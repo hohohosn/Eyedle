@@ -3,3 +3,17 @@ server:
 spring:
   application:
     name: eureka-server
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+  instance:
+    hostname: localhost
+  server:
+    enable-self-preservation: false
