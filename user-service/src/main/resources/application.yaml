@@ -1,0 +1,5 @@
+server:
+  port: 19100
+spring:
+  application:
+    name: user-service
