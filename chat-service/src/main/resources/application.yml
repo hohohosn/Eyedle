@@ -1,6 +1,0 @@
-server:
-  port: 19200
-
-spring:
-  application:
-    name: chat-service
