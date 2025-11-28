@@ -1,0 +1,6 @@
+server:
+  port: 19600
+
+spring:
+  application:
+    name: search-service
