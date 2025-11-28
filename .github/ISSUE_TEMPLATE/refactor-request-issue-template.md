@@ -7,15 +7,6 @@ assignees: ''
 
 ---
 
----
-name: Refactor request
-about: 코드 리팩토링 관련 이슈를 작성합니다.
-title: "[refactor] "
-labels: refactor
-assignees: ''
-
----
-
 ## 🎯 리팩토링 목적
 간단한 설명을 작성해주세요.
 
