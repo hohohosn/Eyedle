@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: notification-service
+server:
+  port: 19400
