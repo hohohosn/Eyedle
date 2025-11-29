@@ -13,18 +13,18 @@ import lombok.NoArgsConstructor;
 public class Author {
 
 	@Column(name = "author_id", nullable = false)
-	private Long authorId;
+	private Long id;
 
 	@Column(name = "author_name", nullable = false)
-	private String authorName;
+	private String name;
 
 	@Column(name = "author_profile_img")
-	private String authorProfileImg;
+	private String profileImg;
 
 	@Builder
-	public Author(Long authorId, String authorName, String profileImgUrl) {
-		this.authorId = authorId;
-		this.authorName = authorName;
-		this.authorProfileImg = profileImgUrl;
+	public Author(Long id, String name, String profileImgUrl) {
+		this.id = id;
+		this.name = name;
+		this.profileImg = profileImgUrl;
 	}
 }

@@ -3,7 +3,6 @@ package com.eyedle.comment_service.domain.model;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -18,7 +17,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -46,9 +44,9 @@ public class Comment {
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "authorId", column = @Column(name = "created_by", nullable = false, updatable = false)),
-		@AttributeOverride(name = "authorName", column = @Column(name = "author_name", nullable = false)),
-		@AttributeOverride(name = "authorProfileImg", column = @Column(name = "author_profile_img"))
+		@AttributeOverride(name = "id", column = @Column(name = "created_by", nullable = false, updatable = false)),
+		@AttributeOverride(name = "name", column = @Column(name = "author_name", nullable = false)),
+		@AttributeOverride(name = "profileImg", column = @Column(name = "author_profile_img"))
 	})
 	private Author author;
 
