@@ -2,16 +2,18 @@ package com.eyedle.comment_service.domain.model;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+import com.eyedle.comment_service.domain.vo.Author;
 import com.github.f4b6a3.tsid.TsidCreator;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
@@ -39,22 +41,25 @@ public class Comment {
 	@Column(name = "parent_id")
 	private Long parentId;
 
-	@Column(nullable = false, length = 1000)
-	private String contents;
+	@Column(nullable = false, columnDefinition = "TEXT")
+	private String content;
+
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "authorId", column = @Column(name = "created_by", nullable = false, updatable = false)),
+		@AttributeOverride(name = "authorName", column = @Column(name = "author_name", nullable = false)),
+		@AttributeOverride(name = "authorProfileImg", column = @Column(name = "author_profile_img"))
+	})
+	private Author author;
 
 	@CreatedDate
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
-	@CreatedBy
-	@Column(name = "created_by", nullable = false, updatable = false)
-	private Long createdBy;
-
 	@LastModifiedDate
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 
-	@LastModifiedBy
 	@Column(name = "updated_by")
 	private Long updatedBy;
 
@@ -71,20 +76,17 @@ public class Comment {
 		}
 	}
 
-	@PreUpdate
-	public void preUpdate(){
-		this.updatedAt = LocalDateTime.now();
-	}
-
 	@Builder
-	public Comment(Long feedId, Long parentId, String contents){
+	public Comment(Long feedId, Long parentId, String content, Author author){
 		this.feedId = feedId;
 		this.parentId = parentId;
-		this.contents = contents;
+		this.content = content;
+		this.author = author;
 	}
 
-	public void updateContents(String content){
-		this.contents = content;
+	public void updateContents(String content, Long userId){
+		this.content = content;
+		this.updatedBy = userId;
 	}
 
 	public void softDelete(Long userId){
