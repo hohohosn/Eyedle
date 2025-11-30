@@ -10,7 +10,7 @@ import lombok.ToString;
 @Builder
 @ToString
 public class UserContext {
-	private Long userId;
-	private String userName;
+	private Long id;
+	private String userId;
 	private String role;
 }

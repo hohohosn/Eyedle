@@ -17,7 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class MockAuthenticationFilter extends OncePerRequestFilter {
 
-	private static final Long DEFAULT_USER_ID = 1L;
+	private static final Long DEFAULT_ID = 1L;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -27,30 +27,30 @@ public class MockAuthenticationFilter extends OncePerRequestFilter {
 		String roleStr = request.getHeader("X-User-Role");
 		String userNameStr = request.getHeader("X-User-Name");
 
-		Long userId;
+		Long id;
 		String role;
-		String userName;
+		String userId;
 
 		if (userIdStr != null) {
 			try {
-				userId = Long.parseLong(userIdStr);
+				id = Long.parseLong(userIdStr);
 				role = (roleStr != null) ? roleStr : "USER";
-				userName = (userNameStr != null) ? userNameStr : "tester";
+				userId = (userNameStr != null) ? userNameStr : "tester";
 			} catch (NumberFormatException e) {
 				// 헤더가 이상하면 기본값으로 폴백하거나 무시
-				userId = DEFAULT_USER_ID;
+				id = DEFAULT_ID;
 				role = "USER";
-				userName = "tester";
+				userId = "tester";
 			}
 		} else {
-			userId = DEFAULT_USER_ID;
+			id = DEFAULT_ID;
 			role = "USER";
-			userName = "default-tester";
+			userId = "default-tester";
 		}
 
 		UserContext userContext = UserContext.builder()
+			.id(id)
 			.userId(userId)
-			.userName(userName)
 			.role(role)
 			.build();
 

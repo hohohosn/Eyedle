@@ -24,3 +24,7 @@ h2:
 eureka:
   client:
     enabled: false
+
+logging:
+  level:
+    root: info
