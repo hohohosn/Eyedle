@@ -1,9 +1,25 @@
 server:
   port: 19200
 
+
 spring:
   application:
     name: chat-service
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:${DATABASE_PORT}/${DATABASE_NAME}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  jpa:
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgresSQLDialect
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
 
 eureka:
   client:
@@ -11,5 +27,6 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: http://localhost:19090/eureka/
+
   instance:
     hostname: chat-service
