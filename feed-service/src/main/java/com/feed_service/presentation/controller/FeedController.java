@@ -34,4 +34,10 @@ public class FeedController {
     public CommonResponse  updateFeed(@PathVariable Long feedId, @RequestBody FeedUpdateRequestDto request){
         return CommonResponse.of(SuccessCode.OK, feedService.updateFeed(feedId, request));
     }
+
+    @DeleteMapping("/{feedId}")
+    public CommonResponse deleteFeed(@PathVariable Long feedId){
+        feedService.statusDeleted(feedId);
+        return CommonResponse.of(SuccessCode.OK);
+    }
 }

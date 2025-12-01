@@ -37,5 +37,11 @@ public class FeedService {
         return FeedResponseDto.mapFeed(feed);
     }
 
+    @Transactional
+    public void statusDeleted(Long feedId) {
+        Feed feed = feedRepository.findById(feedId)
+                .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
+        feed.statusDeleted();
+    }
 
 }
