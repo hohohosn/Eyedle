@@ -35,7 +35,7 @@ public class ChatMessage {
   @Column(nullable = false)
   private String messageContent;
 
-  private boolean isReported;
+  private boolean isReported = false;
 
   private LocalDateTime createdAt;
   private LocalDateTime deletedAt;

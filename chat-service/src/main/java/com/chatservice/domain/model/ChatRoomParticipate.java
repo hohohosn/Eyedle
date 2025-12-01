@@ -27,12 +27,17 @@ public class ChatRoomParticipate {
   @Column(nullable = false)
   private Long userId;
 
-  private boolean isBlocked;
+  @Column(nullable = false)
+  private boolean isBlocked = false;
+
   private LocalDateTime blockedAt;
 
-  private boolean isLeft;
+  @Column(nullable = false)
+  private boolean isLeft = false;
+
   private LocalDateTime leftAt;
 
+  @Column(nullable = false)
   private LocalDateTime createdAt;
 }
 

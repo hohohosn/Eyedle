@@ -34,7 +34,11 @@ public class ChatRoom {
   @Enumerated(EnumType.STRING)
   private ChatRoomStatus chatRoomStatus;
 
+//  private LocalDateTime lastMessageAt;
+
+  @Column(nullable = false)
   private LocalDateTime createdAt;
+
   private LocalDateTime updatedAt;
 }
 
