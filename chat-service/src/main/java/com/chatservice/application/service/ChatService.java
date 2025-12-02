@@ -10,6 +10,7 @@ import com.chatservice.presentation.request.CreateChatRoomReqDto;
 import com.chatservice.presentation.response.CreateChatRoomResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class ChatService {
   private final ChatRoomRepository chatRoomRepository;
   private final ChatParticipateRepository chatParticipateRepository;
 
+  @Transactional
   public CreateChatRoomResDto createDirectChatRoom(Long userId, CreateChatRoomReqDto reqDto) {
 
     // 1. 두 유저가 같은 사람인지 확인
@@ -67,3 +69,5 @@ public class ChatService {
     return CreateChatRoomResDto.from(newChatRoom);
   }
 }
+
+// TODO: 예외 처리 적용
