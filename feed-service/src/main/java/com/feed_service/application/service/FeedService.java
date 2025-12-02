@@ -7,6 +7,8 @@ import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.presentation.response.FeedResponseDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,6 +29,11 @@ public class FeedService {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
         return FeedResponseDto.mapFeed(feed);
+    }
+
+    public Page<FeedResponseDto> findAllFeeds(Pageable pageable) {
+        Page<Feed> feeds = feedRepository.findFeeds(pageable);
+        return feeds.map(FeedResponseDto::mapFeed);
     }
 
     @Transactional

@@ -7,6 +7,9 @@ import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.sun.net.httpserver.Authenticator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,6 +31,14 @@ public class FeedController {
     @GetMapping("/{feedId}")
     public CommonResponse getFeed(@PathVariable Long feedId){
         return CommonResponse.of(SuccessCode.OK, feedService.findFeed(feedId));
+    }
+
+    @GetMapping
+    public CommonResponse getFeeds(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable));
     }
 
     @PatchMapping("/{feedId}")
