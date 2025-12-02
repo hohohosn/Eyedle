@@ -24,6 +24,6 @@ public class SearchResponse {
 	@AllArgsConstructor
 	public static class SearchResult{
 		private List<UserDocument> users;
-		private List<FeedDocument> feeds;>
+		private List<FeedDocument> feeds;
 	}
 }
