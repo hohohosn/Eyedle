@@ -39,7 +39,20 @@ public class ChatRoom {
   @Column(nullable = false)
   private LocalDateTime createdAt;
 
-  private LocalDateTime updatedAt;
+  /**
+   * 일대일 채팅방 생성을 위한 정적 팩토리 메서드
+   */
+  public static ChatRoom createOneToOne(ChatRoomStatus chatRoomStatus) {
+    ChatRoom chatRoom = new ChatRoom();
+    chatRoom.chatRoomType = ChatRoomType.DIRECT;
+    chatRoom.chatRoomStatus = chatRoomStatus;
+    chatRoom.createdAt = LocalDateTime.now();
+    return chatRoom;
+  }
+
+  public void openRoom() {
+    this.chatRoomStatus = ChatRoomStatus.OPEN;
+  }
 }
 
 // TODO : ID 수정 필요

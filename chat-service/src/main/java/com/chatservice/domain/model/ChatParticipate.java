@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_chat_room_participates")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatRoomParticipate {
+public class ChatParticipate {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,18 +27,29 @@ public class ChatRoomParticipate {
   @Column(nullable = false)
   private Long userId;
 
-  @Column(nullable = false)
-  private boolean isBlocked = false;
+//  @Column(nullable = false)
+//  private boolean isBlocked;
+//
+//  private LocalDateTime blockedAt;
 
-  private LocalDateTime blockedAt;
-
   @Column(nullable = false)
-  private boolean isLeft = false;
+  private boolean isLeft;
 
   private LocalDateTime leftAt;
 
   @Column(nullable = false)
   private LocalDateTime createdAt;
+
+  /**
+   * 채팅 참여자 생성을 위한 정적 팩토리 메서드
+   */
+  public static ChatParticipate create(Long chatRoomId, Long userId) {
+    ChatParticipate participate = new ChatParticipate();
+    participate.chatRoomId = chatRoomId;
+    participate.userId = userId;
+    participate.createdAt = LocalDateTime.now();
+    return participate;
+  }
 }
 
 // TODO : ID 수정 필요

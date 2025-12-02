@@ -32,7 +32,7 @@ public class ChatMessage {
   @Enumerated(EnumType.STRING)
   private ContentType contentType;
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 500)
   private String messageContent;
 
   private boolean isReported = false;
