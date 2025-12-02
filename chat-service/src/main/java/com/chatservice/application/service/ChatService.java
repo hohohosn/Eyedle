@@ -8,6 +8,7 @@ import com.chatservice.domain.repository.ChatParticipateRepository;
 import com.chatservice.domain.repository.ChatRoomRepository;
 import com.chatservice.presentation.request.CreateChatRoomReqDto;
 import com.chatservice.presentation.response.CreateChatRoomResDto;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,34 +23,28 @@ public class ChatService {
   @Transactional
   public CreateChatRoomResDto createDirectChatRoom(Long userId, CreateChatRoomReqDto reqDto) {
 
-    // 1. 두 유저가 같은 사람인지 확인
+    // 두 유저가 같은 사람인지 확인
     if (reqDto.receiverId().equals(userId)) {
       throw new IllegalArgumentException();
     }
 
-    // TODO: 2. 존재하는 유저인지 확인
+    // TODO: 존재하는 유저인지 확인
 
-    // TODO: 3. 차단한 유저인지 확인
+    // TODO: 차단한 유저인지 확인
 
-    // 4. 기존 채팅방 존재 여부 확인
-    ChatRoom existingChatRoom = chatRoomRepository
-        .findDirectChatRoom(userId, reqDto.receiverId()).orElse(null);
+    return chatRoomRepository.findDirectChatRoom(userId, reqDto.receiverId())
+        .map(existingChatRoom -> {
+          boolean meLeft = chatParticipateRepository.isLeft(existingChatRoom.getId(), userId);
+          boolean receiverLeft = chatParticipateRepository
+              .isLeft(existingChatRoom.getId(), reqDto.receiverId());
 
-    if (existingChatRoom != null) {
-      boolean meLeft = chatParticipateRepository.isLeft(existingChatRoom.getId(), userId);
-      boolean receiverLeft = chatParticipateRepository
-          .isLeft(existingChatRoom.getId(), reqDto.receiverId());
-
-      // 4-1. 채팅방은 존재하지만 둘 다 그 방을 떠났다면 새로운 방 생성
-      if (meLeft && receiverLeft) {
-        return createNewChatRoom(userId, reqDto.receiverId());
-      }
-      // 4-2. 기존 방 재사용
-      return CreateChatRoomResDto.from(existingChatRoom);
-    }
-
-    // 5. 기존 방 없다면 새로운 채팅방 생성
-    return createNewChatRoom(userId, reqDto.receiverId());
+          // 둘 다 방을 떠났으면 새 채팅방 생성
+          return (meLeft && receiverLeft)
+              ? createNewChatRoom(userId, reqDto.receiverId())
+              : CreateChatRoomResDto.from(existingChatRoom);
+        })
+        // 기존 방이 없으면 새 채팅방 생성
+        .orElseGet(() -> createNewChatRoom(userId, reqDto.receiverId()));
   }
 
   private CreateChatRoomResDto createNewChatRoom(Long userId, Long receiverId) {
@@ -61,10 +56,9 @@ public class ChatService {
     chatRoomRepository.save(newChatRoom);
 
     // 채팅 참여자 생성
-    ChatParticipate me = ChatParticipate.create(newChatRoom.getId(), userId);
-    ChatParticipate receiver = ChatParticipate.create(newChatRoom.getId(), receiverId);
-    chatParticipateRepository.save(me);
-    chatParticipateRepository.save(receiver);
+    Stream.of(userId, receiverId)
+        .map(id -> ChatParticipate.create(newChatRoom.getId(), id))
+        .forEach(chatParticipateRepository::save);
 
     return CreateChatRoomResDto.from(newChatRoom);
   }
