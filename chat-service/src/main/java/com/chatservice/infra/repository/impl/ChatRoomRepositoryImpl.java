@@ -3,6 +3,7 @@ package com.chatservice.infra.repository.impl;
 import com.chatservice.domain.model.ChatRoom;
 import com.chatservice.domain.repository.ChatRoomRepository;
 import com.chatservice.infra.repository.jpa.ChatRoomJpaRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -15,5 +16,10 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepository {
   @Override
   public ChatRoom save(ChatRoom chatRoom) {
     return chatRoomJpaRepository.save(chatRoom);
+  }
+
+  @Override
+  public Optional<ChatRoom> findDirectChatRoom(Long userId1, Long userId2) {
+    return chatRoomJpaRepository.findDirectChatRoom(userId1, userId2);
   }
 }

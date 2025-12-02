@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 public interface ChatParticipateRepository {
 
   ChatParticipate save(ChatParticipate chatParticipate);
+
+  boolean isLeft(Long chatRoomId, Long userId);
 }

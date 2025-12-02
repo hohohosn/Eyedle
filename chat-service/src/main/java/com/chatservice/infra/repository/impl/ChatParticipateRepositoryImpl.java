@@ -16,4 +16,10 @@ public class ChatParticipateRepositoryImpl implements ChatParticipateRepository 
   public ChatParticipate save(ChatParticipate chatParticipate) {
     return chatParticipateJpaRepository.save(chatParticipate);
   }
+
+  @Override
+  public boolean isLeft(Long chatRoomId, Long userId) {
+    return chatParticipateJpaRepository.existsByChatRoomIdAndUserIdAndIsLeftTrue(chatRoomId,
+        userId);
+  }
 }

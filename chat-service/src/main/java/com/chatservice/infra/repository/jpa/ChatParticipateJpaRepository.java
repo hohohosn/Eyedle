@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ChatParticipateJpaRepository extends JpaRepository<ChatParticipate, Long> {
 
+  boolean existsByChatRoomIdAndUserIdAndIsLeftTrue(Long chatRoomId, Long userId);
 }
