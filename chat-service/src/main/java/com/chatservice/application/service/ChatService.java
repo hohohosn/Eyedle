@@ -20,28 +20,28 @@ public class ChatService {
   private final ChatRoomRepository chatRoomRepository;
   private final ChatParticipateRepository chatParticipateRepository;
 
+  /**
+   * 새 채팅 생성
+   */
   @Transactional
   public CreateChatRoomResDto createDirectChatRoom(Long userId, CreateChatRoomReqDto reqDto) {
 
     // 두 유저가 같은 사람인지 확인
     if (reqDto.receiverId().equals(userId)) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException("자기 자신과는 채팅방을 만들 수 없습니다.");
     }
 
     // TODO: 존재하는 유저인지 확인
 
-    // TODO: 차단한 유저인지 확인
+    // TODO: 차단 관계의 유저인지 확인
 
     return chatRoomRepository.findDirectChatRoom(userId, reqDto.receiverId())
         .map(existingChatRoom -> {
           boolean meLeft = chatParticipateRepository.isLeft(existingChatRoom.getId(), userId);
-          boolean receiverLeft = chatParticipateRepository
-              .isLeft(existingChatRoom.getId(), reqDto.receiverId());
+          boolean receiverLeft = chatParticipateRepository.isLeft(existingChatRoom.getId(), reqDto.receiverId());
 
           // 둘 다 방을 떠났으면 새 채팅방 생성
-          return (meLeft && receiverLeft)
-              ? createNewChatRoom(userId, reqDto.receiverId())
-              : CreateChatRoomResDto.from(existingChatRoom);
+          return (meLeft && receiverLeft) ? createNewChatRoom(userId, reqDto.receiverId()) : CreateChatRoomResDto.from(existingChatRoom);
         })
         // 기존 방이 없으면 새 채팅방 생성
         .orElseGet(() -> createNewChatRoom(userId, reqDto.receiverId()));
@@ -56,12 +56,8 @@ public class ChatService {
     chatRoomRepository.save(newChatRoom);
 
     // 채팅 참여자 생성
-    Stream.of(userId, receiverId)
-        .map(id -> ChatParticipate.create(newChatRoom.getId(), id))
-        .forEach(chatParticipateRepository::save);
+    Stream.of(userId, receiverId).map(id -> ChatParticipate.create(newChatRoom.getId(), id)).forEach(chatParticipateRepository::save);
 
     return CreateChatRoomResDto.from(newChatRoom);
   }
 }
-
-// TODO: 예외 처리 적용
