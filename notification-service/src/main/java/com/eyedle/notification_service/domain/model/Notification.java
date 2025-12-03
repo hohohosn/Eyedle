@@ -3,17 +3,13 @@ package com.eyedle.notification_service.domain.model;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.github.f4b6a3.tsid.TsidCreator;
+import com.common.database.BaseRootEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,12 +19,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-@EntityListeners(AuditingEntityListener.class)
 @Table(name = "p_notification")
-public class Notification {
-	@Id
-	@Column(name = "notification_id")
-	private Long id;
+public class Notification extends BaseRootEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "notification_type", nullable = false)
@@ -55,13 +47,6 @@ public class Notification {
 
 	@Column(name = "deleted_at")
 	private LocalDateTime deletedAt;
-
-	@PrePersist
-	public void prePersist() {
-		if(this.id == null){
-			this.id = TsidCreator.getTsid().toLong();
-		}
-	}
 
 	@Builder
 	public Notification(NotificationType type
