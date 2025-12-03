@@ -17,6 +17,7 @@ public class CommentCreateCommand {
 	public Comment toEntity(Author author) {
 		return Comment.builder()
 			.feedId(this.feedId)
+			.parentId(this.parentId)
 			.content(this.content)
 			.author(author)
 			.build();
