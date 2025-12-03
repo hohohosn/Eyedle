@@ -3,6 +3,28 @@ server:
 spring:
   application:
     name: user-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:${DATABASE_PORT}/${DATABASE_NAME}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update  #개발할 때는 update, 후에 validate로 바꾸기
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  access-expiration-time: 3600000 # 1 hour in milliseconds
+  access-header-name: Authorization
+  header-prefix: "Bearer "
+
 eureka:
   client:
     register-with-eureka: true
