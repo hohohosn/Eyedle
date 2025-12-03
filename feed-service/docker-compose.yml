@@ -6,8 +6,8 @@ services:
     container_name: postgresdb
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_USER: feeduser
+      POSTGRES_PASSWORD: feedpass
       POSTGRES_DB: feeddb
     ports:
       - "5432:5432"
