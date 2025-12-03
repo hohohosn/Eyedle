@@ -63,9 +63,9 @@ public class CommentService {
 		return convertToSlice(comments, pageable);
 	}
 
-
+	@Transactional(readOnly = true)
 	public SliceResponse<CommentGetResponseDto> getReplies(Long userId, Long feedId, Long commentId, Long cursor, Pageable pageable) {
-		validateFeed(feedId, userId);
+		validateReply(commentId, feedId);
 		List<Comment> replies = commentRepository.findAllByParentId(feedId, commentId, cursor, pageable);
 		return convertToSlice(replies, pageable);
 
