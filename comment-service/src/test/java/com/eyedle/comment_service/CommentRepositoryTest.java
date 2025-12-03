@@ -12,12 +12,12 @@ import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.domain.vo.Author;
 import com.eyedle.comment_service.infra.config.JpaAuditConfig;
-import com.eyedle.comment_service.infra.repository.impl.CommentJpaRepositoryImpl;
+import com.eyedle.comment_service.infra.repository.impl.CommentRepositoryImpl;
 
 @DataJpaTest
 @Import({
 	JpaAuditConfig.class
-	, CommentJpaRepositoryImpl.class
+	, CommentRepositoryImpl.class
 })
 public class CommentRepositoryTest {
 

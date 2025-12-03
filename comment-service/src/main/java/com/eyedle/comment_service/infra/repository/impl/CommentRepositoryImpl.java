@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class CommentJpaRepositoryImpl implements CommentRepository {
+public class CommentRepositoryImpl implements CommentRepository {
 
 	private final CommentJpaRepository commentJpaRepository;
 
@@ -22,7 +22,7 @@ public class CommentJpaRepositoryImpl implements CommentRepository {
 	}
 
 	@Override
-	public Optional<Comment> findByIdAndDeletedAtIsNull(Long commentId) {
-		return commentJpaRepository.findByIdAndDeletedAtIsNull(commentId);
+	public Optional<Comment> findByIdAndDeletedAtIsNull(Long id) {
+		return commentJpaRepository.findByIdAndDeletedAtIsNull(id);
 	}
 }
