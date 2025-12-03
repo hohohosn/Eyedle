@@ -1,10 +1,12 @@
 package com.chatservice.presentation.controller;
 
+import static com.common.response.SuccessCode.CREATED;
+
 import com.chatservice.application.service.ChatService;
 import com.chatservice.presentation.request.CreateChatRoomReqDto;
 import com.chatservice.presentation.response.CreateChatRoomResDto;
+import com.common.response.CommonResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,14 +20,11 @@ public class ChatController {
   private final ChatService chatService;
 
   @PostMapping
-  public ResponseEntity<CreateChatRoomResDto> createDirectChatRoom(
-      @RequestBody CreateChatRoomReqDto reqDto
-  ) {
+  public CommonResponse<CreateChatRoomResDto> createDirectChatRoom(@RequestBody CreateChatRoomReqDto reqDto) {
     Long userId = 1L;
-    return ResponseEntity.ok(chatService.createDirectChatRoom(userId, reqDto));
+    return CommonResponse.of(CREATED, chatService.createDirectChatRoom(userId, reqDto));
   }
 }
 
 // TODO:
 //  - 헤더에서 사용자 정보 가져오기
-//  - 공통 응답 적용하기
