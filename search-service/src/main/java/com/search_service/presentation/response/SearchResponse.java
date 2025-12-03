@@ -2,8 +2,6 @@ package com.search_service.presentation.response;
 
 import java.util.List;
 
-import javax.naming.directory.SearchResult;
-
 import com.search_service.domain.model.FeedDocument;
 import com.search_service.domain.model.UserDocument;
 
