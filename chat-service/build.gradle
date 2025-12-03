@@ -20,10 +20,6 @@ configurations {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
 ext {
     set('springCloudVersion', "2025.0.0")
 }
@@ -35,6 +31,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+
+    implementation 'com.github.sparta-Eyedle:msa-common-module:v0.0.4'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
