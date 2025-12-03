@@ -9,6 +9,9 @@ import com.search_service.application.service.SearchService;
 import com.search_service.presentation.response.SearchRankResponse;
 import com.search_service.presentation.response.SearchResponse;
 
+import com.common.response.CommonResponse;
+import com.common.response.SuccessCode;
+
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,24 +22,27 @@ public class SearchController {
 	private final SearchService searchService;
 
 	@GetMapping("/init")
-	public String initData(){
+	public CommonResponse<String> initData(){
 		searchService.createMockData();
-		return "Mock Data Inserted";
+		return CommonResponse.of(SuccessCode.CREATED, "Mock Data Inserted");
 	}
 
 	@GetMapping
-	public SearchResponse search(@RequestParam("keyword") String keyword){
-		return searchService.search(keyword);
+	public CommonResponse<SearchResponse> search(@RequestParam("keyword") String keyword){
+		SearchResponse result = searchService.search(keyword);
+		return CommonResponse.of(SuccessCode.OK, result);
 	}
 
 	@GetMapping("/hot")
-	public SearchRankResponse getHotKeywords(@RequestParam(value="limit", defaultValue = "10") int limit){
-		return searchService.getTopKeywords(limit);
+	public CommonResponse<SearchRankResponse> getHotKeywords(@RequestParam(value="limit", defaultValue = "10") int limit){
+
+		SearchRankResponse result = searchService.getTopKeywords(limit);
+		return CommonResponse.of(SuccessCode.OK, result);
 	}
 
 	@GetMapping("/clear")
-	public String clear(){
+	public CommonResponse<String> clear(){
 		searchService.clearAll();
-		return "All cleared";
+		return CommonResponse.of(SuccessCode.DELETED, "All cleared");
 	}
 }
