@@ -25,7 +25,8 @@ public class SearchService {
 	private final FeedRepository feedRepository;
 	private final KeywordRepository keywordRepository;
 
-	// 임시 데이터
+	// 임시 데이터 하드코딩
+	// 추후 리팩토링 예정
 	public void createMockData(){
 		userRepository.save(UserDocument.builder().id(1L).userId("jeju_native").profileImageUrl("img1.jpg").build());
 		userRepository.save(UserDocument.builder().id(2L).userId("seoul_lover").profileImageUrl("img2.jpg").build());
