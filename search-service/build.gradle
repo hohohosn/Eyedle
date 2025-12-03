@@ -24,10 +24,6 @@ configurations {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
@@ -39,6 +35,8 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'com.github.sparta-Eyedle:msa-common-module:v0.0.6'
 
 }
 
