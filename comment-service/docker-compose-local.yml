@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. PostgreSQL (Main DB)
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: local-postgres
+    restart: always
+    ports:
+      - "5433:5432" # 호스트:컨테이너
+    environment:
+      POSTGRES_USER: ${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_PASSWORD}
+    volumes:
+      # 로컬에 데이터 저장 (컨테이너 내려도 데이터 유지)
+      - ./infra-data-new/postgres:/var/lib/postgresql/data
+    networks:
+      - dev-network
+
+  # ==========================================
+  # 2. Redis - Local Cache (서비스 전용)
+  # ==========================================
+  redis-cache:
+    image: redis:alpine
+    container_name: local-redis-cache
+    ports:
+      - "6380:6379"
+    networks:
+      - dev-network
+
+  # ==========================================
+  # 3. Redis - Global (Pub/Sub)
+  # ==========================================
+  redis-global:
+    image: redis:alpine
+    container_name: local-redis-global
+    ports:
+      - "6379:6379"
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge
