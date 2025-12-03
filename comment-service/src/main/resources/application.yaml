@@ -19,6 +19,14 @@ spring:
       host: localhost
       port: 6380
 
+global:
+  redis:
+    host: localhost
+    port: 6379
+
+instance:
+  node-id: 17
+
 eureka:
   client:
     service-url:
