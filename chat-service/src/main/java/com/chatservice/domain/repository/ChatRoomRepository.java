@@ -10,4 +10,6 @@ public interface ChatRoomRepository {
   ChatRoom save(ChatRoom chatRoom);
 
   Optional<ChatRoom> findDirectChatRoom(Long userId1, Long userId2);
+
+  Optional<ChatRoom> findById(Long id);
 }

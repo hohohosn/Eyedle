@@ -16,7 +16,5 @@ public interface ChatRoomJpaRepository extends JpaRepository<ChatRoom, Long> {
       JOIN ChatParticipate p2 ON p2.chatRoomId = r.id AND p2.userId = :userId2
       WHERE r.chatRoomType = 'DIRECT'
       """)
-  Optional<ChatRoom> findDirectChatRoom(
-      @Param("userId1") Long userId1, @Param("userId2") Long userId2
-  );
+  Optional<ChatRoom> findDirectChatRoom(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
 }

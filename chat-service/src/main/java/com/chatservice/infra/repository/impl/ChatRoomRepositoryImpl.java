@@ -22,4 +22,9 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepository {
   public Optional<ChatRoom> findDirectChatRoom(Long userId1, Long userId2) {
     return chatRoomJpaRepository.findDirectChatRoom(userId1, userId2);
   }
+
+  @Override
+  public Optional<ChatRoom> findById(Long id) {
+    return chatRoomJpaRepository.findById(id);
+  }
 }
