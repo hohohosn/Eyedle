@@ -5,12 +5,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.common.response.CommonResponse;
+import com.common.response.SuccessCode;
 import com.eyedle.comment_service.application.command.CommentCreateCommand;
 import com.eyedle.comment_service.application.service.CommentService;
 import com.eyedle.comment_service.global.annotation.CurrentUser;
 import com.eyedle.comment_service.global.dto.UserContext;
 import com.eyedle.comment_service.presentation.dto.request.CommentCreateRequestDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
+import com.eyedle.comment_service.presentation.enums.CommentErrorCode;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,14 +33,15 @@ public class CommentController {
 	 *
 	 */
 	@PostMapping("/feeds/{feedId}/comments")
-	public CommentCreateResponseDto createComment(
+	public CommonResponse<CommentCreateResponseDto> createComment(
 		@PathVariable Long feedId,
 		@Valid @RequestBody CommentCreateRequestDto commentCreateRequestDto,
 		@CurrentUser UserContext user
 	) {
 
 		CommentCreateCommand commentCreateCommand = commentCreateRequestDto.toCommand(feedId, user.getId());
+		CommentCreateResponseDto commentCreateResponseDto = commentService.saveComment(commentCreateCommand);
 
-		return commentService.saveComment(commentCreateCommand);
+		return CommonResponse.of(SuccessCode.CREATED, commentCreateResponseDto);
 	}
 }

@@ -1,5 +1,6 @@
 package com.eyedle.comment_service;
 
+import static com.common.response.SuccessCode.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
@@ -14,12 +15,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.common.response.CommonResponse;
 import com.eyedle.comment_service.application.command.CommentCreateCommand;
 import com.eyedle.comment_service.application.service.CommentService;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.domain.service.CommentDomainService;
+import com.eyedle.comment_service.infra.client.FeedClient;
 import com.eyedle.comment_service.infra.client.UserClient;
+import com.eyedle.comment_service.infra.client.dto.FeedGetResult;
 import com.eyedle.comment_service.infra.client.dto.UserGetResult;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
 
@@ -38,13 +42,27 @@ public class CommentServiceTest {
 	@Mock
 	private UserClient userClient;
 
+	@Mock
+	private FeedClient feedClient;
+
+	private void setupFeedClientMock(Long feedId) {
+		FeedGetResult mockFeedResult = new FeedGetResult(feedId, 9000L,"PUBLIC");
+
+		CommonResponse<FeedGetResult> response = CommonResponse.of(OK, mockFeedResult);
+
+		given(feedClient.getFeed(feedId)).willReturn(response);
+	}
+
 	private void setupUserClientMock(Long userId) {
 		UserGetResult mockUserResult = UserGetResult.builder()
 			.id(userId)
 			.userId("tester")
 			.profileImageUrl("/img.png")
 			.build();
-		given(userClient.getUser(userId)).willReturn(mockUserResult);
+
+		CommonResponse<UserGetResult> response = CommonResponse.of(OK, mockUserResult);
+		given(userClient.getUser(userId)).willReturn(response);
+
 	}
 
 	private void setupRepositorySaveMock(Long commentId) {
@@ -76,6 +94,7 @@ public class CommentServiceTest {
 			.profileImageUrl("/tester.png")
 			.build();
 
+		setupFeedClientMock(feedId);
 		setupUserClientMock(userId);
 		setupRepositorySaveMock(commentId);
 
@@ -87,6 +106,7 @@ public class CommentServiceTest {
 		assertThat(commentCreateResponseDto.getContent()).isEqualTo(content);
 		assertThat(commentCreateResponseDto.getCreatedBy()).isEqualTo(userId);
 
+		verify(feedClient).getFeed(feedId);
 		verify(userClient).getUser(userId);
 		verify(commentRepository).save(any(Comment.class));
 	}
@@ -107,6 +127,7 @@ public class CommentServiceTest {
 			.parentId(parentId) // parentId 존재
 			.build();
 
+		setupFeedClientMock(feedId);
 		setupUserClientMock(userId);
 		setupRepositorySaveMock(replyId);
 
@@ -140,13 +161,13 @@ public class CommentServiceTest {
 			.parentId(parentId)
 			.build();
 
+		setupFeedClientMock(feedId);
 		given(commentRepository.findByIdAndDeletedAtIsNull(parentId))
 			.willReturn(Optional.empty());
 
 		// when & then
 		assertThatThrownBy(() -> commentService.saveComment(command))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessage("존재하지 않는 댓글에 대댓글을 작성할 수 없습니다");
+			.hasMessage("존재하지 않거나 삭제된 댓글입니다.");
 
 		verify(commentDomainService, times(0)).validateReply(any(), any());
 	}

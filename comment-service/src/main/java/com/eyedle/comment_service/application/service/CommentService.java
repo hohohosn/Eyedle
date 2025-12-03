@@ -1,16 +1,24 @@
 package com.eyedle.comment_service.application.service;
 
+import static com.eyedle.comment_service.presentation.enums.CommentErrorCode.*;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.common.exception.CustomException;
+import com.common.response.CommonResponse;
+import com.common.response.ErrorCode;
 import com.eyedle.comment_service.application.command.CommentCreateCommand;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.domain.service.CommentDomainService;
 import com.eyedle.comment_service.domain.vo.Author;
+import com.eyedle.comment_service.infra.client.FeedClient;
 import com.eyedle.comment_service.infra.client.UserClient;
+import com.eyedle.comment_service.infra.client.dto.FeedGetResult;
 import com.eyedle.comment_service.infra.client.dto.UserGetResult;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
+import com.eyedle.comment_service.presentation.enums.CommentErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,16 +28,19 @@ public class CommentService {
 
 	private final CommentRepository commentRepository;
 	private final UserClient userClient;
+	private final FeedClient feedClient;
 	private final CommentDomainService commentDomainService;
 
 	@Transactional
 	public CommentCreateResponseDto saveComment(CommentCreateCommand commentCreateCommand) {
 
+		validateFeed(commentCreateCommand.getFeedId(), commentCreateCommand.getUserId());
+
 		if (commentCreateCommand.getParentId() != null) {
 			validateReply(commentCreateCommand.getParentId(), commentCreateCommand.getFeedId());
 		}
 
-		UserGetResult userResult = userClient.getUser(commentCreateCommand.getUserId());
+		UserGetResult userResult = getUser(commentCreateCommand.getUserId());
 
 		Author author = userResult.toAuthor();
 		Comment comment = commentCreateCommand.toEntity(author);
@@ -37,6 +48,35 @@ public class CommentService {
 		Comment savedComment = commentRepository.save(comment);
 
 		return CommentCreateResponseDto.fromEntity(savedComment);
+
+	}
+
+	private UserGetResult getUser(Long userId) {
+		CommonResponse<UserGetResult> response = userClient.getUser(userId);
+
+		if (response == null || response.getData() == null) {
+			throw new CustomException(USER_NOT_FOUND);
+		}
+
+		return response.getData();
+	}
+
+	/**
+	 * 피드 검증
+	 * @param feedId
+	 */
+	private void validateFeed(Long feedId, Long userId) {
+
+		CommonResponse<FeedGetResult> result = feedClient.getFeed(feedId);
+
+		if (result == null || result.getData() == null) {
+			throw new CustomException(FEED_NOT_FOUND);
+		}
+
+		FeedGetResult feedGetResult = result.getData();
+
+		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
+		commentDomainService.validateFeed(feedId, userId, feedGetResult.getUserId(), feedGetResult.getPermission());
 
 	}
 
@@ -48,8 +88,9 @@ public class CommentService {
 	private void validateReply(Long parentId, Long feedId) {
 
 		Comment parentComment = commentRepository.findByIdAndDeletedAtIsNull(parentId)
-			.orElseThrow(()-> new IllegalArgumentException("존재하지 않는 댓글에 대댓글을 작성할 수 없습니다"));
+			.orElseThrow(()-> new CustomException(CommentErrorCode.COMMENT_NOT_FOUND));
 
+		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
 		commentDomainService.validateReply(parentComment, feedId);
 
 	}
