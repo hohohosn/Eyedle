@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.search_service.application.service.SearchService;
+import com.search_service.presentation.response.SearchRankResponse;
 import com.search_service.presentation.response.SearchResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,11 @@ public class SearchController {
 	@GetMapping
 	public SearchResponse search(@RequestParam("keyword") String keyword){
 		return searchService.search(keyword);
+	}
+
+	@GetMapping("/hot")
+	public SearchRankResponse getHotKeywords(@RequestParam(value="limit", defaultValue = "10") int limit){
+		return searchService.getTopKeywords(limit);
 	}
 
 	@GetMapping("/clear")

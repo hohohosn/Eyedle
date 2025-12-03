@@ -1,13 +1,18 @@
 package com.search_service.application.service;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import com.search_service.domain.model.FeedDocument;
+import com.search_service.domain.model.KeywordScore;
 import com.search_service.domain.model.UserDocument;
 import com.search_service.domain.repository.FeedRepository;
+import com.search_service.domain.repository.KeywordRepository;
 import com.search_service.domain.repository.UserRepository;
+import com.search_service.presentation.response.SearchRankResponse;
 import com.search_service.presentation.response.SearchResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +23,7 @@ public class SearchService {
 
 	private final UserRepository userRepository;
 	private final FeedRepository feedRepository;
+	private final KeywordRepository keywordRepository;
 
 	// 임시 데이터
 	public void createMockData(){
@@ -32,6 +38,8 @@ public class SearchService {
 	}
 
 	public SearchResponse search(String keyword) {
+		keywordRepository.incrementScore(keyword);
+
 		List<UserDocument> users = userRepository.searchByNickname(keyword);
 		List<FeedDocument> feeds = feedRepository.searchByKeyword(keyword);
 
@@ -41,6 +49,25 @@ public class SearchService {
 				.users(users)
 				.feeds(feeds)
 				.build())
+			.build();
+	}
+
+	public SearchRankResponse getTopKeywords(int limit) {
+		List<KeywordScore> topKeywords = keywordRepository.getTopKeywords(limit);
+		List<SearchRankResponse.RankItem> rankItems = new ArrayList<>();
+
+		for(int i=0; i<topKeywords.size(); i++){
+			KeywordScore item = topKeywords.get(i);
+			rankItems.add(SearchRankResponse.RankItem.builder()
+				.rank(i+1) // 1등부터
+				.keyword(item.getKeyword())
+				.score(item.getScore())
+				.build());
+		}
+
+		return SearchRankResponse.builder()
+			.requestTime(LocalDateTime.now())
+			.ranks(rankItems)
 			.build();
 	}
 
