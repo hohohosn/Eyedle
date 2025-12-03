@@ -6,6 +6,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.common.exception.CustomException;
+import com.common.response.ErrorCode;
+
 import com.search_service.domain.model.FeedDocument;
 import com.search_service.domain.model.KeywordScore;
 import com.search_service.domain.model.UserDocument;
@@ -39,6 +42,10 @@ public class SearchService {
 	}
 
 	public SearchResponse search(String keyword) {
+		if (keyword == null || keyword.trim().isEmpty()) {
+			throw new CustomException(ErrorCode.BAD_REQUEST);
+		}
+
 		keywordRepository.incrementScore(keyword);
 
 		List<UserDocument> users = userRepository.searchByNickname(keyword);
@@ -54,6 +61,10 @@ public class SearchService {
 	}
 
 	public SearchRankResponse getTopKeywords(int limit) {
+		if (limit <= 0) {
+			throw new CustomException(ErrorCode.BAD_REQUEST);
+		}
+
 		List<KeywordScore> topKeywords = keywordRepository.getTopKeywords(limit);
 		List<SearchRankResponse.RankItem> rankItems = new ArrayList<>();
 
