@@ -30,7 +30,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
-    implementation 'com.github.sparta-Eyedle:msa-common-module:v0.0.4'
+    implementation 'com.github.sparta-Eyedle:msa-common-module:v0.0.6'
 
     compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
