@@ -6,6 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.common.database.BaseTimeEntity;
 import com.eyedle.comment_service.domain.vo.Author;
 import com.github.f4b6a3.tsid.TsidCreator;
 
@@ -27,11 +28,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_comment")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners({AuditingEntityListener.class})
-public class Comment {
-	@Id
-	@Column(name = "comment_id")
-	private Long commentId;
+public class Comment extends BaseTimeEntity {
 
 	@Column(name = "feed_id", nullable = false)
 	private Long feedId;
@@ -50,14 +47,6 @@ public class Comment {
 	})
 	private Author author;
 
-	@CreatedDate
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;
-
-	@LastModifiedDate
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
-
 	@Column(name = "updated_by")
 	private Long updatedBy;
 
@@ -66,13 +55,6 @@ public class Comment {
 
 	@Column(name = "deleted_by")
 	private Long deletedBy;
-
-	@PrePersist
-	public void prePersist(){
-		if (this.commentId == null){
-			this.commentId = TsidCreator.getTsid().toLong();
-		}
-	}
 
 	@Builder
 	public Comment(Long feedId, Long parentId, String content, Author author){
