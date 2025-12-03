@@ -2,9 +2,12 @@ package com.eyedle.comment_service.presentation.controller;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,13 +15,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.common.response.CommonResponse;
 import com.common.response.SuccessCode;
 import com.eyedle.comment_service.application.command.CommentCreateCommand;
+import com.eyedle.comment_service.application.command.CommentDeleteCommand;
+import com.eyedle.comment_service.application.command.CommentUpdateCommand;
 import com.eyedle.comment_service.application.service.CommentService;
 import com.eyedle.comment_service.global.annotation.CurrentUser;
 import com.eyedle.comment_service.global.dto.UserContext;
 import com.eyedle.comment_service.presentation.dto.SliceResponse;
 import com.eyedle.comment_service.presentation.dto.request.CommentCreateRequestDto;
+import com.eyedle.comment_service.presentation.dto.request.CommentUpdateRequestDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.CommentDeleteResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentGetResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.CommentUpdateResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -64,7 +72,7 @@ public class CommentController {
 		@PageableDefault(size = 10) Pageable pageable,
 		@CurrentUser UserContext user
 	){
-		SliceResponse<CommentGetResponseDto> result = commentService.getComments(user.getUserId(), feedId, cursor, pageable);
+		SliceResponse<CommentGetResponseDto> result = commentService.getComments(user.getId(), feedId, cursor, pageable);
 		return CommonResponse.of(SuccessCode.OK, result);
 	}
 
@@ -76,7 +84,28 @@ public class CommentController {
 		@PageableDefault(size = 10) Pageable pageable,
 		@CurrentUser UserContext user
 	) {
-		SliceResponse<CommentGetResponseDto> result = commentService.getReplies(user.getUserId(), feedId,commentId, cursor, pageable);
+		SliceResponse<CommentGetResponseDto> result = commentService.getReplies(user.getId(), feedId,commentId, cursor, pageable);
 		return CommonResponse.of(SuccessCode.OK, result);
 	}
+
+	@DeleteMapping("/feeds/{feedId}/comments/{commentId}")
+	public CommonResponse<CommentDeleteResponseDto> deleteComment(@CurrentUser UserContext user,
+		@PathVariable("feedId") Long feedId,
+		@PathVariable("commentId") Long commentId
+	){
+		CommentDeleteResponseDto deleteResponseDto = commentService.deleteComment(CommentDeleteCommand.toCommand(user.getId(), feedId, commentId));
+		return CommonResponse.of(SuccessCode.DELETED, deleteResponseDto);
+	}
+
+	@PutMapping("/feeds/{feedId}/comments/{commentId}")
+	public CommonResponse<CommentUpdateResponseDto> updateComment(@CurrentUser UserContext user,
+		@PathVariable("feedId") Long feedId,
+		@PathVariable("commentId") Long commentId,
+		@Valid @RequestBody CommentUpdateRequestDto commentUpdateRequestDto
+	){
+		CommentUpdateResponseDto updateResponseDto = commentService.updateComment(CommentUpdateCommand.toCommand(commentId, feedId, user.getId(), commentUpdateRequestDto.getContent()));
+		return CommonResponse.of(SuccessCode.OK, updateResponseDto);
+	}
+
+
 }

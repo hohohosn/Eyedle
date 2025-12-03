@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.common.exception.CustomException;
 import com.common.response.CommonResponse;
 import com.eyedle.comment_service.application.command.CommentCreateCommand;
+import com.eyedle.comment_service.application.command.CommentDeleteCommand;
+import com.eyedle.comment_service.application.command.CommentUpdateCommand;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.domain.service.CommentDomainService;
@@ -22,7 +24,9 @@ import com.eyedle.comment_service.infra.client.dto.UserGetResult;
 import com.eyedle.comment_service.infra.repository.UserCacheRepository;
 import com.eyedle.comment_service.presentation.dto.SliceResponse;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.CommentDeleteResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentGetResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.CommentUpdateResponseDto;
 import com.eyedle.comment_service.presentation.enums.CommentErrorCode;
 
 import lombok.RequiredArgsConstructor;
@@ -71,6 +75,34 @@ public class CommentService {
 
 	}
 
+	@Transactional
+	public CommentDeleteResponseDto deleteComment(CommentDeleteCommand commentDeleteCommand) {
+
+		Comment comment = getComment(commentDeleteCommand.getCommentId());
+		commentDomainService.validateAuthor(commentDeleteCommand.getUserId(), comment.getAuthor().getId());
+		comment.softDelete(commentDeleteCommand.getUserId());
+		Comment deletedComment = commentRepository.save(comment);
+		return CommentDeleteResponseDto.fromEntity(deletedComment);
+
+	}
+
+	@Transactional
+	public CommentUpdateResponseDto updateComment(CommentUpdateCommand commentUpdateCommand) {
+
+		Comment comment = getComment(commentUpdateCommand.getCommentId());
+		commentDomainService.validateAuthor(commentUpdateCommand.getUserId(), comment.getAuthor().getId());
+		comment.updateContents(commentUpdateCommand.getComment());
+		Comment updatedComment = commentRepository.save(comment);
+		return CommentUpdateResponseDto.fromEntity(updatedComment);
+
+	}
+
+	/**
+	 * 목록 처리
+	 * @param comments
+	 * @param pageable
+	 * @return
+	 */
 	private SliceResponse<CommentGetResponseDto> convertToSlice(List<Comment> comments, Pageable pageable) {
 		boolean hasNext = false;
 		Long nextCursor = null;
@@ -94,6 +126,11 @@ public class CommentService {
 		return SliceResponse.of(dtoList, hasNext, nextCursor);
 	}
 
+	/**
+	 *  Redis -> DB 조회
+	 * @param userId
+	 * @return
+	 */
 	private Author getUser(Long userId) {
 
 		return userCacheRepository.getAuthor(userId)
@@ -106,6 +143,10 @@ public class CommentService {
 			});
 	}
 
+	private Comment getComment(Long commentId) {
+		return commentRepository.findByIdAndDeletedAtIsNull(commentId)
+			.orElseThrow(()-> new CustomException(CommentErrorCode.COMMENT_NOT_FOUND));
+	}
 
 	/**
 	 * 피드 검증
@@ -133,8 +174,7 @@ public class CommentService {
 	 */
 	private void validateReply(Long parentId, Long feedId) {
 
-		Comment parentComment = commentRepository.findByIdAndDeletedAtIsNull(parentId)
-			.orElseThrow(()-> new CustomException(CommentErrorCode.COMMENT_NOT_FOUND));
+		Comment parentComment = getComment(parentId);
 
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
 		commentDomainService.validateReply(parentComment, feedId);

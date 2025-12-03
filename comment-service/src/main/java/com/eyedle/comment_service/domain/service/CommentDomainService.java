@@ -21,6 +21,12 @@ public class CommentDomainService {
 
 	}
 
+	public void validateAuthor(Long userId, Long authorId){
+		if (!userId.equals(authorId)){
+			throw new CustomException(CommentErrorCode.AUTHOR_FORBIDDEN);
+		}
+	}
+
 	public void validateFeed(Long feedId, Long requestUserId, Long feedAuthorId, String permission) {
 
 	}
