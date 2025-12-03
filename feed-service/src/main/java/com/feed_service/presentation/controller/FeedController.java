@@ -1,11 +1,10 @@
 package com.feed_service.presentation.controller;
 
-import com.feed_service.Common.CommonResponse;
-import com.feed_service.Common.SuccessCode;
+import com.common.response.CommonResponse;
+import com.common.response.SuccessCode;
 import com.feed_service.application.service.FeedService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
-import com.sun.net.httpserver.Authenticator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
