@@ -42,12 +42,12 @@ public class FeedController {
 
     @PatchMapping("/{feedId}")
     public CommonResponse  updateFeed(@PathVariable Long feedId, @RequestBody FeedUpdateRequestDto request){
-        return CommonResponse.of(SuccessCode.OK, feedService.updateFeed(feedId, request));
+        return CommonResponse.of(SuccessCode.UPDATED, feedService.updateFeed(feedId, request));
     }
 
     @DeleteMapping("/{feedId}")
     public CommonResponse deleteFeed(@PathVariable Long feedId){
         feedService.statusDeleted(feedId);
-        return CommonResponse.of(SuccessCode.OK);
+        return CommonResponse.of(SuccessCode.DELETED);
     }
 }
