@@ -1,10 +1,9 @@
 package com.chatservice.domain.model;
 
+import com.common.database.BaseTimeEntity;
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -12,14 +11,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_chat_room_participates")
+@Table(name = "p_chat_participates")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatParticipate {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+@AttributeOverride(name = "updatedAt", column = @Column(name = "ignore_updated_at", insertable = false, updatable = false))
+public class ChatParticipate extends BaseTimeEntity {
 
   @Column(nullable = false)
   private Long chatRoomId;
@@ -27,18 +23,10 @@ public class ChatParticipate {
   @Column(nullable = false)
   private Long userId;
 
-//  @Column(nullable = false)
-//  private boolean isBlocked;
-//
-//  private LocalDateTime blockedAt;
-
   @Column(nullable = false)
   private boolean isLeft;
 
   private LocalDateTime leftAt;
-
-  @Column(nullable = false)
-  private LocalDateTime createdAt;
 
   /**
    * 채팅 참여자 생성을 위한 정적 팩토리 메서드
@@ -47,9 +35,17 @@ public class ChatParticipate {
     ChatParticipate participate = new ChatParticipate();
     participate.chatRoomId = chatRoomId;
     participate.userId = userId;
-    participate.createdAt = LocalDateTime.now();
     return participate;
   }
-}
 
-// TODO : ID 수정 필요
+  /**
+   * 채팅 참여자의 채팅 참여 여부
+   */
+  public void leave() {
+    this.isLeft = true;
+  }
+
+  public void join() {
+    this.isLeft = false;
+  }
+}

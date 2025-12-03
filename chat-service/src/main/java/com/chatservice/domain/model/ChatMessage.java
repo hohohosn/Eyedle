@@ -1,12 +1,11 @@
 package com.chatservice.domain.model;
 
+import com.common.database.BaseTimeEntity;
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -17,11 +16,8 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_chat_messages")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChatMessage {
-
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+@AttributeOverride(name = "updatedAt", column = @Column(name = "ignore_updated_at", insertable = false, updatable = false))
+public class ChatMessage extends BaseTimeEntity {
 
   @Column(nullable = false)
   private Long chatRoomId;
@@ -35,10 +31,7 @@ public class ChatMessage {
   @Column(nullable = false, length = 500)
   private String messageContent;
 
-  private boolean isReported = false;
+  private boolean isReported;
 
-  private LocalDateTime createdAt;
   private LocalDateTime deletedAt;
 }
-
-// TODO : ID 수정 필요
