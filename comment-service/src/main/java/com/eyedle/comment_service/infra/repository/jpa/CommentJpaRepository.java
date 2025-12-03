@@ -8,5 +8,5 @@ import com.eyedle.comment_service.domain.model.Comment;
 
 public interface CommentJpaRepository extends JpaRepository<Comment, Long> {
 
-	Optional<Comment> findByCommentIdAndDeletedAtIsNull(Long commentId);
+	Optional<Comment> findByIdAndDeletedAtIsNull(Long commentId);
 }

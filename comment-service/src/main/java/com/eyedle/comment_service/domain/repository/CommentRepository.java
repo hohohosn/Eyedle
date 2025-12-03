@@ -8,5 +8,5 @@ public interface CommentRepository {
 
 	Comment save(Comment comment);
 
-	Optional<Comment> findByCommentIdAndDeletedAtIsNull(Long commentId);
+	Optional<Comment> findByIdAndDeletedAtIsNull(Long commentId);
 }

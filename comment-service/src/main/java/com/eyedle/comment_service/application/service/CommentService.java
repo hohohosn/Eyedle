@@ -47,7 +47,7 @@ public class CommentService {
 	 */
 	private void validateReply(Long parentId, Long feedId) {
 
-		Comment parentComment = commentRepository.findByCommentIdAndDeletedAtIsNull(parentId)
+		Comment parentComment = commentRepository.findByIdAndDeletedAtIsNull(parentId)
 			.orElseThrow(()-> new IllegalArgumentException("존재하지 않는 댓글에 대댓글을 작성할 수 없습니다"));
 
 		commentDomainService.validateReply(parentComment, feedId);

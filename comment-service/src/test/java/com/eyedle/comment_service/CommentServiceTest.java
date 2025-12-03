@@ -50,7 +50,7 @@ public class CommentServiceTest {
 	private void setupRepositorySaveMock(Long commentId) {
 		given(commentRepository.save(any(Comment.class))).willAnswer(invocation -> {
 			Comment savedComment = invocation.getArgument(0);
-			ReflectionTestUtils.setField(savedComment, "commentId", commentId);
+			ReflectionTestUtils.setField(savedComment, "id", commentId);
 			return savedComment;
 		});
 	}
@@ -111,7 +111,7 @@ public class CommentServiceTest {
 		setupRepositorySaveMock(replyId);
 
 		Comment parentComment = Comment.builder().feedId(feedId).content("대댓글달댓글").build();
-		given(commentRepository.findByCommentIdAndDeletedAtIsNull(parentId))
+		given(commentRepository.findByIdAndDeletedAtIsNull(parentId))
 			.willReturn(Optional.of(parentComment));
 
 		willDoNothing().given(commentDomainService).validateReply(parentComment, feedId);
@@ -122,7 +122,7 @@ public class CommentServiceTest {
 		// then
 		assertThat(response.getCommentId()).isEqualTo(replyId);
 
-		verify(commentRepository).findByCommentIdAndDeletedAtIsNull(parentId);
+		verify(commentRepository).findByIdAndDeletedAtIsNull(parentId);
 		verify(commentDomainService).validateReply(parentComment, feedId);
 	}
 
@@ -140,7 +140,7 @@ public class CommentServiceTest {
 			.parentId(parentId)
 			.build();
 
-		given(commentRepository.findByCommentIdAndDeletedAtIsNull(parentId))
+		given(commentRepository.findByIdAndDeletedAtIsNull(parentId))
 			.willReturn(Optional.empty());
 
 		// when & then

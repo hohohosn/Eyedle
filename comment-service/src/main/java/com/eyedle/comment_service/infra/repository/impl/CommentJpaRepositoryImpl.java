@@ -22,7 +22,7 @@ public class CommentJpaRepositoryImpl implements CommentRepository {
 	}
 
 	@Override
-	public Optional<Comment> findByCommentIdAndDeletedAtIsNull(Long commentId) {
-		return commentJpaRepository.findByCommentIdAndDeletedAtIsNull(commentId);
+	public Optional<Comment> findByIdAndDeletedAtIsNull(Long commentId) {
+		return commentJpaRepository.findByIdAndDeletedAtIsNull(commentId);
 	}
 }

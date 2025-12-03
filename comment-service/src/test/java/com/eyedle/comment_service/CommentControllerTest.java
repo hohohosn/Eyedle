@@ -68,7 +68,7 @@ public class CommentControllerTest {
 		Author author = userGetResult.toAuthor();
 
 		Comment comment = commentCreateCommand.toEntity(author);
-		ReflectionTestUtils.setField(comment, "commentId", commentId);
+		ReflectionTestUtils.setField(comment, "id", commentId);
 
 		CommentCreateResponseDto commentCreateResponseDto = CommentCreateResponseDto.fromEntity(comment);
 

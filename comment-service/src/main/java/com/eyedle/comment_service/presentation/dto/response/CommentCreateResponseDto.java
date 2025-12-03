@@ -26,7 +26,7 @@ public class CommentCreateResponseDto {
 	public static CommentCreateResponseDto fromEntity(Comment comment)
 	{
 		return CommentCreateResponseDto.builder()
-			.commentId(comment.getCommentId())
+			.commentId(comment.getId())
 			.parentId(comment.getParentId())
 			.feedId(comment.getFeedId())
 			.content(comment.getContent())

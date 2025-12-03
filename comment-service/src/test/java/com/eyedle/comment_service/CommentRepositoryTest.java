@@ -45,8 +45,8 @@ public class CommentRepositoryTest {
 		Comment savedComment = commentRepository.save(comment);
 
 		// then
-		assertThat(savedComment.getCommentId()).isNotNull();
-		System.out.println("TSID : "+savedComment.getCommentId());
+		assertThat(savedComment.getId()).isNotNull();
+		System.out.println("TSID : "+savedComment.getId());
 
 		assertThat(savedComment.getContent()).isEqualTo("댓글");
 		assertThat(savedComment.getFeedId()).isEqualTo(7777L);
