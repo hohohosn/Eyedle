@@ -21,7 +21,8 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET_KEY}
-  access-expiration-time: 3600000 # 1 hour in milliseconds
+  access-token-expiration: 3600000 # 1 hour in milliseconds
+  refresh-token-expiration: 604800000 # 7 days in milliseconds
   access-header-name: Authorization
   header-prefix: "Bearer "
 
