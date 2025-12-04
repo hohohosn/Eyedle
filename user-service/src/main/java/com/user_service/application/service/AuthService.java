@@ -115,7 +115,7 @@ public class AuthService {
 		Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
 
 		// 사용자 조회
-		User user = userRepository.findById(userId)
+		User user = userRepository.findByIdAndIsDeletedFalse(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		// 계정 상태 확인
