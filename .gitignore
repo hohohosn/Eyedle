@@ -41,3 +41,4 @@ search-service/es-data/
 search-service/es-plugins/
 comment-service/infra-data-new/**
 comment-service/.env
+/notification-service/infra-data
