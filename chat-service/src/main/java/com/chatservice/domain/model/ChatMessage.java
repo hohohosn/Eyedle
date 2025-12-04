@@ -1,13 +1,7 @@
 package com.chatservice.domain.model;
 
 import com.common.database.BaseTimeEntity;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -40,4 +34,8 @@ public class ChatMessage extends BaseTimeEntity {
   private boolean isReported;
 
   private LocalDateTime deletedAt;
+
+  public void delete() {
+    this.deletedAt = LocalDateTime.now();
+  }
 }
