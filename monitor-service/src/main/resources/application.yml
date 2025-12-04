@@ -26,3 +26,5 @@ eureka:
     service-url:
       defaultZone: http://localhost:19090/eureka/
 
+instance:
+  node-id: 14
