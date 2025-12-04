@@ -1,29 +1,44 @@
 package com.chatservice.application.service;
 
-import static com.chatservice.common.ChatErrorCode.CHAT_PARTICIPATE_NOT_FOUND;
-import static com.chatservice.common.ChatErrorCode.CHAT_ROOM_NOT_FOUND;
-import static com.chatservice.domain.model.ChatRoomStatus.OPEN;
-import static com.chatservice.domain.model.ChatRoomStatus.REQUESTED;
-
-import com.chatservice.common.ChatErrorCode;
+import com.chatservice.application.dto.ChatRoomInfo;
+import com.chatservice.application.dto.UserInfo;
+import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.domain.model.ChatParticipate;
 import com.chatservice.domain.model.ChatRoom;
+import com.chatservice.domain.model.ChatRoomStatus;
+import com.chatservice.domain.repository.ChatMessageRepository;
 import com.chatservice.domain.repository.ChatParticipateRepository;
 import com.chatservice.domain.repository.ChatRoomRepository;
+import com.chatservice.infra.client.BlockClient;
+import com.chatservice.infra.client.FollowClient;
+import com.chatservice.infra.client.UserClient;
 import com.chatservice.presentation.request.CreateChatRoomReqDto;
+import com.chatservice.presentation.response.ChatRoomCursorResDto;
 import com.chatservice.presentation.response.CreateChatRoomResDto;
 import com.common.exception.CustomException;
+import java.util.List;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.chatservice.common.ChatErrorCode.*;
+import static com.chatservice.domain.model.ChatRoomStatus.OPEN;
+import static com.chatservice.domain.model.ChatRoomStatus.REQUESTED;
 
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
+  private final static int PAGE_SIZE = 20;
   private final ChatRoomRepository chatRoomRepository;
   private final ChatParticipateRepository chatParticipateRepository;
+  private final ChatMessageRepository chatMessageRepository;
+  private final UserClient userClient;
+  private final BlockClient blockClient;
+  private final FollowClient followClient;
 
   /**
    * 새 채팅 생성
@@ -33,12 +48,23 @@ public class ChatService {
 
     // 두 유저가 같은 사람인지 확인
     if (reqDto.receiverId().equals(userId)) {
-      throw new CustomException(ChatErrorCode.SELF_CHAT_NOT_ALLOWED);
+      throw new CustomException(SELF_CHAT_NOT_ALLOWED);
     }
 
-    // TODO: 존재하는 유저인지 확인
+    // 상대가 존재하는 유저인지 확인
+    UserInfo receiverInfo = userClient.getUserInfo(reqDto.receiverId());
+    if (receiverInfo == null) {
+      throw new CustomException(USER_NOT_FOUND);
+    }
 
-    // TODO: 차단 관계의 유저인지 확인
+    // 내가 상대를 차단했는지
+    boolean blockedByMe = blockClient.isBlocked(userId, reqDto.receiverId());
+    //상대가 나를 차단했는지
+    boolean blockedMe = blockClient.isBlocked(reqDto.receiverId(), userId);
+
+    if (blockedByMe || blockedMe) {
+      throw new CustomException(BLOCKED_USER);
+    }
 
     return chatRoomRepository.findDirectChatRoom(userId, reqDto.receiverId())
         .map(existingChatRoom -> {
@@ -83,6 +109,39 @@ public class ChatService {
     chatParticipate.leave();
   }
 
+  /**
+   * 채팅방 목록 조회
+   */
+  @Transactional(readOnly = true)
+  public ChatRoomCursorResDto getChatRoomList(Long userId, Long cursor) {
+    // 커서 값 없으면 가장 큰 값으로 초기화(최신 방부터 조회)
+    Long effectiveCursor = (cursor == null) ? Long.MAX_VALUE : cursor;
+
+    Pageable pageable = PageRequest.of(0, PAGE_SIZE);
+
+    // 커서 기준 채팅방 조회
+    List<ChatRoom> chatRooms = chatRoomRepository.findChatRooms(userId, effectiveCursor, pageable);
+
+    List<ChatRoomInfo> chatRoomInfos = chatRooms.stream().map(r -> createChatRoomInfo(r, userId)).toList();
+
+    // 다음 페이지 조회용 커서
+    Long nextCursor = (chatRooms.size() < PAGE_SIZE) ? null : chatRooms.get(chatRooms.size() - 1).getId();
+
+    return ChatRoomCursorResDto.of(chatRoomInfos, nextCursor);
+  }
+
+  private ChatRoomInfo createChatRoomInfo(ChatRoom chatRoom, Long userId) {
+    Long chatRoomId = chatRoom.getId();
+
+    Long receiverId = chatParticipateRepository.findOtherUserId(chatRoomId, userId);
+
+    UserInfo receiverInfo = userClient.getUserInfo(receiverId);
+
+    ChatMessage lastMessage = chatMessageRepository.findLastMessage(chatRoomId).orElse(null);
+
+    return ChatRoomInfo.of(chatRoomId, receiverInfo, lastMessage);
+  }
+
   private ChatParticipate getChatParticipate(Long chatRoomId, Long userId) {
     return chatParticipateRepository.findByChatRoomIdAndUserId(chatRoomId, userId)
         .orElseThrow(() -> new CustomException(CHAT_PARTICIPATE_NOT_FOUND));
@@ -90,16 +149,27 @@ public class ChatService {
 
   private CreateChatRoomResDto createNewChatRoom(Long userId, Long receiverId) {
 
-    // TODO: 팔로우 관계 확인
+    // 팔로우 관계 확인
+    boolean iFollowReceiver = followClient.isFollowing(userId, receiverId);
+    boolean receiverFollowMe = followClient.isFollowing(receiverId, userId);
 
-    // 채팅방 생성 -> 팔로우 관계에 따라 생성되는 방 상태 다름
-    ChatRoom newChatRoom = ChatRoom.createOneToOne(OPEN);
+    // 한쪽이라도 팔로우 중이면 바로 OPEN
+    ChatRoomStatus chatRoomStatus = (iFollowReceiver || receiverFollowMe) ? OPEN : REQUESTED;
+
+    // 채팅방 생성
+    ChatRoom newChatRoom = ChatRoom.createOneToOne(chatRoomStatus);
     chatRoomRepository.save(newChatRoom);
 
     // 채팅 참여자 생성
     Stream.of(userId, receiverId)
-        .map(id -> ChatParticipate.create(newChatRoom.getId(), id))
-        .forEach(chatParticipateRepository::save);
+        .forEach(id -> {
+          // 중복 참여 확인
+          if (chatParticipateRepository.existsByChatRoomIdAndUserId(newChatRoom.getId(), id)) {
+            throw new CustomException(DUPLICATE_CHAT_PARTICIPATE);
+          }
+
+          chatParticipateRepository.save(ChatParticipate.create(newChatRoom.getId(), id));
+        });
 
     return CreateChatRoomResDto.from(newChatRoom);
   }
