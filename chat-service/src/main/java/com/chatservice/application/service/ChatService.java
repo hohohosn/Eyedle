@@ -130,6 +130,20 @@ public class ChatService {
     return ChatRoomCursorResDto.of(chatRoomInfos, nextCursor);
   }
 
+  /**
+   * 채팅방 나가기
+   */
+  @Transactional
+  public void leaveChatRoom(Long chatRoomId, Long userId) {
+    ChatParticipate chatParticipate = getChatParticipate(chatRoomId, userId);
+
+    if (chatParticipate.isLeft()) {
+      throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
+    }
+
+    chatParticipate.leave();
+  }
+
   private ChatRoomInfo createChatRoomInfo(ChatRoom chatRoom, Long userId) {
     Long chatRoomId = chatRoom.getId();
 

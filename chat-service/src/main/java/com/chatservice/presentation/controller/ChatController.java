@@ -28,20 +28,27 @@ public class ChatController {
   public CommonResponse<Void> acceptChatRoom(@PathVariable Long chatRoomId) {
     Long userId = 1L;
     chatService.acceptChatRoom(chatRoomId, userId);
-    return CommonResponse.of(OK, null);
+    return CommonResponse.of(OK);
   }
 
   @PostMapping("/{chatRoomId}/reject")
   public CommonResponse<Void> rejectChatRoom(@PathVariable Long chatRoomId) {
     Long userId = 1L;
     chatService.rejectChatRoom(chatRoomId, userId);
-    return CommonResponse.of(OK, null);
+    return CommonResponse.of(OK);
   }
 
   @GetMapping
   public CommonResponse<ChatRoomCursorResDto> getChatRoomList(@RequestParam(required = false) Long cursor) {
     Long userId = 1L;
     return CommonResponse.of(OK, chatService.getChatRoomList(userId, cursor));
+  }
+
+  @DeleteMapping("/{chatRoomId}/leave")
+  public CommonResponse<Void> leaveChatRoom(@PathVariable Long chatRoomId) {
+    Long userId = 1L;
+    chatService.leaveChatRoom(chatRoomId, userId);
+    return CommonResponse.of(OK);
   }
 }
 

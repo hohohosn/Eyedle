@@ -13,6 +13,7 @@ public enum ChatErrorCode implements BaseErrorCode {
   // ChatParticipate
   CHAT_PARTICIPATE_NOT_FOUND("CHAT1000", "채팅 참여자를 찾을 수 없습니다.", 404),
   DUPLICATE_CHAT_PARTICIPATE("CHAT1001", "중복된 채팅 참여자입니다.", 409),
+  ALREADY_LEFT_CHAT_ROOM("CHAT1002", "이미 채팅방을 나간 상태입니다.", 409),
 
   // USER
   USER_NOT_FOUND("CHAT5000", "사용자를 찾을 수 없습니다.", 404),
