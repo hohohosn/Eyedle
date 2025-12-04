@@ -5,13 +5,19 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_chat_participates")
+@Table(
+    name = "p_chat_participates",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"chat_room_id", "user_id"})
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AttributeOverride(name = "updatedAt", column = @Column(name = "ignore_updated_at", insertable = false, updatable = false))
@@ -23,7 +29,6 @@ public class ChatParticipate extends BaseTimeEntity {
   @Column(nullable = false)
   private Long userId;
 
-  @Column(nullable = false)
   private boolean isLeft;
 
   private LocalDateTime leftAt;
@@ -43,6 +48,7 @@ public class ChatParticipate extends BaseTimeEntity {
    */
   public void leave() {
     this.isLeft = true;
+    this.leftAt = LocalDateTime.now();
   }
 
   public void join() {
