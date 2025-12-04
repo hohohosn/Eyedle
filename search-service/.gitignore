@@ -37,3 +37,6 @@ out/
 .vscode/
 
 .DS_Store
+
+es-data/
+es-plugins/
