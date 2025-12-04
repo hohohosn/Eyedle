@@ -7,7 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.eyedle.comment_service.global.dto.UserContext;
+import com.eyedle.notification_service.global.dto.UserContext;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

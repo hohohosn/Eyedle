@@ -9,8 +9,8 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import com.eyedle.comment_service.global.annotation.CurrentUser;
-import com.eyedle.comment_service.global.dto.UserContext;
+import com.eyedle.notification_service.global.annotation.CurrentUser;
+import com.eyedle.notification_service.global.dto.UserContext;
 
 @Component
 public class UserContextResolver implements HandlerMethodArgumentResolver {
