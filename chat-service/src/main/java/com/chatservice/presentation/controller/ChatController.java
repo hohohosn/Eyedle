@@ -1,18 +1,15 @@
 package com.chatservice.presentation.controller;
 
-import static com.common.response.SuccessCode.CREATED;
-import static com.common.response.SuccessCode.OK;
-
 import com.chatservice.application.service.ChatService;
 import com.chatservice.presentation.request.CreateChatRoomReqDto;
+import com.chatservice.presentation.response.ChatRoomCursorResDto;
 import com.chatservice.presentation.response.CreateChatRoomResDto;
 import com.common.response.CommonResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import static com.common.response.SuccessCode.CREATED;
+import static com.common.response.SuccessCode.OK;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,6 +36,12 @@ public class ChatController {
     Long userId = 1L;
     chatService.rejectChatRoom(chatRoomId, userId);
     return CommonResponse.of(OK, null);
+  }
+
+  @GetMapping
+  public CommonResponse<ChatRoomCursorResDto> getChatRoomList(@RequestParam(required = false) Long cursor) {
+    Long userId = 1L;
+    return CommonResponse.of(OK, chatService.getChatRoomList(userId, cursor));
   }
 }
 
