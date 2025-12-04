@@ -1,0 +1,21 @@
+server:
+  port: 19201  # 테스트용 포트
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/chatdb_test
+    username: test_user
+    password: 1234
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 테스트에서는 테이블 생성/삭제
+    show-sql: true
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+jwt:
+  secretKey: test-secret-key
