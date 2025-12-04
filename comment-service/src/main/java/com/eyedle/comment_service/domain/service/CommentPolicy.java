@@ -7,7 +7,7 @@ import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.presentation.enums.CommentErrorCode;
 
 @Component
-public class CommentDomainService {
+public class CommentPolicy {
 
 	public void validateReply(Comment parentComment, Long feedId) {
 
