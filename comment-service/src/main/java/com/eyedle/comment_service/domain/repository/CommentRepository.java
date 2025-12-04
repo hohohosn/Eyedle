@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.querydsl.core.Tuple;
 
+
 public interface CommentRepository {
 
 	Comment save(Comment comment);
@@ -19,4 +20,6 @@ public interface CommentRepository {
 	List<Comment> findAllByParentId(Long feedId, Long parentId, Long cursor, Pageable pageable);
 
 	List<Comment> findAllByMyComments(Long userId, Long cursor, String sortBy, String keyword, Pageable pageable);
+
+	void deleteAllRepliesByParentId(Long parentId, Long userId);
 }

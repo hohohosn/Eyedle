@@ -85,6 +85,12 @@ public class CommentService {
 		commentPolicy.validateAuthor(commentDeleteCommand.getUserId(), comment.getAuthor().getId());
 		comment.softDelete(commentDeleteCommand.getUserId());
 		Comment deletedComment = commentRepository.save(comment);
+
+		// 댓글이 삭제될 때 대댓글도 같이 삭제
+		if (deletedComment.getParentId() == null) {
+			commentRepository.deleteAllRepliesByParentId(deletedComment.getId(), commentDeleteCommand.getUserId());
+		}
+
 		return CommentDeleteResponseDto.fromEntity(deletedComment);
 
 	}
@@ -126,7 +132,6 @@ public class CommentService {
 			nextCursor = lastComment.getId();
 		}
 
-		// 3. 변환 (replyCount 포함)
 		List<CommentGetResponseDto> dtos = results.stream()
 			.map(tuple -> {
 				Comment comment = tuple.get(0, Comment.class); // 댓글

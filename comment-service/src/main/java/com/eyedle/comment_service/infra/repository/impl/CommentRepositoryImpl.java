@@ -39,6 +39,11 @@ public class CommentRepositoryImpl implements CommentRepository {
 	}
 
 	@Override
+	public void deleteAllRepliesByParentId(Long parentId, Long userId) {
+		commentJpaRepository.deleteAllRepliesByParentId(parentId, userId);
+	}
+
+	@Override
 	public List<Tuple> findAllByFeedId(Long feedId, Long cursor, Pageable pageable) {
 
 		QComment reply = new QComment("reply");
