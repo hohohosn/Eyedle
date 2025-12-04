@@ -14,12 +14,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommentGetResponseDto {
+public class MyCommentGetResponseDto {
 	private Long commentId;
 	private Long feedId;
 	private Long parentId;
 	private String content;
-	private Long replyCount;
 	private LocalDateTime createdAt;
 	private AuthorDto author;
 
@@ -41,15 +40,14 @@ public class CommentGetResponseDto {
 		}
 	}
 
-	public static CommentGetResponseDto fromEntity(Comment comment, Author author, Long replyCount) {
-		return CommentGetResponseDto.builder()
+	public static MyCommentGetResponseDto fromEntity(Comment comment, Author author){
+		return MyCommentGetResponseDto.builder()
 			.commentId(comment.getId())
 			.feedId(comment.getFeedId())
 			.parentId(comment.getParentId())
 			.content(comment.getContent())
 			.createdAt(comment.getCreatedAt())
 			.author(AuthorDto.fromEntity(author))
-			.replyCount(replyCount)
 			.build();
 	}
 

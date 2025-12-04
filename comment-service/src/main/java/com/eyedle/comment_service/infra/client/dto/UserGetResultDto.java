@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserGetResult {
+public class UserGetResultDto {
 	private Long id;
 	private String userId;
 	private String profileImageUrl;
