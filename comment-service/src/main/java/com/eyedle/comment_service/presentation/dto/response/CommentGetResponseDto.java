@@ -19,6 +19,7 @@ public class CommentGetResponseDto {
 	private Long feedId;
 	private Long parentId;
 	private String content;
+	private Long replyCount;
 	private LocalDateTime createdAt;
 	private AuthorDto author;
 
@@ -40,7 +41,7 @@ public class CommentGetResponseDto {
 		}
 	}
 
-	public static CommentGetResponseDto fromEntity(Comment comment, Author author){
+	public static CommentGetResponseDto fromEntity(Comment comment, Author author, Long replyCount) {
 		return CommentGetResponseDto.builder()
 			.commentId(comment.getId())
 			.feedId(comment.getFeedId())
@@ -48,6 +49,7 @@ public class CommentGetResponseDto {
 			.content(comment.getContent())
 			.createdAt(comment.getCreatedAt())
 			.author(AuthorDto.fromEntity(author))
+			.replyCount(replyCount)
 			.build();
 	}
 

@@ -8,7 +8,10 @@ import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import com.querydsl.core.Tuple;
+import com.querydsl.jpa.JPAExpressions;
 import com.eyedle.comment_service.domain.model.Comment;
+import com.eyedle.comment_service.domain.model.QComment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.infra.repository.jpa.CommentJpaRepository;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -34,9 +37,21 @@ public class CommentRepositoryImpl implements CommentRepository {
 	}
 
 	@Override
-	public List<Comment> findAllByFeedId(Long feedId, Long cursor, Pageable pageable) {
+	public List<Tuple> findAllByFeedId(Long feedId, Long cursor, Pageable pageable) {
+
+		QComment reply = new QComment("reply");
+
 		return jpaQueryFactory
-			.selectFrom(comment)
+			.select(
+				comment,
+				JPAExpressions.select(reply.count())
+					.from(reply)
+					.where(
+						reply.parentId.eq(comment.id),
+						reply.deletedAt.isNull()
+					)
+			)
+			.from(comment)
 			.where(
 				comment.feedId.eq(feedId),       // 1. 해당 피드의 댓글
 				comment.parentId.isNull(),       // 2. 대댓글 제외 (원댓글만)

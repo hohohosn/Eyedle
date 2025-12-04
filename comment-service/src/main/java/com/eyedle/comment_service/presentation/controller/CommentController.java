@@ -27,6 +27,7 @@ import com.eyedle.comment_service.presentation.dto.response.CommentCreateRespons
 import com.eyedle.comment_service.presentation.dto.response.CommentDeleteResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentGetResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentUpdateResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.ReplyGetResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -77,14 +78,14 @@ public class CommentController {
 	}
 
 	@GetMapping("/feeds/{feedId}/comments/{commentId}/replies")
-	public CommonResponse<SliceResponse<CommentGetResponseDto>> getReplies(
+	public CommonResponse<SliceResponse<ReplyGetResponseDto>> getReplies(
 		@PathVariable("feedId") Long feedId,
 		@PathVariable("commentId") Long commentId,
 		@RequestParam(required = false) Long cursor,
 		@PageableDefault(size = 10) Pageable pageable,
 		@CurrentUser UserContext user
 	) {
-		SliceResponse<CommentGetResponseDto> result = commentService.getReplies(user.getId(), feedId,commentId, cursor, pageable);
+		SliceResponse<ReplyGetResponseDto> result = commentService.getReplies(user.getId(), feedId,commentId, cursor, pageable);
 		return CommonResponse.of(SuccessCode.OK, result);
 	}
 

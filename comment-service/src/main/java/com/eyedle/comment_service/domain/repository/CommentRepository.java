@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 
 import com.eyedle.comment_service.domain.model.Comment;
+import com.querydsl.core.Tuple;
 
 public interface CommentRepository {
 
@@ -13,7 +14,7 @@ public interface CommentRepository {
 
 	Optional<Comment> findByIdAndDeletedAtIsNull(Long id);
 
-	List<Comment> findAllByFeedId(Long feedId, Long cursor, Pageable pageable);
+	List<Tuple> findAllByFeedId(Long feedId, Long cursor, Pageable pageable);
 
 	List<Comment> findAllByParentId(Long feedId, Long parentId, Long cursor, Pageable pageable);
 }

@@ -15,19 +15,21 @@ import com.eyedle.comment_service.application.command.CommentDeleteCommand;
 import com.eyedle.comment_service.application.command.CommentUpdateCommand;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
-import com.eyedle.comment_service.domain.service.CommentDomainService;
+import com.eyedle.comment_service.domain.service.CommentPolicy;
 import com.eyedle.comment_service.domain.vo.Author;
 import com.eyedle.comment_service.infra.client.FeedClient;
 import com.eyedle.comment_service.infra.client.UserClient;
-import com.eyedle.comment_service.infra.client.dto.FeedGetResult;
-import com.eyedle.comment_service.infra.client.dto.UserGetResult;
+import com.eyedle.comment_service.infra.client.dto.FeedGetResultDto;
+import com.eyedle.comment_service.infra.client.dto.UserGetResultDto;
 import com.eyedle.comment_service.infra.repository.UserCacheRepository;
 import com.eyedle.comment_service.presentation.dto.SliceResponse;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentDeleteResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentGetResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentUpdateResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.ReplyGetResponseDto;
 import com.eyedle.comment_service.presentation.enums.CommentErrorCode;
+import com.querydsl.core.Tuple;
 
 import lombok.RequiredArgsConstructor;
 
@@ -39,7 +41,7 @@ public class CommentService {
 	private final UserClient userClient;
 	private final FeedClient feedClient;
 	private UserCacheRepository userCacheRepository;
-	private final CommentDomainService commentDomainService;
+	private final CommentPolicy commentPolicy;
 
 	@Transactional
 	public CommentCreateResponseDto saveComment(CommentCreateCommand commentCreateCommand) {
@@ -63,23 +65,22 @@ public class CommentService {
 	@Transactional(readOnly = true)
 	public SliceResponse<CommentGetResponseDto> getComments(Long userId, Long feedId, Long cursor, Pageable pageable) {
 		validateFeed(feedId, userId);
-		List<Comment> comments = commentRepository.findAllByFeedId(feedId, cursor, pageable);
-		return convertToSlice(comments, pageable);
+		List<Tuple> comments = commentRepository.findAllByFeedId(feedId, cursor, pageable);
+		return tuplesToSlice(comments, pageable);
 	}
 
 	@Transactional(readOnly = true)
-	public SliceResponse<CommentGetResponseDto> getReplies(Long userId, Long feedId, Long commentId, Long cursor, Pageable pageable) {
+	public SliceResponse<ReplyGetResponseDto> getReplies(Long userId, Long feedId, Long commentId, Long cursor, Pageable pageable) {
 		validateReply(commentId, feedId);
 		List<Comment> replies = commentRepository.findAllByParentId(feedId, commentId, cursor, pageable);
 		return convertToSlice(replies, pageable);
-
 	}
 
 	@Transactional
 	public CommentDeleteResponseDto deleteComment(CommentDeleteCommand commentDeleteCommand) {
 
 		Comment comment = getComment(commentDeleteCommand.getCommentId());
-		commentDomainService.validateAuthor(commentDeleteCommand.getUserId(), comment.getAuthor().getId());
+		commentPolicy.validateAuthor(commentDeleteCommand.getUserId(), comment.getAuthor().getId());
 		comment.softDelete(commentDeleteCommand.getUserId());
 		Comment deletedComment = commentRepository.save(comment);
 		return CommentDeleteResponseDto.fromEntity(deletedComment);
@@ -90,20 +91,47 @@ public class CommentService {
 	public CommentUpdateResponseDto updateComment(CommentUpdateCommand commentUpdateCommand) {
 
 		Comment comment = getComment(commentUpdateCommand.getCommentId());
-		commentDomainService.validateAuthor(commentUpdateCommand.getUserId(), comment.getAuthor().getId());
+		commentPolicy.validateAuthor(commentUpdateCommand.getUserId(), comment.getAuthor().getId());
 		comment.updateContents(commentUpdateCommand.getComment());
 		Comment updatedComment = commentRepository.save(comment);
 		return CommentUpdateResponseDto.fromEntity(updatedComment);
 
 	}
 
+	private SliceResponse<CommentGetResponseDto> tuplesToSlice(List<Tuple> results, Pageable pageable) {
+		boolean hasNext = false;
+		Long nextCursor = null;
+
+		if (results.size() > pageable.getPageSize()) {
+			hasNext = true;
+			results.remove(pageable.getPageSize());
+		}
+
+		if (!results.isEmpty()) {
+			Comment lastComment = results.get(results.size() - 1).get(0, Comment.class);
+			nextCursor = lastComment.getId();
+		}
+
+		// 3. 변환 (replyCount 포함)
+		List<CommentGetResponseDto> dtos = results.stream()
+			.map(tuple -> {
+				Comment comment = tuple.get(0, Comment.class); // 댓글
+				Long replyCount = tuple.get(1, Long.class); // 대댓글 카운트
+				Author author = getUser(comment.getAuthor().getId());
+				return CommentGetResponseDto.fromEntity(comment, author, replyCount);
+			})
+			.toList();
+
+		return SliceResponse.of(dtos, hasNext, nextCursor);
+	}
+
 	/**
-	 * 목록 처리
+	 * 대댓글 목록 처리
 	 * @param comments
 	 * @param pageable
 	 * @return
 	 */
-	private SliceResponse<CommentGetResponseDto> convertToSlice(List<Comment> comments, Pageable pageable) {
+	private SliceResponse<ReplyGetResponseDto> convertToSlice(List<Comment> comments, Pageable pageable) {
 		boolean hasNext = false;
 		Long nextCursor = null;
 
@@ -116,10 +144,10 @@ public class CommentService {
 			nextCursor = comments.get(comments.size() - 1).getId();
 		}
 
-		List<CommentGetResponseDto> dtoList = comments.stream()
+		List<ReplyGetResponseDto> dtoList = comments.stream()
 			.map(comment -> {
 				Author author = getUser(comment.getAuthor().getId());
-				return CommentGetResponseDto.fromEntity(comment, author);
+				return ReplyGetResponseDto.fromEntity(comment, author);
 			})
 			.toList();
 
@@ -135,8 +163,8 @@ public class CommentService {
 
 		return userCacheRepository.getAuthor(userId)
 			.orElseGet(() -> {
-				UserGetResult userResult = userClient.getUser(userId).getData();
-				Author newAuthor = userResult.toAuthor();
+				UserGetResultDto userGetResultDto = userClient.getUser(userId).getData();
+				Author newAuthor = userGetResultDto.toAuthor();
 				// Redis 저장
 				userCacheRepository.saveAuthor(newAuthor);
 				return newAuthor;
@@ -154,16 +182,16 @@ public class CommentService {
 	 */
 	private void validateFeed(Long feedId, Long userId) {
 
-		CommonResponse<FeedGetResult> result = feedClient.getFeed(feedId);
+		CommonResponse<FeedGetResultDto> result = feedClient.getFeed(feedId);
 
 		if (result == null || result.getData() == null) {
 			throw new CustomException(FEED_NOT_FOUND);
 		}
 
-		FeedGetResult feedGetResult = result.getData();
+		FeedGetResultDto feedGetResultDto = result.getData();
 
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
-		commentDomainService.validateFeed(feedId, userId, feedGetResult.getUserId(), feedGetResult.getPermission());
+		commentPolicy.validateFeed(feedId, userId, feedGetResultDto.getUserId(), feedGetResultDto.getPermission());
 
 	}
 
@@ -177,7 +205,7 @@ public class CommentService {
 		Comment parentComment = getComment(parentId);
 
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
-		commentDomainService.validateReply(parentComment, feedId);
+		commentPolicy.validateReply(parentComment, feedId);
 
 	}
 }
