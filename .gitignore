@@ -37,3 +37,5 @@ out/
 .vscode/
 
 .DS_Store
+comment-service/infra-data-new/**
+comment-service/.env
