@@ -45,6 +45,7 @@ public class Notification {
 
 	@CreatedDate
 	@Field("created_at")
+	@Indexed(expireAfter = "30d")
 	private LocalDateTime createdAt;
 
 	@Field("deleted_at")
@@ -52,9 +53,9 @@ public class Notification {
 
 	@PersistenceCreator
 	@Builder
-	public Notification(Long id, NotificationType type, Long targetId, Long subTargetId, Long receiverId, String message) {
+	public Notification(Long id, NotificationType notificationType, Long targetId, Long subTargetId, Long receiverId, String message) {
 		this.id = (id != null) ? id : TsidUtil.nextId();
-		this.notificationType = type;
+		this.notificationType = notificationType;
 		this.targetId = targetId;
 		this.subTargetId = subTargetId;
 		this.receiverId = receiverId;
