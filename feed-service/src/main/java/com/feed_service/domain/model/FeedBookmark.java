@@ -1,5 +1,6 @@
 package com.feed_service.domain.model;
 
+import com.common.database.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,11 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "feed_bookmarks")
-public class FeedBookmark {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long feedBookmarkId;
+public class FeedBookmark extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "feed_id", nullable = false)
@@ -26,5 +23,4 @@ public class FeedBookmark {
         this.feed = feed;
         this.userId = userId;
     }
-
 }
