@@ -27,6 +27,7 @@ import com.eyedle.comment_service.presentation.dto.response.CommentCreateRespons
 import com.eyedle.comment_service.presentation.dto.response.CommentDeleteResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentGetResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentUpdateResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.MyCommentGetResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.ReplyGetResponseDto;
 
 import jakarta.validation.Valid;
@@ -77,18 +78,6 @@ public class CommentController {
 		return CommonResponse.of(SuccessCode.OK, result);
 	}
 
-	@GetMapping("/feeds/{feedId}/comments/{commentId}/replies")
-	public CommonResponse<SliceResponse<ReplyGetResponseDto>> getReplies(
-		@PathVariable("feedId") Long feedId,
-		@PathVariable("commentId") Long commentId,
-		@RequestParam(required = false) Long cursor,
-		@PageableDefault(size = 10) Pageable pageable,
-		@CurrentUser UserContext user
-	) {
-		SliceResponse<ReplyGetResponseDto> result = commentService.getReplies(user.getId(), feedId,commentId, cursor, pageable);
-		return CommonResponse.of(SuccessCode.OK, result);
-	}
-
 	@DeleteMapping("/feeds/{feedId}/comments/{commentId}")
 	public CommonResponse<CommentDeleteResponseDto> deleteComment(@CurrentUser UserContext user,
 		@PathVariable("feedId") Long feedId,
@@ -106,6 +95,31 @@ public class CommentController {
 	){
 		CommentUpdateResponseDto updateResponseDto = commentService.updateComment(CommentUpdateCommand.toCommand(commentId, feedId, user.getId(), commentUpdateRequestDto.getContent()));
 		return CommonResponse.of(SuccessCode.OK, updateResponseDto);
+	}
+
+	@GetMapping("/feeds/{feedId}/comments/{commentId}/replies")
+	public CommonResponse<SliceResponse<ReplyGetResponseDto>> getReplies(
+		@PathVariable("feedId") Long feedId,
+		@PathVariable("commentId") Long commentId,
+		@RequestParam(required = false) Long cursor,
+		@PageableDefault(size = 10) Pageable pageable,
+		@CurrentUser UserContext user
+	) {
+		SliceResponse<ReplyGetResponseDto> result = commentService.getReplies(user.getId(), feedId,commentId, cursor, pageable);
+		return CommonResponse.of(SuccessCode.OK, result);
+	}
+
+	@GetMapping("/comments/my")
+	public CommonResponse<SliceResponse<MyCommentGetResponseDto>> getMyComments(
+		@CurrentUser UserContext user,
+		@RequestParam(required = false) Long cursor,
+		@RequestParam(defaultValue = "desc") String sortBy,
+		@RequestParam(required = false) String keyword,
+		@PageableDefault(size = 10) Pageable pageable
+	){
+		SliceResponse<MyCommentGetResponseDto> result =
+			commentService.getMyComments(user.getId(), cursor, sortBy, keyword, pageable);
+		return CommonResponse.of(SuccessCode.OK, result);
 	}
 
 

@@ -17,4 +17,6 @@ public interface CommentRepository {
 	List<Tuple> findAllByFeedId(Long feedId, Long cursor, Pageable pageable);
 
 	List<Comment> findAllByParentId(Long feedId, Long parentId, Long cursor, Pageable pageable);
+
+	List<Comment> findAllByMyComments(Long userId, Long cursor, String sortBy, String keyword, Pageable pageable);
 }

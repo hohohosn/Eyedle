@@ -3,6 +3,7 @@ package com.eyedle.comment_service.application.service;
 import static com.eyedle.comment_service.presentation.enums.CommentErrorCode.*;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import com.eyedle.comment_service.presentation.dto.response.CommentCreateRespons
 import com.eyedle.comment_service.presentation.dto.response.CommentDeleteResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentGetResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentUpdateResponseDto;
+import com.eyedle.comment_service.presentation.dto.response.MyCommentGetResponseDto;
 import com.eyedle.comment_service.presentation.dto.response.ReplyGetResponseDto;
 import com.eyedle.comment_service.presentation.enums.CommentErrorCode;
 import com.querydsl.core.Tuple;
@@ -73,7 +75,7 @@ public class CommentService {
 	public SliceResponse<ReplyGetResponseDto> getReplies(Long userId, Long feedId, Long commentId, Long cursor, Pageable pageable) {
 		validateReply(commentId, feedId);
 		List<Comment> replies = commentRepository.findAllByParentId(feedId, commentId, cursor, pageable);
-		return convertToSlice(replies, pageable);
+		return convertToSlice(replies, pageable, ReplyGetResponseDto::fromEntity);
 	}
 
 	@Transactional
@@ -98,6 +100,18 @@ public class CommentService {
 
 	}
 
+	@Transactional(readOnly = true)
+	public SliceResponse<MyCommentGetResponseDto> getMyComments(Long userId, Long cursor, String sortBy, String keyword, Pageable pageable) {
+		List<Comment> comments = commentRepository.findAllByMyComments(userId, cursor, sortBy, keyword, pageable);
+		return convertToSlice(comments, pageable, MyCommentGetResponseDto::fromEntity);
+	}
+
+	/**
+	 * 댓글 목록 처리(대댓글개수있음)
+	 * @param results
+	 * @param pageable
+	 * @return
+	 */
 	private SliceResponse<CommentGetResponseDto> tuplesToSlice(List<Tuple> results, Pageable pageable) {
 		boolean hasNext = false;
 		Long nextCursor = null;
@@ -126,12 +140,12 @@ public class CommentService {
 	}
 
 	/**
-	 * 대댓글 목록 처리
+	 * 목록 처리(대댓글카운트없음). 대댓글, 내가쓴댓글 공용
 	 * @param comments
 	 * @param pageable
 	 * @return
 	 */
-	private SliceResponse<ReplyGetResponseDto> convertToSlice(List<Comment> comments, Pageable pageable) {
+	private <T> SliceResponse<T> convertToSlice(List<Comment> comments, Pageable pageable, BiFunction<Comment, Author, T> mapper) {
 		boolean hasNext = false;
 		Long nextCursor = null;
 
@@ -144,10 +158,10 @@ public class CommentService {
 			nextCursor = comments.get(comments.size() - 1).getId();
 		}
 
-		List<ReplyGetResponseDto> dtoList = comments.stream()
+		List<T> dtoList = comments.stream()
 			.map(comment -> {
 				Author author = getUser(comment.getAuthor().getId());
-				return ReplyGetResponseDto.fromEntity(comment, author);
+				return mapper.apply(comment, author);
 			})
 			.toList();
 
