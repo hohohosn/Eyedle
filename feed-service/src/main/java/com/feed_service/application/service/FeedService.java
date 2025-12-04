@@ -5,12 +5,15 @@ import com.feed_service.domain.repository.FeedRepository;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.presentation.response.FeedResponseDto;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FeedService {
 
     private final FeedRepository feedRepository;
@@ -22,11 +25,16 @@ public class FeedService {
         return FeedResponseDto.mapFeed(feed);
 
     }
-    @Transactional
+
     public FeedResponseDto findFeed(Long feedId) {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
         return FeedResponseDto.mapFeed(feed);
+    }
+
+    public Page<FeedResponseDto> findAllFeeds(Pageable pageable) {
+        Page<Feed> feeds = feedRepository.findFeeds(pageable);
+        return feeds.map(FeedResponseDto::mapFeed);
     }
 
     @Transactional

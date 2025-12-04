@@ -7,7 +7,10 @@ import lombok.Getter;
 @Getter
 public class FeedCreateRequestDto {
 
+    @jakarta.validation.constraints.NotNull
     private FeedPermission permission;
+
+    @jakarta.validation.constraints.NotBlank
     private String content;
 
     public Feed toEntity(Long feedId, Long userId) {

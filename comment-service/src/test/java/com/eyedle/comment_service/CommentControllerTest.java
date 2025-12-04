@@ -24,7 +24,7 @@ import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.vo.Author;
 import com.eyedle.comment_service.global.config.SecurityConfig;
 import com.eyedle.comment_service.global.config.WebConfig;
-import com.eyedle.comment_service.infra.client.dto.UserGetResult;
+import com.eyedle.comment_service.infra.client.dto.UserGetResultDto;
 import com.eyedle.comment_service.presentation.controller.CommentController;
 import com.eyedle.comment_service.presentation.dto.request.CommentCreateRequestDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
@@ -59,13 +59,13 @@ public class CommentControllerTest {
 
 		CommentCreateCommand commentCreateCommand = commentCreateRequestDto.toCommand(feedId, userId);
 
-		UserGetResult userGetResult = UserGetResult.builder()
+		UserGetResultDto userGetResultDto = UserGetResultDto.builder()
 			.id(userId)
 			.userId(userName)
 			.profileImageUrl(profileUrl)
 			.build();
 
-		Author author = userGetResult.toAuthor();
+		Author author = userGetResultDto.toAuthor();
 
 		Comment comment = commentCreateCommand.toEntity(author);
 		ReflectionTestUtils.setField(comment, "id", commentId);

@@ -20,11 +20,11 @@ import com.eyedle.comment_service.application.command.CommentCreateCommand;
 import com.eyedle.comment_service.application.service.CommentService;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
-import com.eyedle.comment_service.domain.service.CommentDomainService;
+import com.eyedle.comment_service.domain.service.CommentPolicy;
 import com.eyedle.comment_service.infra.client.FeedClient;
 import com.eyedle.comment_service.infra.client.UserClient;
-import com.eyedle.comment_service.infra.client.dto.FeedGetResult;
-import com.eyedle.comment_service.infra.client.dto.UserGetResult;
+import com.eyedle.comment_service.infra.client.dto.FeedGetResultDto;
+import com.eyedle.comment_service.infra.client.dto.UserGetResultDto;
 import com.eyedle.comment_service.presentation.dto.response.CommentCreateResponseDto;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +37,7 @@ public class CommentServiceTest {
 	private CommentRepository commentRepository;
 
 	@Mock
-	private CommentDomainService commentDomainService;
+	private CommentPolicy commentPolicy;
 
 	@Mock
 	private UserClient userClient;
@@ -46,21 +46,21 @@ public class CommentServiceTest {
 	private FeedClient feedClient;
 
 	private void setupFeedClientMock(Long feedId) {
-		FeedGetResult mockFeedResult = new FeedGetResult(feedId, 9000L,"PUBLIC");
+		FeedGetResultDto mockFeedResult = new FeedGetResultDto(feedId, 9000L,"PUBLIC");
 
-		CommonResponse<FeedGetResult> response = CommonResponse.of(OK, mockFeedResult);
+		CommonResponse<FeedGetResultDto> response = CommonResponse.of(OK, mockFeedResult);
 
 		given(feedClient.getFeed(feedId)).willReturn(response);
 	}
 
 	private void setupUserClientMock(Long userId) {
-		UserGetResult mockUserResult = UserGetResult.builder()
+		UserGetResultDto mockUserResult = UserGetResultDto.builder()
 			.id(userId)
 			.userId("tester")
 			.profileImageUrl("/img.png")
 			.build();
 
-		CommonResponse<UserGetResult> response = CommonResponse.of(OK, mockUserResult);
+		CommonResponse<UserGetResultDto> response = CommonResponse.of(OK, mockUserResult);
 		given(userClient.getUser(userId)).willReturn(response);
 
 	}
@@ -88,7 +88,7 @@ public class CommentServiceTest {
 			.content(content)
 			.build();
 
-		UserGetResult mockUserResult = UserGetResult.builder()
+		UserGetResultDto mockUserResult = UserGetResultDto.builder()
 			.id(userId)
 			.userId("tester")
 			.profileImageUrl("/tester.png")
@@ -135,7 +135,7 @@ public class CommentServiceTest {
 		given(commentRepository.findByIdAndDeletedAtIsNull(parentId))
 			.willReturn(Optional.of(parentComment));
 
-		willDoNothing().given(commentDomainService).validateReply(parentComment, feedId);
+		willDoNothing().given(commentPolicy).validateReply(parentComment, feedId);
 
 		// when
 		CommentCreateResponseDto response = commentService.saveComment(command);
@@ -144,7 +144,7 @@ public class CommentServiceTest {
 		assertThat(response.getCommentId()).isEqualTo(replyId);
 
 		verify(commentRepository).findByIdAndDeletedAtIsNull(parentId);
-		verify(commentDomainService).validateReply(parentComment, feedId);
+		verify(commentPolicy).validateReply(parentComment, feedId);
 	}
 
 	@Test
@@ -169,7 +169,7 @@ public class CommentServiceTest {
 		assertThatThrownBy(() -> commentService.saveComment(command))
 			.hasMessage("존재하지 않거나 삭제된 댓글입니다.");
 
-		verify(commentDomainService, times(0)).validateReply(any(), any());
+		verify(commentPolicy, times(0)).validateReply(any(), any());
 	}
 
 }

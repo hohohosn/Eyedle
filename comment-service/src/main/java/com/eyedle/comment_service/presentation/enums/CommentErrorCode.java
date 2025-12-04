@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CommentErrorCode implements BaseErrorCode {
-
+	AUTHOR_FORBIDDEN(403, "E403", "댓글 수정, 삭제 권한이 없습니다."),
 	USER_NOT_FOUND(404, "E404", "해당 회원을 찾을 수 없습니다."),
 	FEED_NOT_FOUND(404, "E404", "존재하지 않거나 삭제된 피드입니다."),
 	COMMENT_NOT_FOUND(404,"E404", "존재하지 않거나 삭제된 댓글입니다."),
