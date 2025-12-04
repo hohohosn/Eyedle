@@ -3,8 +3,6 @@ package com.eyedle.notification_service.infra.redis;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.imageio.IIOException;
-
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -24,6 +22,7 @@ public class RedisSubscriber {
 
 	public void sendMessage(String message) {
 		try {
+			log.info("🔥 [Redis Sub] Received: {}", message);
 			Map<String, Object> eventMap = objectMapper.readValue(message, Map.class);
 			Long receiverId = Long.valueOf(String.valueOf(eventMap.get("receiverId")));
 

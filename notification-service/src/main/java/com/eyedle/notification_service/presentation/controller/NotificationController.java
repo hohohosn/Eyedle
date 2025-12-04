@@ -22,7 +22,7 @@ public class NotificationController {
 	private final NotificationService notificationService;
 	private static Long USER_ID = 500L;
 
-	@GetMapping(value = "/internal/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	@GetMapping(value = "/notifications/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	public SseEmitter subscribe(/*@CurrentUser UserContext user*/) {
 		return notificationService.subscribe(500L);
 	}
