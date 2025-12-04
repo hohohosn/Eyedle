@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.eyedle.notification_service.infra.repository.SseEmitterRepository;
+import com.eyedle.notification_service.presentation.dto.request.NotificationRedisDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -23,18 +24,18 @@ public class RedisSubscriber {
 	public void sendMessage(String message) {
 		try {
 			log.info("🔥 [Redis Sub] Received: {}", message);
-			Map<String, Object> eventMap = objectMapper.readValue(message, Map.class);
-			Long receiverId = Long.valueOf(String.valueOf(eventMap.get("receiverId")));
+			NotificationRedisDto notificationRedisDto = objectMapper.readValue(message, NotificationRedisDto.class);
+			Long receiverId = notificationRedisDto.getReceiverId();
 
 			SseEmitter emitter = emitterRepository.get(receiverId);
 
 			if (emitter != null) {
 				emitter.send(SseEmitter.event()
 					.name("notification")
-					.data(eventMap)
+					.data(notificationRedisDto)
 				);
 				log.info("Sent message with receiverId={}", receiverId);
-				log.info("Sent message with eventMap={}", eventMap);
+				log.info("Sent message with eventMap={}", notificationRedisDto);
 			}
 		}catch (IOException e){
 			log.error("SSE 전송 중 에러", e);
