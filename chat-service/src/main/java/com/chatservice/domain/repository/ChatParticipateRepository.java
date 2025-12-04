@@ -12,4 +12,8 @@ public interface ChatParticipateRepository {
   boolean isLeft(Long chatRoomId, Long userId);
 
   Optional<ChatParticipate> findByChatRoomIdAndUserId(Long chatRoomId, Long userId);
+
+  boolean existsByChatRoomIdAndUserId(Long chatRoomId, Long userId);
+
+  Long findOtherUserId(Long chatRoomId, Long currentUserId);
 }
