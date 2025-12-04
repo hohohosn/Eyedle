@@ -32,7 +32,7 @@ public class RedisSubscriber {
 			if (emitter != null) {
 				emitter.send(SseEmitter.event()
 					.name("notification")
-					.data(notificationRedisDto)
+					.data(notificationRedisDto.getMessage())
 				);
 				log.info("Sent message with receiverId={}", receiverId);
 				log.info("Sent message with eventMap={}", notificationRedisDto);

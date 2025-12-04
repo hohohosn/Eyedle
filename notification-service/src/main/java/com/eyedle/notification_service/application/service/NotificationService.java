@@ -2,7 +2,6 @@ package com.eyedle.notification_service.application.service;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.eyedle.notification_service.domain.model.Notification;
@@ -40,24 +39,13 @@ public class NotificationService {
 
 		emitterRepository.save(userId, emitter);
 
-		// 503 error 방지
-		try {
-			emitter.send(
-				SseEmitter.event()
-				.name("connect")
-				.data("connected!"));
-		} catch (Exception e) {
-			emitterRepository.deleteById(userId);
-			log.error("SSE emitter 연결 실패", e);
-			throw new RuntimeException("SSE emitter 연결에 실패했습니다.", e);
-		}
+		sendEmitter(userId, emitter, "connection","connected!");
 
 		return emitter;
 
 	}
 
-	@Transactional
-	public void send(NotificationCreateRequestDto notificationCreateRequestDto) {
+	public void sendNotification(NotificationCreateRequestDto notificationCreateRequestDto) {
 		Notification notification = notificationCreateRequestDto.toEntity();
 		Notification savedNotification = notificationRepository.save(notification);
 		NotificationCreateResponseDto notificationCreateResponseDto = NotificationCreateResponseDto.fromEntity(savedNotification);
@@ -70,5 +58,18 @@ public class NotificationService {
 			log.error("Redis 발송 실패",e);
 		}
 
+	}
+
+	private void sendEmitter(Long userId, SseEmitter emitter, String eventName, Object data) {
+		try {
+			emitter.send(
+				SseEmitter.event()
+					.name(eventName)
+					.data(data));
+		} catch (Exception e) {
+			emitterRepository.deleteById(userId);
+			log.error("SSE emitter 연결 실패", e);
+			throw new RuntimeException("SSE emitter 연결에 실패했습니다.", e);
+		}
 	}
 }

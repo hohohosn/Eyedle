@@ -30,7 +30,7 @@ public class NotificationController {
 
 	@PostMapping("/internal/notifications")
 	public CommonResponse<SuccessCode> sendNotification(@Valid @RequestBody NotificationCreateRequestDto notificationCreateRequestDto) {
-		notificationService.send(notificationCreateRequestDto);
+		notificationService.sendNotification(notificationCreateRequestDto);
 		return CommonResponse.of(SuccessCode.CREATED);
 	}
 
