@@ -14,8 +14,8 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
   private final ChatMessageJpaRepository chatMessageJpaRepository;
 
   @Override
-  public ChatMessage save(ChatMessage chatMessage) {
-    return chatMessageJpaRepository.save(chatMessage);
+  public void save(ChatMessage chatMessage) {
+    chatMessageJpaRepository.save(chatMessage);
   }
 
   @Override

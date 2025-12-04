@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ChatMessageRepository {
 
-  ChatMessage save(ChatMessage chatMessage);
+  void save(ChatMessage chatMessage);
 
   Optional<ChatMessage> findLastMessage(Long chatRoomId);
 }
