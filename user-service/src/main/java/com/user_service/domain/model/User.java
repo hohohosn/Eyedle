@@ -49,7 +49,7 @@ public class User {
 
 	@Column(nullable = false)
 	@Builder.Default
-	private Boolean isDeleted = false;
+	private boolean isDeleted = false;
 
 	// Auditing 필드
 	@CreatedDate
@@ -80,7 +80,7 @@ public class User {
 		}
 	}
 
-	// === 정적 팩토리 메서드 ===
+	// 정적 팩토리 메서드
 
 	public static User createUser(
 		String email,
