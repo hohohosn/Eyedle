@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import static com.common.response.SuccessCode.CREATED;
+import static com.common.response.SuccessCode.DELETED;
 import static com.common.response.SuccessCode.OK;
 
 @RestController
@@ -48,7 +49,14 @@ public class ChatController {
   public CommonResponse<Void> leaveChatRoom(@PathVariable Long chatRoomId) {
     Long userId = 1L;
     chatService.leaveChatRoom(chatRoomId, userId);
-    return CommonResponse.of(OK);
+    return CommonResponse.of(DELETED);
+  }
+
+  @DeleteMapping("/{chatRoomId}/messages/{messageId}")
+  public CommonResponse<Void> deleteMessage(@PathVariable Long chatRoomId, @PathVariable Long messageId) {
+    Long userId = 1L;
+    chatService.deleteMessage(chatRoomId, messageId, userId);
+    return CommonResponse.of(DELETED);
   }
 }
 

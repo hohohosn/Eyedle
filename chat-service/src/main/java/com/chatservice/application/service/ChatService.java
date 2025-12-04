@@ -144,6 +144,28 @@ public class ChatService {
     chatParticipant.leave();
   }
 
+  @Transactional
+  public void deleteMessage(Long chatRoomId, Long messageId, Long userId) {
+    ChatMessage chatMessage = chatMessageRepository.findById(messageId).orElseThrow(() -> new CustomException(CHAT_MESSAGE_NOT_FOUND));
+
+    // 다른 채팅방 메세지 삭제 방지
+    if (!chatMessage.getChatRoomId().equals(chatRoomId)) {
+      throw new CustomException(MESSAGE_NOT_IN_CHATROOM);
+    }
+
+    // 본인이 보낸 메세지인지 확인
+    if (!chatMessage.getUserId().equals(userId)) {
+      throw new CustomException(NOT_MESSAGE_OWNER);
+    }
+
+    // 이미 삭제된 메세지인지 확인
+    if (chatMessage.getDeletedAt() != null) {
+      throw new CustomException(MESSAGE_ALREADY_DELETED);
+    }
+
+    chatMessage.delete();
+  }
+
   private ChatRoomInfo createChatRoomInfo(ChatRoom chatRoom, Long userId) {
     Long chatRoomId = chatRoom.getId();
 
