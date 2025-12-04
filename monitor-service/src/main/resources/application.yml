@@ -4,3 +4,11 @@ server:
 spring:
   application:
     name: monitor-service
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+
