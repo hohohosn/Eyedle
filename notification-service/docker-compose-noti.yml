@@ -11,8 +11,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: noti
-      MONGO_INITDB_ROOT_PASSWORD: noti
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - ./infra-data/mongo:/data/db
     networks:

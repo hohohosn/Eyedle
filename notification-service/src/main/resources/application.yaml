@@ -7,7 +7,7 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://noti:noti@localhost:27017/notification_db?authSource=admin
+      uri: mongodb://${MONGO_USER:noti}:${MONGO_PASSWORD:noti}@localhost:27017/notification_db?authSource=admin
       auto-index-creation: true
 
     redis:

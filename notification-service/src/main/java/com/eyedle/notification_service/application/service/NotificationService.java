@@ -48,7 +48,8 @@ public class NotificationService {
 				.data("connected!"));
 		} catch (Exception e) {
 			emitterRepository.deleteById(userId);
-			throw new RuntimeException("연결 실패");
+			log.error("SSE emitter 연결 실패", e);
+			throw new RuntimeException("SSE emitter 연결에 실패했습니다.", e);
 		}
 
 		return emitter;
