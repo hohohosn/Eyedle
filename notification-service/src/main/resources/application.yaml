@@ -1,9 +1,29 @@
-spring:
-  application:
-    name: notification-service
 server:
   port: 19400
 
+spring:
+  application:
+    name: notification-service
+
+  data:
+    mongodb:
+      uri: mongodb://noti:noti@localhost:27017/notification_db?authSource=admin
+      auto-index-creation: true
+
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9093
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: latest
+
+instance:
+  node-id: 18
+
+# Eureka
 eureka:
   client:
     service-url:

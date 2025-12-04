@@ -3,57 +3,57 @@ package com.eyedle.notification_service.domain.model;
 import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceCreator;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
 
-import com.common.database.BaseRootEntity;
+import com.common.utils.TsidUtil;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Document(collection = "p_notification")
 @Getter
-@Table(name = "p_notification")
-public class Notification extends BaseRootEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Notification {
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "notification_type", nullable = false)
+	@Id
+	private Long id;
+
+	@Field("notification_type")
 	private NotificationType notificationType;
 
-	@Column(name = "target_id", nullable = false)
+	@Field("target_id")
 	private Long targetId;
 
-	@Column(name = "sub_target_id")
+	@Field("sub_target_id")
 	private Long subTargetId;
 
-	@Column(name = "receiver_id", nullable = false)
+	@Indexed
+	@Field("receiver_id")
 	private Long receiverId;
 
-	@Column(columnDefinition = "TEXT", nullable = false)
+	@Field
 	private String message;
 
-	@Column(name = "read_at")
+	@Field(name = "read_at")
 	private LocalDateTime readAt;
 
 	@CreatedDate
-	@Column(name = "created_at", nullable = false, updatable = false)
+	@Field("created_at")
 	private LocalDateTime createdAt;
 
-	@Column(name = "deleted_at")
+	@Field("deleted_at")
 	private LocalDateTime deletedAt;
 
+	@PersistenceCreator
 	@Builder
-	public Notification(NotificationType type
-		, Long targetId
-		, Long subTargetId
-		, Long receiverId
-		, String message) {
+	public Notification(Long id, NotificationType type, Long targetId, Long subTargetId, Long receiverId, String message) {
+		this.id = (id != null) ? id : TsidUtil.nextId();
 		this.notificationType = type;
 		this.targetId = targetId;
 		this.subTargetId = subTargetId;
@@ -68,5 +68,7 @@ public class Notification extends BaseRootEntity {
 	public void softDelete() {
 		this.deletedAt = LocalDateTime.now();
 	}
+
+	public boolean isNotice() { return this.notificationType == NotificationType.NOTICE; }
 
 }
