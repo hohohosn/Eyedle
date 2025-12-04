@@ -1,5 +1,7 @@
 package com.feed_service.application.service;
 
+import com.common.exception.CustomException;
+import com.common.response.ErrorCode;
 import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.repository.FeedRepository;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
@@ -19,16 +21,21 @@ public class FeedService {
     private final FeedRepository feedRepository;
 
     @Transactional
-    public FeedResponseDto createFeed(FeedCreateRequestDto request, Long userId, Long feedId) {
-        Feed feed = request.toEntity(userId, feedId);
-        feed = feedRepository.save(feed);
-        return FeedResponseDto.mapFeed(feed);
+    public Long createFeed(FeedCreateRequestDto request, Long userId) {
 
+        Feed feed = Feed.builder()
+                .userId(userId)
+                .content(request.getContent())
+                .permission(request.getPermission())
+                .build();
+
+        feedRepository.save(feed);
+        return feed.getId();
     }
 
     public FeedResponseDto findFeed(Long feedId) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         return FeedResponseDto.mapFeed(feed);
     }
 
@@ -40,7 +47,7 @@ public class FeedService {
     @Transactional
     public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         feed.updateFeed(request.getContent(), request.getPermission());
         return FeedResponseDto.mapFeed(feed);
     }
@@ -48,7 +55,7 @@ public class FeedService {
     @Transactional
     public void statusDeleted(Long feedId) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         feed.statusDeleted();
     }
 
