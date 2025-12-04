@@ -10,6 +10,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.common.response.CommonResponse;
 import com.common.response.SuccessCode;
 import com.eyedle.notification_service.application.service.NotificationService;
+import com.eyedle.notification_service.global.annotation.CurrentUser;
+import com.eyedle.notification_service.global.dto.UserContext;
 import com.eyedle.notification_service.presentation.dto.request.NotificationCreateRequestDto;
 
 import jakarta.validation.Valid;
@@ -20,11 +22,10 @@ import lombok.RequiredArgsConstructor;
 public class NotificationController {
 
 	private final NotificationService notificationService;
-	private static Long USER_ID = 500L;
 
 	@GetMapping(value = "/notifications/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-	public SseEmitter subscribe(/*@CurrentUser UserContext user*/) {
-		return notificationService.subscribe(500L);
+	public SseEmitter subscribe(@CurrentUser UserContext user) {
+		return notificationService.subscribe(user.getId());
 	}
 
 	@PostMapping("/internal/notifications")
