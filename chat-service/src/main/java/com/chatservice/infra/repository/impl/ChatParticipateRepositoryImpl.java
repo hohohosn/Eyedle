@@ -18,8 +18,8 @@ public class ChatParticipateRepositoryImpl implements ChatParticipateRepository 
   private final JPAQueryFactory jpaQueryFactory;
 
   @Override
-  public ChatParticipate save(ChatParticipate chatParticipate) {
-    return chatParticipateJpaRepository.save(chatParticipate);
+  public void save(ChatParticipate chatParticipate) {
+    chatParticipateJpaRepository.save(chatParticipate);
   }
 
   @Override
