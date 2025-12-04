@@ -1,17 +1,17 @@
 package com.chatservice.domain.repository;
 
-import com.chatservice.domain.model.ChatParticipate;
+import com.chatservice.domain.model.ChatParticipant;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ChatParticipateRepository {
+public interface ChatParticipantRepository {
 
-  void save(ChatParticipate chatParticipate);
+  void save(ChatParticipant chatParticipant);
 
   boolean isLeft(Long chatRoomId, Long userId);
 
-  Optional<ChatParticipate> findByChatRoomIdAndUserId(Long chatRoomId, Long userId);
+  Optional<ChatParticipant> findByChatRoomIdAndUserId(Long chatRoomId, Long userId);
 
   boolean existsByChatRoomIdAndUserId(Long chatRoomId, Long userId);
 

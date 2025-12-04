@@ -3,11 +3,11 @@ package com.chatservice.application.service;
 import com.chatservice.application.dto.ChatRoomInfo;
 import com.chatservice.application.dto.UserInfo;
 import com.chatservice.domain.model.ChatMessage;
-import com.chatservice.domain.model.ChatParticipate;
+import com.chatservice.domain.model.ChatParticipant;
 import com.chatservice.domain.model.ChatRoom;
 import com.chatservice.domain.model.ChatRoomStatus;
 import com.chatservice.domain.repository.ChatMessageRepository;
-import com.chatservice.domain.repository.ChatParticipateRepository;
+import com.chatservice.domain.repository.ChatParticipantRepository;
 import com.chatservice.domain.repository.ChatRoomRepository;
 import com.chatservice.infra.client.BlockClient;
 import com.chatservice.infra.client.FollowClient;
@@ -34,7 +34,7 @@ public class ChatService {
 
   private final static int PAGE_SIZE = 20;
   private final ChatRoomRepository chatRoomRepository;
-  private final ChatParticipateRepository chatParticipateRepository;
+  private final ChatParticipantRepository chatParticipantRepository;
   private final ChatMessageRepository chatMessageRepository;
   private final UserClient userClient;
   private final BlockClient blockClient;
@@ -68,8 +68,8 @@ public class ChatService {
 
     return chatRoomRepository.findDirectChatRoom(userId, reqDto.receiverId())
         .map(existingChatRoom -> {
-          boolean meLeft = chatParticipateRepository.isLeft(existingChatRoom.getId(), userId);
-          boolean receiverLeft = chatParticipateRepository.isLeft(existingChatRoom.getId(), reqDto.receiverId());
+          boolean meLeft = chatParticipantRepository.isLeft(existingChatRoom.getId(), userId);
+          boolean receiverLeft = chatParticipantRepository.isLeft(existingChatRoom.getId(), reqDto.receiverId());
 
           // 둘 다 방을 떠났으면 새 채팅방 생성
           return (meLeft && receiverLeft) ? createNewChatRoom(userId, reqDto.receiverId())
@@ -92,10 +92,10 @@ public class ChatService {
       chatRoom.changeRoomStatus(OPEN);
     }
 
-    ChatParticipate chatParticipate = getChatParticipate(chatRoomId, userId);
+    ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
 
     // 채팅 참여
-    chatParticipate.join();
+    chatParticipant.join();
   }
 
   /**
@@ -103,10 +103,10 @@ public class ChatService {
    */
   @Transactional
   public void rejectChatRoom(Long chatRoomId, Long userId) {
-    ChatParticipate chatParticipate = getChatParticipate(chatRoomId, userId);
+    ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
 
     // 채팅 거절
-    chatParticipate.leave();
+    chatParticipant.leave();
   }
 
   /**
@@ -135,19 +135,19 @@ public class ChatService {
    */
   @Transactional
   public void leaveChatRoom(Long chatRoomId, Long userId) {
-    ChatParticipate chatParticipate = getChatParticipate(chatRoomId, userId);
+    ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
 
-    if (chatParticipate.isLeft()) {
+    if (chatParticipant.isLeft()) {
       throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
     }
 
-    chatParticipate.leave();
+    chatParticipant.leave();
   }
 
   private ChatRoomInfo createChatRoomInfo(ChatRoom chatRoom, Long userId) {
     Long chatRoomId = chatRoom.getId();
 
-    Long receiverId = chatParticipateRepository.findOtherUserId(chatRoomId, userId);
+    Long receiverId = chatParticipantRepository.findOtherUserId(chatRoomId, userId);
 
     UserInfo receiverInfo = userClient.getUserInfo(receiverId);
 
@@ -156,9 +156,9 @@ public class ChatService {
     return ChatRoomInfo.of(chatRoomId, receiverInfo, lastMessage);
   }
 
-  private ChatParticipate getChatParticipate(Long chatRoomId, Long userId) {
-    return chatParticipateRepository.findByChatRoomIdAndUserId(chatRoomId, userId)
-        .orElseThrow(() -> new CustomException(CHAT_PARTICIPATE_NOT_FOUND));
+  private ChatParticipant getChatParticipate(Long chatRoomId, Long userId) {
+    return chatParticipantRepository.findByChatRoomIdAndUserId(chatRoomId, userId)
+        .orElseThrow(() -> new CustomException(CHAT_PARTICIPANT_NOT_FOUND));
   }
 
   private CreateChatRoomResDto createNewChatRoom(Long userId, Long receiverId) {
@@ -178,11 +178,11 @@ public class ChatService {
     Stream.of(userId, receiverId)
         .forEach(id -> {
           // 중복 참여 확인
-          if (chatParticipateRepository.existsByChatRoomIdAndUserId(newChatRoom.getId(), id)) {
-            throw new CustomException(DUPLICATE_CHAT_PARTICIPATE);
+          if (chatParticipantRepository.existsByChatRoomIdAndUserId(newChatRoom.getId(), id)) {
+            throw new CustomException(DUPLICATE_CHAT_PARTICIPANT);
           }
 
-          chatParticipateRepository.save(ChatParticipate.create(newChatRoom.getId(), id));
+          chatParticipantRepository.save(ChatParticipant.create(newChatRoom.getId(), id));
         });
 
     return CreateChatRoomResDto.from(newChatRoom);
