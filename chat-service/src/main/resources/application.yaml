@@ -33,6 +33,3 @@ eureka:
 
 instance:
   node-id: 13
-
-jwt:
-  secretKey: d585acbcdd8df2d9713f9aec7a2827fce82f56f2072da1fb0f2d9b1fc51b31c1

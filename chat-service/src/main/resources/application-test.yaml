@@ -16,6 +16,3 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
-
-jwt:
-  secretKey: test-secret-key
