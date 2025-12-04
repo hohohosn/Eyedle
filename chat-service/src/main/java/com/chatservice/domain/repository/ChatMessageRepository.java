@@ -10,4 +10,6 @@ public interface ChatMessageRepository {
   void save(ChatMessage chatMessage);
 
   Optional<ChatMessage> findLastMessage(Long chatRoomId);
+
+  Optional<ChatMessage> findById(Long messageId);
 }

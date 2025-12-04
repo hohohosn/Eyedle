@@ -22,4 +22,9 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
   public Optional<ChatMessage> findLastMessage(Long chatRoomId) {
     return chatMessageJpaRepository.findTopByChatRoomIdOrderByIdDesc(chatRoomId);
   }
+
+  @Override
+  public Optional<ChatMessage> findById(Long messageId) {
+    return chatMessageJpaRepository.findById(messageId);
+  }
 }
