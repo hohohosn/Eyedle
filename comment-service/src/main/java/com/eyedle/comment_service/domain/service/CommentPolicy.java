@@ -7,7 +7,7 @@ import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.presentation.enums.CommentErrorCode;
 
 @Component
-public class CommentDomainService {
+public class CommentPolicy {
 
 	public void validateReply(Comment parentComment, Long feedId) {
 
@@ -19,6 +19,12 @@ public class CommentDomainService {
 			throw new CustomException(CommentErrorCode.REPLY_DEPTH_OVER);
 		}
 
+	}
+
+	public void validateAuthor(Long userId, Long authorId){
+		if (!userId.equals(authorId)){
+			throw new CustomException(CommentErrorCode.AUTHOR_FORBIDDEN);
+		}
 	}
 
 	public void validateFeed(Long feedId, Long requestUserId, Long feedAuthorId, String permission) {

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FeedGetResult {
+public class FeedGetResultDto {
 
 	private Long feedId;
 	private Long userId;

@@ -2,6 +2,8 @@ package com.eyedle.comment_service.domain.model;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.LastModifiedBy;
+
 import com.common.database.BaseTimeEntity;
 import com.eyedle.comment_service.domain.vo.Author;
 
@@ -39,6 +41,7 @@ public class Comment extends BaseTimeEntity {
 	})
 	private Author author;
 
+	@LastModifiedBy
 	@Column(name = "updated_by")
 	private Long updatedBy;
 
@@ -56,9 +59,8 @@ public class Comment extends BaseTimeEntity {
 		this.author = author;
 	}
 
-	public void updateContents(String content, Long userId){
+	public void updateContents(String content){
 		this.content = content;
-		this.updatedBy = userId;
 	}
 
 	public void softDelete(Long userId){
