@@ -2,6 +2,7 @@ package com.chatservice.infra.repository.impl;
 
 import com.chatservice.domain.model.ChatRoom;
 import com.chatservice.domain.model.ChatRoomType;
+import com.chatservice.domain.model.QChatParticipant;
 import com.chatservice.domain.repository.ChatRoomRepository;
 import com.chatservice.infra.repository.jpa.ChatRoomJpaRepository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -33,13 +34,15 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepository {
 
   @Override
   public Optional<ChatRoom> findDirectChatRoom(Long userId1, Long userId2) {
+    QChatParticipant p1 = new QChatParticipant("p1");
+    QChatParticipant p2 = new QChatParticipant("p2");
     ChatRoom room = jpaQueryFactory
         .select(chatRoom)
         .from(chatRoom)
-        .join(chatParticipant)
-        .on(chatParticipant.chatRoomId.eq(chatRoom.id).and(chatParticipant.userId.eq(userId1)))
-        .join(chatParticipant, chatParticipant)
-        .on(chatParticipant.chatRoomId.eq(chatRoom.id).and(chatParticipant.userId.eq(userId2)))
+        .join(p1)
+        .on(p1.chatRoomId.eq(chatRoom.id).and(p1.userId.eq(userId1)))
+        .join(p2)
+        .on(p2.chatRoomId.eq(chatRoom.id).and(p2.userId.eq(userId2)))
         .where(chatRoom.chatRoomType.eq(ChatRoomType.DIRECT))
         .fetchOne();
     return Optional.ofNullable(room);
