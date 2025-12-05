@@ -90,7 +90,18 @@ public class NotificationController {
 		return CommonResponse.of(SuccessCode.UPDATED);
 	}
 
-
+	/**
+	 * 알림 단건 삭제
+	 * @param user
+	 * @param notificationId
+	 * @return
+	 */
+	@DeleteMapping("/notifications/{notificationId}")
+	public CommonResponse<SuccessCode> deleteNotification(@CurrentUser UserContext user,
+		@PathVariable("notificationId") Long notificationId) {
+		notificationService.deleteNotification(user.getId(), notificationId);
+		return CommonResponse.of(SuccessCode.DELETED);
+	}
 
 
 }

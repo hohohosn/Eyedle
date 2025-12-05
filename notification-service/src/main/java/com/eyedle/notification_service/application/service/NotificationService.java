@@ -76,9 +76,7 @@ public class NotificationService {
 	@Transactional
 	public void readNotification(Long userId, Long notificationId) {
 
-		Notification notification = notificationRepository.findByIdAndDeletedAtIsNull(notificationId)
-			.orElseThrow(()-> new CustomException(
-			NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+		Notification notification = getNotification(notificationId);
 
 		notificationPolicy.UserIsReceiver(userId, notification.getReceiverId());
 
@@ -91,6 +89,20 @@ public class NotificationService {
 	@Transactional
 	public void readAllNotifications(Long userId) {
 		notificationRepository.markAllAsRead(userId);
+	}
+
+	@Transactional
+	public void deleteNotification(Long userId, Long notificationId) {
+		Notification notification = getNotification(notificationId);
+		notificationPolicy.UserIsReceiver(userId, notification.getReceiverId());
+		notification.softDelete();
+		notificationRepository.save(notification);
+	}
+
+	private Notification getNotification(Long notificationId) {
+		return 	notificationRepository.findByIdAndDeletedAtIsNull(notificationId)
+			.orElseThrow(()-> new CustomException(
+				NotificationErrorCode.NOTIFICATION_NOT_FOUND));
 	}
 
 	private void sendEmitter(Long userId, SseEmitter emitter, String eventName, Object data) {
