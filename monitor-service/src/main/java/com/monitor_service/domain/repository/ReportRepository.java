@@ -16,4 +16,6 @@ public interface ReportRepository {
 	Page<Report> findAllByStatus(ReportStatus status, Pageable pageable);
 
 	Optional<Report> findById(Long id);
+
+	void delete(Report report);
 }

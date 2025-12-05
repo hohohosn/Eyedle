@@ -68,4 +68,15 @@ public class ReportService {
 
 		return report.getId();
 	}
+
+	@Transactional
+	public Long deleteReport(Long reportId) {
+		Report report = reportRepository.findById(reportId)
+			.orElseThrow(() -> new NoSuchElementException("해당 신고를 찾을 수 없습니다."));
+
+		reportRepository.delete(report);
+
+		return report.getId();
+	}
+
 }

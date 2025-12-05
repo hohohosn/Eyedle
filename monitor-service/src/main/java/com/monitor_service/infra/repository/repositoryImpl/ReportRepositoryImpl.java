@@ -37,4 +37,9 @@ public class ReportRepositoryImpl implements ReportRepository {
 	public Optional<Report> findById(Long id) {
 		return reportJpaRepository.findById(id);
 	}
+
+	@Override
+	public void delete(Report report) {
+		reportJpaRepository.delete(report);
+	}
 }
