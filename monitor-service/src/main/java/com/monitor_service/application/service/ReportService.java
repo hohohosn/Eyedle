@@ -1,11 +1,15 @@
 package com.monitor_service.application.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.monitor_service.domain.model.Report;
+import com.monitor_service.domain.model.ReportStatus;
 import com.monitor_service.domain.repository.ReportRepository;
 import com.monitor_service.presentation.request.CreateReportRequest;
+import com.monitor_service.presentation.response.ReportResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,5 +34,17 @@ public class ReportService {
 		Report savedReport = reportRepository.save(report);
 
 		return savedReport.getId();
+	}
+
+	public Page<ReportResponse> getReports(ReportStatus status, Pageable pageable){
+		Page<Report> reports;
+
+		if (status == null){
+			reports = reportRepository.findAll(pageable);
+		}else {
+			reports = reportRepository.findAllByStatus(status, pageable);
+		}
+
+		return reports.map(ReportResponse::from);
 	}
 }
