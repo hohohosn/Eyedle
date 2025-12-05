@@ -9,7 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,11 +22,15 @@ public class FeedController {
 
     private final FeedService feedService;
 
-    @PostMapping
-    public CommonResponse createFeed(@RequestBody FeedCreateRequestDto request){
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public CommonResponse createFeed(
+            @RequestPart("request") FeedCreateRequestDto request,               // JSON part
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ){
+
         Long userId = 1L;
 
-        return CommonResponse.of(SuccessCode.OK, feedService.createFeed(request, userId));
+        return CommonResponse.of(SuccessCode.OK, feedService.createFeed(request, files, userId));
     }
 
     @GetMapping("/{feedId}")
