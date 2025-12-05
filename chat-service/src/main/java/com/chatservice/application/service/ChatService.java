@@ -16,9 +16,11 @@ import com.chatservice.presentation.request.CreateChatRoomReqDto;
 import com.chatservice.presentation.response.ChatRoomCursorResDto;
 import com.chatservice.presentation.response.CreateChatRoomResDto;
 import com.common.exception.CustomException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.internal.constraintvalidators.bv.time.futureorpresent.FutureOrPresentValidatorForThaiBuddhistDate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class ChatService {
   private final UserClient userClient;
   private final BlockClient blockClient;
   private final FollowClient followClient;
+  private final FutureOrPresentValidatorForThaiBuddhistDate futureOrPresentValidatorForThaiBuddhistDate;
 
   /**
    * 새 채팅 생성
@@ -116,15 +119,37 @@ public class ChatService {
   public ChatRoomCursorResDto getChatRoomList(Long userId, Long cursor) {
     // 커서 값 없으면 가장 큰 값으로 초기화(최신 방부터 조회)
     Long effectiveCursor = (cursor == null) ? Long.MAX_VALUE : cursor;
-
     Pageable pageable = PageRequest.of(0, PAGE_SIZE);
 
     // 커서 기준 채팅방 조회
     List<ChatRoom> chatRooms = chatRoomRepository.findChatRooms(userId, effectiveCursor, pageable);
+    if (chatRooms.isEmpty()) {
+      return ChatRoomCursorResDto.of(List.of(), null);
+    }
 
-    List<ChatRoomInfo> chatRoomInfos = chatRooms.stream().map(r -> createChatRoomInfo(r, userId)).toList();
+    // chat room id 목록
+    List<Long> chatRoomIds = chatRooms.stream().map(ChatRoom::getId).toList();
 
-    // 다음 페이지 조회용 커서
+    // 채팅 상대의 Id 한번에 조회
+    Map<Long, Long> chatRoomToOtherUserId = chatParticipantRepository.findOtherUserIds(chatRoomIds, userId);
+
+    // 채팅 상대 정보 조회
+    List<Long> otherUserIds = new ArrayList<>(chatRoomToOtherUserId.values());
+    Map<Long, UserInfo> userInfoMap = userClient.getUserInfos(otherUserIds);
+
+    // 마지막 메세지 조회
+    Map<Long, ChatMessage> lastMessageMap = chatMessageRepository.findLastMessageByChatRoomIds(chatRoomIds);
+
+    // ChatRoomInfo 매핑
+    List<ChatRoomInfo> chatRoomInfos = chatRooms.stream()
+        .map(r -> {
+          Long receiverId = chatRoomToOtherUserId.get(r.getId());
+          UserInfo receiverInfo = userInfoMap.get(receiverId);
+          ChatMessage lastMessage = lastMessageMap.get(r.getId());
+          return ChatRoomInfo.of(r.getId(), receiverInfo, lastMessage);
+        }).toList();
+
+    // 다음 커서
     Long nextCursor = (chatRooms.size() < PAGE_SIZE) ? null : chatRooms.get(chatRooms.size() - 1).getId();
 
     return ChatRoomCursorResDto.of(chatRoomInfos, nextCursor);
@@ -166,18 +191,6 @@ public class ChatService {
     chatMessage.delete();
   }
 
-  private ChatRoomInfo createChatRoomInfo(ChatRoom chatRoom, Long userId) {
-    Long chatRoomId = chatRoom.getId();
-
-    Long receiverId = chatParticipantRepository.findOtherUserId(chatRoomId, userId);
-
-    UserInfo receiverInfo = userClient.getUserInfo(receiverId);
-
-    ChatMessage lastMessage = chatMessageRepository.findLastMessage(chatRoomId).orElse(null);
-
-    return ChatRoomInfo.of(chatRoomId, receiverInfo, lastMessage);
-  }
-
   private ChatParticipant getChatParticipate(Long chatRoomId, Long userId) {
     return chatParticipantRepository.findByChatRoomIdAndUserId(chatRoomId, userId)
         .orElseThrow(() -> new CustomException(CHAT_PARTICIPANT_NOT_FOUND));
@@ -197,15 +210,10 @@ public class ChatService {
     chatRoomRepository.save(newChatRoom);
 
     // 채팅 참여자 생성
-    Stream.of(userId, receiverId)
-        .forEach(id -> {
-          // 중복 참여 확인
-          if (chatParticipantRepository.existsByChatRoomIdAndUserId(newChatRoom.getId(), id)) {
-            throw new CustomException(DUPLICATE_CHAT_PARTICIPANT);
-          }
-
-          chatParticipantRepository.save(ChatParticipant.create(newChatRoom.getId(), id));
-        });
+    ChatParticipant sender = ChatParticipant.create(newChatRoom.getId(), userId, false);
+    ChatParticipant receiver = ChatParticipant.create(receiverId, receiverId, chatRoomStatus == REQUESTED);   // 수신자는 아직 참여하지 않음
+    chatParticipantRepository.save(sender);
+    chatParticipantRepository.save(receiver);
 
     return CreateChatRoomResDto.from(newChatRoom);
   }
