@@ -1,6 +1,8 @@
 package com.chatservice.domain.repository;
 
 import com.chatservice.domain.model.ChatParticipant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
@@ -13,7 +15,5 @@ public interface ChatParticipantRepository {
 
   Optional<ChatParticipant> findByChatRoomIdAndUserId(Long chatRoomId, Long userId);
 
-  boolean existsByChatRoomIdAndUserId(Long chatRoomId, Long userId);
-
-  Long findOtherUserId(Long chatRoomId, Long currentUserId);
+  Map<Long, Long> findOtherUserIds(List<Long> chatRoomIds, Long currentUserId);
 }

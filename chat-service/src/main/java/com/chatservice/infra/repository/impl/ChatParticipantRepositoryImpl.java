@@ -3,8 +3,12 @@ package com.chatservice.infra.repository.impl;
 import com.chatservice.domain.model.ChatParticipant;
 import com.chatservice.domain.repository.ChatParticipantRepository;
 import com.chatservice.infra.repository.jpa.ChatParticipantJpaRepository;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -40,18 +44,14 @@ public class ChatParticipantRepositoryImpl implements ChatParticipantRepository 
   }
 
   @Override
-  public boolean existsByChatRoomIdAndUserId(Long chatRoomId, Long userId) {
-    return chatParticipantJpaRepository.existsByChatRoomIdAndUserId(chatRoomId, userId);
-  }
-
-  @Override
-  public Long findOtherUserId(Long chatRoomId, Long currentUserId) {
-    return jpaQueryFactory
-        .select(chatParticipant.userId)
+  public Map<Long, Long> findOtherUserIds(List<Long> chatRoomIds, Long currentUserId) {
+    List<Tuple> tuples = jpaQueryFactory
+        .select(chatParticipant.chatRoomId, chatParticipant.userId)
         .from(chatParticipant)
-        .where(chatParticipant.chatRoomId.eq(chatRoomId)
+        .where(chatParticipant.chatRoomId.in(chatRoomIds)
             .and(chatParticipant.userId.ne(currentUserId))
             .and(chatParticipant.isLeft.eq(false)))
-        .fetchOne();
+        .fetch();
+    return tuples.stream().collect(Collectors.toMap(t -> t.get(chatParticipant.chatRoomId), t -> t.get(chatParticipant.userId)));
   }
 }
