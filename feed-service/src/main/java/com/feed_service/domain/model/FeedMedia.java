@@ -18,10 +18,11 @@ public class FeedMedia extends BaseTimeEntity {
     @Column(nullable = false)
     private String mediaUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String mediaType;
+    private Enum mediaType;
 
-    public FeedMedia(Feed feed, String mediaUrl, String mediaType) {
+    public FeedMedia(Feed feed, String mediaUrl, Enum mediaType) {
         this.feed = feed;
         this.mediaUrl = mediaUrl;
         this.mediaType = mediaType;
