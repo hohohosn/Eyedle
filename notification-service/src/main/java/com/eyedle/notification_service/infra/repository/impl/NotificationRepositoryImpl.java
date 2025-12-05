@@ -40,7 +40,7 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 		criteria.and("createdAt").gte(limitDate);
 
 		if (cursor != null) {
-			criteria.and("id").lte(cursor);
+			criteria.and("id").lt(cursor);
 		}
 
 		Query query = new Query(criteria);
