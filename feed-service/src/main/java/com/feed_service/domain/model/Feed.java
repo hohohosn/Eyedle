@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "p_feed")
@@ -29,6 +31,9 @@ public class Feed extends BaseTimeEntity {
     private boolean isDeleted = false;
 
     private LocalDateTime deletedAt;
+
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FeedMedia> mediaList =  new ArrayList<>();
 
     @Builder
     public Feed(Long userId, String content, FeedPermission permission) {
