@@ -68,4 +68,14 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 		mongoTemplate.updateMulti(query, update, Notification.class);
 
 	}
+
+	@Override
+	public void deleteAllByReceiverId(Long receiverId) {
+		Query query = new Query(Criteria.where("receiverId").is(receiverId)
+		.and("deletedAt").isNull());
+
+		Update update = new Update().set("deletedAt", LocalDateTime.now());
+
+		mongoTemplate.updateMulti(query, update, Notification.class);
+	}
 }

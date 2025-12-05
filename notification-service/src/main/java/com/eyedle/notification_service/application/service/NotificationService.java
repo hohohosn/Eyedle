@@ -99,6 +99,11 @@ public class NotificationService {
 		notificationRepository.save(notification);
 	}
 
+	@Transactional
+	public void deleteAllNotifications(Long userId) {
+		notificationRepository.deleteAllByReceiverId(userId);
+	}
+
 	private Notification getNotification(Long notificationId) {
 		return 	notificationRepository.findByIdAndDeletedAtIsNull(notificationId)
 			.orElseThrow(()-> new CustomException(

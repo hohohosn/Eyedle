@@ -78,6 +78,17 @@ public class NotificationController {
 	}
 
 	/**
+	 * 알림 일괄삭제
+	 * @param user
+	 * @return
+	 */
+	@DeleteMapping("/notifications")
+	public CommonResponse<SuccessCode> deleteAllNotifications(@CurrentUser UserContext user) {
+		notificationService.deleteAllNotifications(user.getId());
+		return CommonResponse.of(SuccessCode.DELETED);
+	}
+
+	/**
 	 * 알림 단건 읽음
 	 * @param user
 	 * @param notificationId
