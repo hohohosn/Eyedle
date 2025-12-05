@@ -32,10 +32,11 @@ public class ChatParticipant extends BaseTimeEntity {
   /**
    * 채팅 참여자 생성을 위한 정적 팩토리 메서드
    */
-  public static ChatParticipant create(Long chatRoomId, Long userId) {
+  public static ChatParticipant create(Long chatRoomId, Long userId, boolean isLeft) {
     ChatParticipant participant = new ChatParticipant();
     participant.chatRoomId = chatRoomId;
     participant.userId = userId;
+    participant.isLeft = isLeft;
     return participant;
   }
 
