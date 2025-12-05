@@ -1,15 +1,22 @@
 package com.eyedle.notification_service.application.service;
 
+import java.util.List;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.common.exception.CustomException;
 import com.eyedle.notification_service.domain.model.Notification;
 import com.eyedle.notification_service.domain.repository.NotificationRepository;
 import com.eyedle.notification_service.infra.config.RedisConfig;
 import com.eyedle.notification_service.infra.repository.SseEmitterRepository;
+import com.eyedle.notification_service.presentation.dto.SliceResponse;
 import com.eyedle.notification_service.presentation.dto.request.NotificationCreateRequestDto;
 import com.eyedle.notification_service.presentation.dto.response.NotificationCreateResponseDto;
+import com.eyedle.notification_service.presentation.dto.response.NotificationGetResponseDto;
+import com.eyedle.notification_service.presentation.enums.NotificationErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -21,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NotificationService {
 
+	private final NotificationPolicy  notificationPolicy;
 	private final NotificationRepository notificationRepository;
 	private final SseEmitterRepository emitterRepository;
 	private final StringRedisTemplate redisTemplate;
@@ -60,6 +68,31 @@ public class NotificationService {
 
 	}
 
+	public SliceResponse<NotificationGetResponseDto> getNotifications(Long id, Long cursor, int size) {
+		List<Notification> notifications = notificationRepository.findAllByReceiverId(id,cursor,size);
+		return convertToSlice(notifications, size);
+	}
+
+	@Transactional
+	public void readNotification(Long userId, Long notificationId) {
+
+		Notification notification = notificationRepository.findByIdAndDeletedAtIsNull(notificationId)
+			.orElseThrow(()-> new CustomException(
+			NotificationErrorCode.NOTIFICATION_NOT_FOUND));
+
+		notificationPolicy.UserIsReceiver(userId, notification.getReceiverId());
+
+		notification.markAsRead();
+
+		notificationRepository.save(notification);
+
+	}
+
+	@Transactional
+	public void readAllNotifications(Long userId) {
+		notificationRepository.markAllAsRead(userId);
+	}
+
 	private void sendEmitter(Long userId, SseEmitter emitter, String eventName, Object data) {
 		try {
 			emitter.send(
@@ -71,5 +104,25 @@ public class NotificationService {
 			log.error("SSE emitter 연결 실패", e);
 			throw new RuntimeException("SSE emitter 연결에 실패했습니다.", e);
 		}
+	}
+
+	private SliceResponse<NotificationGetResponseDto> convertToSlice(List<Notification> notifications, int size) {
+		boolean hasNext = false;
+		Long nextCursor = null;
+
+		if (notifications.size() > size) {
+			hasNext = true;
+			notifications.remove(size);
+		}
+
+		if (!notifications.isEmpty()) {
+			nextCursor = notifications.get(notifications.size() - 1).getId();
+		}
+
+		List<NotificationGetResponseDto> dtos = notifications.stream()
+			.map(NotificationGetResponseDto::fromEntity)
+			.toList();
+
+		return SliceResponse.of(dtos, hasNext, nextCursor);
 	}
 }
