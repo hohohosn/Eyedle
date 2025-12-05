@@ -45,7 +45,6 @@ public class Notification {
 
 	@CreatedDate
 	@Field("created_at")
-	@Indexed(expireAfter = "30d")
 	private LocalDateTime createdAt;
 
 	@Field("deleted_at")
