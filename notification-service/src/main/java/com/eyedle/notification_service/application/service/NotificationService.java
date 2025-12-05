@@ -77,7 +77,7 @@ public class NotificationService {
 
 		Notification notification = getNotification(notificationId);
 
-		notificationPolicy.UserIsReceiver(userId, notification.getReceiverId());
+		notificationPolicy.userIsReceiver(userId, notification.getReceiverId());
 
 		notification.markAsRead();
 
@@ -93,7 +93,7 @@ public class NotificationService {
 
 	public void deleteNotification(Long userId, Long notificationId) {
 		Notification notification = getNotification(notificationId);
-		notificationPolicy.UserIsReceiver(userId, notification.getReceiverId());
+		notificationPolicy.userIsReceiver(userId, notification.getReceiverId());
 		notification.softDelete();
 		notificationRepository.save(notification);
 	}
