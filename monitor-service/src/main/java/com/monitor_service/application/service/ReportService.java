@@ -11,6 +11,7 @@ import com.monitor_service.domain.model.Report;
 import com.monitor_service.domain.model.ReportStatus;
 import com.monitor_service.domain.repository.ReportRepository;
 import com.monitor_service.presentation.request.CreateReportRequest;
+import com.monitor_service.presentation.request.ProcessReportRequest;
 import com.monitor_service.presentation.response.ReportDetailResponse;
 import com.monitor_service.presentation.response.ReportResponse;
 
@@ -56,5 +57,15 @@ public class ReportService {
 			.orElseThrow(() -> new NoSuchElementException("해당 신고 내역을 찾을 수 없습니다."));
 
 		return ReportDetailResponse.from(report);
+	}
+
+	@Transactional
+	public Long processReport(Long reportId, ProcessReportRequest request) {
+		Report report = reportRepository.findById(reportId)
+			.orElseThrow(() -> new NoSuchElementException("해당 신고 내역을 찾을 수 없습니다."));
+
+		report.processReport(request.processorid(), request.status());
+
+		return report.getId();
 	}
 }
