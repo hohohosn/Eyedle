@@ -66,7 +66,7 @@ public class ReportService {
 		Report report = reportRepository.findById(reportId)
 			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
-		report.processReport(request.processorid(), request.status());
+		report.processReport(request.processorId(), request.status());
 
 		return report.getId();
 	}

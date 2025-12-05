@@ -4,6 +4,6 @@ import com.monitor_service.domain.model.ReportStatus;
 
 public record ProcessReportRequest(
 	ReportStatus status,
-	Long processorid
+	Long processorId
 ) {
 }
