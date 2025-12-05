@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import com.eyedle.notification_service.domain.model.Notification;
 import com.eyedle.notification_service.domain.repository.NotificationRepository;
 import com.eyedle.notification_service.infra.repository.mongo.NotificationMongoRepository;
+import com.mongodb.client.result.UpdateResult;
 
 import lombok.RequiredArgsConstructor;
 
@@ -58,25 +59,27 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 	}
 
 	@Override
-	public void markAllAsRead(Long userId) {
+	public Long markAllAsRead(Long userId) {
 		Query query = new Query(Criteria.where("receiverId").is(userId)
 			.and("deletedAt").isNull()
 			.and("readAt").isNull());
 
 		Update update = new Update().set("readAt", LocalDateTime.now());
+		UpdateResult result = mongoTemplate.updateMulti(query, update, Notification.class);
 
-		mongoTemplate.updateMulti(query, update, Notification.class);
+		return result.getModifiedCount();
 
 	}
 
 	@Override
-	public void deleteAllByReceiverId(Long receiverId) {
+	public Long deleteAllByReceiverId(Long receiverId) {
 		Query query = new Query(Criteria.where("receiverId").is(receiverId)
 		.and("deletedAt").isNull());
 
 		Update update = new Update().set("deletedAt", LocalDateTime.now());
+		UpdateResult result = mongoTemplate.updateMulti(query, update, Notification.class);
 
-		mongoTemplate.updateMulti(query, update, Notification.class);
+		return result.getModifiedCount();
 	}
 
 	@Override

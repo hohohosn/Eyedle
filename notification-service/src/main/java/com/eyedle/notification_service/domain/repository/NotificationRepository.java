@@ -13,9 +13,9 @@ public interface NotificationRepository {
 
 	Optional<Notification> findByIdAndDeletedAtIsNull(Long id);
 
-	void markAllAsRead(Long receiverId);
+	Long markAllAsRead(Long receiverId);
 
-	void deleteAllByReceiverId(Long receiverId);
+	Long deleteAllByReceiverId(Long receiverId);
 
 	Long countByReceiverIdAndReadAtIsNullAndDeletedAtIsNull(Long receiverId);
 }

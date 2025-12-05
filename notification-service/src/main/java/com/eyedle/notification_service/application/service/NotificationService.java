@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.common.exception.CustomException;
@@ -86,8 +85,10 @@ public class NotificationService {
 
 	}
 
-	public void readAllNotifications(Long userId) {
-		notificationRepository.markAllAsRead(userId);
+	public NotificationCountsResponseDto readAllNotifications(Long userId) {
+		return NotificationCountsResponseDto.toDto(
+			notificationRepository.markAllAsRead(userId)
+		);
 	}
 
 	public void deleteNotification(Long userId, Long notificationId) {
@@ -97,8 +98,10 @@ public class NotificationService {
 		notificationRepository.save(notification);
 	}
 
-	public void deleteAllNotifications(Long userId) {
-		notificationRepository.deleteAllByReceiverId(userId);
+	public NotificationCountsResponseDto deleteAllNotifications(Long userId) {
+		return NotificationCountsResponseDto.toDto(
+			notificationRepository.deleteAllByReceiverId(userId)
+		);
 	}
 
 	public NotificationCountsResponseDto countUnreadNotifications(Long userId) {
