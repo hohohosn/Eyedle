@@ -7,6 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.common.exception.CustomException;
+import com.common.response.ErrorCode;
 import com.monitor_service.domain.model.Report;
 import com.monitor_service.domain.model.ReportStatus;
 import com.monitor_service.domain.repository.ReportRepository;
@@ -54,7 +56,7 @@ public class ReportService {
 
 	public ReportDetailResponse getReport(Long reportId) {
 		Report report = reportRepository.findById(reportId)
-			.orElseThrow(() -> new NoSuchElementException("해당 신고 내역을 찾을 수 없습니다."));
+			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
 		return ReportDetailResponse.from(report);
 	}
@@ -62,7 +64,7 @@ public class ReportService {
 	@Transactional
 	public Long processReport(Long reportId, ProcessReportRequest request) {
 		Report report = reportRepository.findById(reportId)
-			.orElseThrow(() -> new NoSuchElementException("해당 신고 내역을 찾을 수 없습니다."));
+			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
 		report.processReport(request.processorid(), request.status());
 
@@ -72,7 +74,7 @@ public class ReportService {
 	@Transactional
 	public Long deleteReport(Long reportId) {
 		Report report = reportRepository.findById(reportId)
-			.orElseThrow(() -> new NoSuchElementException("해당 신고를 찾을 수 없습니다."));
+			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
 		reportRepository.delete(report);
 
