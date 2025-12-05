@@ -6,6 +6,8 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import com.common.database.BaseTimeEntity;
+import com.common.exception.CustomException;
+import com.common.response.ErrorCode;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -67,7 +69,7 @@ public class Report extends BaseTimeEntity{
 
 	public void processReport(Long processorId, ReportStatus newStatus){
 		if (newStatus == ReportStatus.PENDING) {
-			throw new IllegalArgumentException("처리는 RESOLVED 또는 REJECTED로만 가능");
+			throw new CustomException(ErrorCode.BAD_REQUEST);
 		}
 
 		this.processorId = processorId;
