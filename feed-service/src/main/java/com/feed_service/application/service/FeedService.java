@@ -3,8 +3,10 @@ package com.feed_service.application.service;
 import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
 import com.feed_service.domain.model.Feed;
+import com.feed_service.domain.model.FeedMedia;
 import com.feed_service.domain.repository.FeedRepository;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
+import com.feed_service.presentation.request.FeedMediaUploadRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.presentation.response.FeedResponseDto;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +37,12 @@ public class FeedService {
 
         feedRepository.save(feed);
 
-        feedMediaService.uploadMedias(feed, files);
+        if(request.getMedias() != null){
+            for(FeedMediaUploadRequestDto m : request.getMedias()){
+                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
+                feed.getMediaList().add(media);
+            }
+        }
 
         return feed.getId();
     }
