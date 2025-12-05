@@ -16,4 +16,6 @@ public interface NotificationRepository {
 	void markAllAsRead(Long receiverId);
 
 	void deleteAllByReceiverId(Long receiverId);
+
+	Long countByReceiverIdAndReadAtIsNullAndDeletedAtIsNull(Long receiverId);
 }

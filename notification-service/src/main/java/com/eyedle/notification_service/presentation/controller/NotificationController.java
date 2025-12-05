@@ -18,6 +18,7 @@ import com.eyedle.notification_service.global.annotation.CurrentUser;
 import com.eyedle.notification_service.global.dto.UserContext;
 import com.eyedle.notification_service.presentation.dto.SliceResponse;
 import com.eyedle.notification_service.presentation.dto.request.NotificationCreateRequestDto;
+import com.eyedle.notification_service.presentation.dto.response.NotificationCountsResponseDto;
 import com.eyedle.notification_service.presentation.dto.response.NotificationGetResponseDto;
 
 import jakarta.validation.Valid;
@@ -112,6 +113,17 @@ public class NotificationController {
 		@PathVariable("notificationId") Long notificationId) {
 		notificationService.deleteNotification(user.getId(), notificationId);
 		return CommonResponse.of(SuccessCode.DELETED);
+	}
+
+	/**
+	 *
+	 * @param user
+	 * @return
+	 */
+	@GetMapping("/notifications/counts")
+	public CommonResponse<NotificationCountsResponseDto> countUnreadNotifications(@CurrentUser UserContext user){
+		NotificationCountsResponseDto notificationCountsResponseDto = notificationService.countUnreadNotifications(user.getId());
+		return CommonResponse.of(SuccessCode.OK, notificationCountsResponseDto);
 	}
 
 

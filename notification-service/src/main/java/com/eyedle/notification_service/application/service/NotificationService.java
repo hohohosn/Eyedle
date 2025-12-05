@@ -14,6 +14,7 @@ import com.eyedle.notification_service.infra.config.RedisConfig;
 import com.eyedle.notification_service.infra.repository.SseEmitterRepository;
 import com.eyedle.notification_service.presentation.dto.SliceResponse;
 import com.eyedle.notification_service.presentation.dto.request.NotificationCreateRequestDto;
+import com.eyedle.notification_service.presentation.dto.response.NotificationCountsResponseDto;
 import com.eyedle.notification_service.presentation.dto.response.NotificationCreateResponseDto;
 import com.eyedle.notification_service.presentation.dto.response.NotificationGetResponseDto;
 import com.eyedle.notification_service.presentation.enums.NotificationErrorCode;
@@ -73,7 +74,6 @@ public class NotificationService {
 		return convertToSlice(notifications, size);
 	}
 
-	@Transactional
 	public void readNotification(Long userId, Long notificationId) {
 
 		Notification notification = getNotification(notificationId);
@@ -86,12 +86,10 @@ public class NotificationService {
 
 	}
 
-	@Transactional
 	public void readAllNotifications(Long userId) {
 		notificationRepository.markAllAsRead(userId);
 	}
 
-	@Transactional
 	public void deleteNotification(Long userId, Long notificationId) {
 		Notification notification = getNotification(notificationId);
 		notificationPolicy.UserIsReceiver(userId, notification.getReceiverId());
@@ -99,9 +97,14 @@ public class NotificationService {
 		notificationRepository.save(notification);
 	}
 
-	@Transactional
 	public void deleteAllNotifications(Long userId) {
 		notificationRepository.deleteAllByReceiverId(userId);
+	}
+
+	public NotificationCountsResponseDto countUnreadNotifications(Long userId) {
+		return NotificationCountsResponseDto.toDto(
+			notificationRepository.countByReceiverIdAndReadAtIsNullAndDeletedAtIsNull(userId)
+		);
 	}
 
 	private Notification getNotification(Long notificationId) {

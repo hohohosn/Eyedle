@@ -9,4 +9,5 @@ import com.eyedle.notification_service.domain.model.Notification;
 public interface NotificationMongoRepository extends MongoRepository<Notification, Long> {
 
 	Optional<Notification> findByIdAndDeletedAtIsNull(Long id);
+
 }

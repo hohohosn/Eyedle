@@ -78,4 +78,19 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 
 		mongoTemplate.updateMulti(query, update, Notification.class);
 	}
+
+	@Override
+	public Long countByReceiverIdAndReadAtIsNullAndDeletedAtIsNull(Long receiverId) {
+		Criteria criteria = new Criteria();
+
+		criteria.and("receiverId").is(receiverId);
+		criteria.and("deletedAt").isNull();
+		criteria.and("readAt").isNull();
+
+		LocalDateTime limitDate = LocalDateTime.now().minusDays(30);
+		criteria.and("createdAt").gte(limitDate);
+
+		Query query = new Query(criteria);
+		return mongoTemplate.count(query, Notification.class);
+	}
 }
