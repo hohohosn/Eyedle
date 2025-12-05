@@ -21,10 +21,8 @@ public class FeedController {
     @PostMapping
     public CommonResponse createFeed(@RequestBody FeedCreateRequestDto request){
         Long userId = 1L;
-        Long feedId = 1L;
 
-        return CommonResponse.of(SuccessCode.OK,
-                feedService.createFeed(request, userId, feedId));
+        return CommonResponse.of(SuccessCode.OK, feedService.createFeed(request, userId));
     }
 
     @GetMapping("/{feedId}")
@@ -42,7 +40,7 @@ public class FeedController {
 
     @PatchMapping("/{feedId}")
     public CommonResponse  updateFeed(@PathVariable Long feedId, @RequestBody FeedUpdateRequestDto request){
-        return CommonResponse.of(SuccessCode.UPDATED, feedService.updateFeed(feedId, request));
+        return CommonResponse.of(SuccessCode.OK, feedService.updateFeed(feedId, request));
     }
 
     @DeleteMapping("/{feedId}")
