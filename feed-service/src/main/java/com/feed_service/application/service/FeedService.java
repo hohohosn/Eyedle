@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -19,9 +22,10 @@ import org.springframework.stereotype.Service;
 public class FeedService {
 
     private final FeedRepository feedRepository;
+    private final FeedMediaService feedMediaService;
 
     @Transactional
-    public Long createFeed(FeedCreateRequestDto request, Long userId) {
+    public Long createFeed(FeedCreateRequestDto request, List<MultipartFile> files, Long userId) {
 
         Feed feed = Feed.builder()
                 .userId(userId)
@@ -30,6 +34,9 @@ public class FeedService {
                 .build();
 
         feedRepository.save(feed);
+
+        feedMediaService.uploadMedias(feed, files);
+
         return feed.getId();
     }
 
