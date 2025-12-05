@@ -32,7 +32,7 @@ public class NotificationCreateRequestDto {
 	public Notification toEntity() {
 		return Notification.builder()
 			.receiverId(this.receiverId)
-			.type(this.type)
+			.notificationType(this.type)
 			.message(this.message)
 			.targetId(this.targetId)
 			.subTargetId(this.subTargetId)
