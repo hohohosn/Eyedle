@@ -1,5 +1,7 @@
 package com.monitor_service.infra.repository.repositoryImpl;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -29,5 +31,10 @@ public class ReportRepositoryImpl implements ReportRepository {
 	@Override
 	public Page<Report> findAllByStatus(ReportStatus status, Pageable pageable) {
 		return reportJpaRepository.findAllByStatus(status, pageable);
+	}
+
+	@Override
+	public Optional<Report> findById(Long id) {
+		return reportJpaRepository.findById(id);
 	}
 }

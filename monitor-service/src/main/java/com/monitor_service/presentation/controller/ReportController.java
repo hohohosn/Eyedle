@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import com.monitor_service.application.service.ReportService;
 import com.monitor_service.domain.model.ReportStatus;
 import com.monitor_service.presentation.request.CreateReportRequest;
 import com.monitor_service.presentation.response.CreateReportResponse;
+import com.monitor_service.presentation.response.ReportDetailResponse;
 import com.monitor_service.presentation.response.ReportResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,12 @@ public class ReportController {
 		@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
 	){
 		Page<ReportResponse> response = reportService.getReports(status, pageable);
+		return CommonResponse.of(SuccessCode.OK, response);
+	}
+
+	@GetMapping("/{reportId}")
+	public CommonResponse<ReportDetailResponse> getReport(@PathVariable Long reportId) {
+		ReportDetailResponse response = reportService.getReport(reportId);
 		return CommonResponse.of(SuccessCode.OK, response);
 	}
 }

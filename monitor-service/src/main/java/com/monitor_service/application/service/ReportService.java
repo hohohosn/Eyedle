@@ -1,5 +1,7 @@
 package com.monitor_service.application.service;
 
+import java.util.NoSuchElementException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import com.monitor_service.domain.model.Report;
 import com.monitor_service.domain.model.ReportStatus;
 import com.monitor_service.domain.repository.ReportRepository;
 import com.monitor_service.presentation.request.CreateReportRequest;
+import com.monitor_service.presentation.response.ReportDetailResponse;
 import com.monitor_service.presentation.response.ReportResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -46,5 +49,12 @@ public class ReportService {
 		}
 
 		return reports.map(ReportResponse::from);
+	}
+
+	public ReportDetailResponse getReport(Long reportId) {
+		Report report = reportRepository.findById(reportId)
+			.orElseThrow(() -> new NoSuchElementException("해당 신고 내역을 찾을 수 없습니다."));
+
+		return ReportDetailResponse.from(report);
 	}
 }
