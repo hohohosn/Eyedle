@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.validator.internal.constraintvalidators.bv.time.futureorpresent.FutureOrPresentValidatorForThaiBuddhistDate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,7 +40,6 @@ public class ChatService {
   private final UserClient userClient;
   private final BlockClient blockClient;
   private final FollowClient followClient;
-  private final FutureOrPresentValidatorForThaiBuddhistDate futureOrPresentValidatorForThaiBuddhistDate;
 
   /**
    * 새 채팅 생성
@@ -211,7 +209,7 @@ public class ChatService {
 
     // 채팅 참여자 생성
     ChatParticipant sender = ChatParticipant.create(newChatRoom.getId(), userId, false);
-    ChatParticipant receiver = ChatParticipant.create(receiverId, receiverId, chatRoomStatus == REQUESTED);   // 수신자는 아직 참여하지 않음
+    ChatParticipant receiver = ChatParticipant.create(newChatRoom.getId(), receiverId, chatRoomStatus == REQUESTED);   // 수신자는 아직 참여하지 않음
     chatParticipantRepository.save(sender);
     chatParticipantRepository.save(receiver);
 
