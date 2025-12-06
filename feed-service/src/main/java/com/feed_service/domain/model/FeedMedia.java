@@ -20,7 +20,7 @@ public class FeedMedia extends BaseTimeEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Enum mediaType;
+    private MediaType mediaType;
 
     public FeedMedia(Feed feed, String mediaUrl, MediaType mediaType) {
         this.feed = feed;
