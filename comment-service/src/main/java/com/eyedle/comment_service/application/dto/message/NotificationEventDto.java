@@ -28,7 +28,7 @@ public class NotificationEventDto {
 
 		if (comment.getParentId() != null) {
 			type = "COMMENT_REPLY";
-			message = authorName + "님이 회원님의 댓글에 댓글을 남겼습니다.";
+			message = authorName + "님이 회원님의 댓글에 답글을 남겼습니다";
 			subTargetId = comment.getParentId();
 		}
 
@@ -40,23 +40,6 @@ public class NotificationEventDto {
 			.subTargetId(subTargetId)
 			.build();
 
-	}
-
-	private static String setNotificationType(Comment comment) {
-		if (comment.getParentId() != null) {
-			return "COMMENT_REPLY";
-		}
-		return "FEED_COMMENT";
-	}
-
-	private static String setNotificationMessage(Comment comment) {
-		String authorName = comment.getAuthor().getName();
-
-		if (comment.getParentId() != null) {
-			return authorName + "님이 회원님의 댓글에 답글을 남겼습니다.";
-		}
-
-		return authorName + "님이 회원님의 게시글에 댓글을 남겼습니다.";
 	}
 
 }

@@ -53,8 +53,10 @@ public class CommentService {
 
 		Long feedAuthor = validateFeed(commentCreateCommand.getFeedId(), commentCreateCommand.getUserId());
 
+		Comment parentComment = null;
 		if (commentCreateCommand.getParentId() != null) {
-			validateReply(commentCreateCommand.getParentId(), commentCreateCommand.getFeedId());
+			parentComment = getComment(commentCreateCommand.getParentId());
+			validateReply(parentComment, commentCreateCommand.getFeedId());
 		}
 
 		Author author = getUser(commentCreateCommand.getUserId());
@@ -62,7 +64,7 @@ public class CommentService {
 		Comment comment = commentCreateCommand.toEntity(author);
 		Comment savedComment = commentRepository.save(comment);
 
-		sendNotificationEvent(savedComment, feedAuthor);
+		sendNotificationEvent(savedComment, parentComment, feedAuthor);
 
 		return CommentCreateResponseDto.fromEntity(savedComment);
 
@@ -77,7 +79,7 @@ public class CommentService {
 
 	@Transactional(readOnly = true)
 	public SliceResponse<ReplyGetResponseDto> getReplies(Long userId, Long feedId, Long commentId, Long cursor, Pageable pageable) {
-		validateReply(commentId, feedId);
+		validateReplyById(commentId, feedId);
 		List<Comment> replies = commentRepository.findAllByParentId(feedId, commentId, cursor, pageable);
 		return convertToSlice(replies, pageable, ReplyGetResponseDto::fromEntity);
 	}
@@ -222,27 +224,31 @@ public class CommentService {
 
 	/**
 	 * 대댓글 검증
-	 * @param parentId
+	 * @param parentComment
 	 * @param feedId
 	 */
-	private void validateReply(Long parentId, Long feedId) {
-
-		Comment parentComment = getComment(parentId);
+	private void validateReply(Comment parentComment, Long feedId) {
 
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
 		commentPolicy.validateReply(parentComment, feedId);
 
 	}
 
+	private void validateReplyById(Long parentId, Long feedId) {
+		Comment parentComment = getComment(parentId);
+		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
+		commentPolicy.validateReply(parentComment, feedId);
+	}
+
 	/**
 	 * Kafka 이벤트 발행
 	 * @param savedComment
 	 */
-	private void sendNotificationEvent(Comment savedComment, Long feedAuthor) {
+	private void sendNotificationEvent(Comment savedComment, Comment parentComment, Long feedAuthor) {
 
-		Long receiverId = setReceiver(savedComment, feedAuthor);
+		Long receiverId = setReceiver(parentComment, feedAuthor);
 
-		if(feedAuthor.equals(savedComment.getAuthor().getId())) {
+		if(receiverId.equals(savedComment.getAuthor().getId())) {
 			return;
 		}
 
@@ -252,14 +258,13 @@ public class CommentService {
 
 	/**
 	 * 댓글/대댓글시 알림 수신자 확인
-	 * @param savedComment
+	 * @param parentComment
 	 * @param feedAuthor
 	 * @return
 	 */
-	private Long setReceiver(Comment savedComment, Long feedAuthor) {
+	private Long setReceiver(Comment parentComment, Long feedAuthor) {
 
-		if(savedComment.getParentId() != null){
-			Comment parentComment = getComment(savedComment.getParentId());
+		if(parentComment != null){
 			return parentComment.getAuthor().getId();
 		}
 
