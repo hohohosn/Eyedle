@@ -6,6 +6,7 @@ import com.chatservice.domain.repository.ChatMessageRepository;
 import com.chatservice.infra.repository.jpa.ChatMessageJpaRepository;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,6 +14,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+
+import static com.chatservice.domain.model.QChatMessage.chatMessage;
 
 @Repository
 @RequiredArgsConstructor
@@ -49,5 +52,15 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
         .fetch();
 
     return lastMessages.stream().collect(Collectors.toMap(ChatMessage::getChatRoomId, Function.identity()));
+  }
+
+  @Override
+  public List<ChatMessage> findOldMessages(Long chatRoomId, LocalDateTime dateTime, int limit) {
+    return jpaQueryFactory
+        .selectFrom(chatMessage)
+        .where(chatMessage.chatRoomId.eq(chatRoomId).and(chatMessage.createdAt.lt(dateTime)))
+        .orderBy(chatMessage.createdAt.desc())
+        .limit(limit)
+        .fetch();
   }
 }
