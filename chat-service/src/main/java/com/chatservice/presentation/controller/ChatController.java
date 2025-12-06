@@ -2,9 +2,11 @@ package com.chatservice.presentation.controller;
 
 import com.chatservice.application.service.ChatService;
 import com.chatservice.presentation.request.CreateChatRoomReqDto;
+import com.chatservice.presentation.response.ChatMessageResDto;
 import com.chatservice.presentation.response.ChatRoomCursorResDto;
 import com.chatservice.presentation.response.CreateChatRoomResDto;
 import com.common.response.CommonResponse;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -57,6 +59,12 @@ public class ChatController {
     Long userId = 1L;
     chatService.deleteMessage(chatRoomId, messageId, userId);
     return CommonResponse.of(DELETED);
+  }
+
+  @GetMapping("/{chatRoomId}/messages")
+  public CommonResponse<List<ChatMessageResDto>> getChatRoomMessages(@PathVariable Long chatRoomId, @RequestParam(required = false) Long before) {
+    Long userId = 1L;
+    return CommonResponse.of(OK, chatService.getMessages(userId, chatRoomId, before));
   }
 }
 
