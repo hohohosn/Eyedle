@@ -35,7 +35,7 @@ public class ChatMessage extends BaseTimeEntity {
 
   private LocalDateTime deletedAt;
 
-  public void delete() {
-    this.deletedAt = LocalDateTime.now();
+  public void delete(LocalDateTime deletedAt) {
+    this.deletedAt = deletedAt;
   }
 }
