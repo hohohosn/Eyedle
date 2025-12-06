@@ -2,13 +2,13 @@ spring:
   application:
     name: comment-service
   datasource:
-    url: jdbc:postgresql://localhost:5433/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5433/${DB_NAME:commentDB}
+    username: ${DB_USERNAME:comment}
+    password: ${DB_PASSWORD:comment}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -18,6 +18,11 @@ spring:
     redis:
       host: localhost
       port: 6380
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 global:
   redis:
