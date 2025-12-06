@@ -1,21 +1,23 @@
 package com.chatservice.domain.model;
 
 import com.common.database.BaseTimeEntity;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_chat_participates")
+@Table(
+    name = "p_chat_participants",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"chat_room_id", "user_id"})
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AttributeOverride(name = "updatedAt", column = @Column(name = "ignore_updated_at", insertable = false, updatable = false))
-public class ChatParticipate extends BaseTimeEntity {
+public class ChatParticipant extends BaseTimeEntity {
 
   @Column(nullable = false)
   private Long chatRoomId;
@@ -23,7 +25,6 @@ public class ChatParticipate extends BaseTimeEntity {
   @Column(nullable = false)
   private Long userId;
 
-  @Column(nullable = false)
   private boolean isLeft;
 
   private LocalDateTime leftAt;
@@ -31,11 +32,12 @@ public class ChatParticipate extends BaseTimeEntity {
   /**
    * 채팅 참여자 생성을 위한 정적 팩토리 메서드
    */
-  public static ChatParticipate create(Long chatRoomId, Long userId) {
-    ChatParticipate participate = new ChatParticipate();
-    participate.chatRoomId = chatRoomId;
-    participate.userId = userId;
-    return participate;
+  public static ChatParticipant create(Long chatRoomId, Long userId, boolean isLeft) {
+    ChatParticipant participant = new ChatParticipant();
+    participant.chatRoomId = chatRoomId;
+    participant.userId = userId;
+    participant.isLeft = isLeft;
+    return participant;
   }
 
   /**
@@ -43,6 +45,7 @@ public class ChatParticipate extends BaseTimeEntity {
    */
   public void leave() {
     this.isLeft = true;
+    this.leftAt = LocalDateTime.now();
   }
 
   public void join() {

@@ -30,3 +30,6 @@ eureka:
 
   instance:
     hostname: chat-service
+
+instance:
+  node-id: 13

@@ -1,10 +1,17 @@
 package com.chatservice.domain.repository;
 
 import com.chatservice.domain.model.ChatMessage;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ChatMessageRepository {
 
-  ChatMessage save(ChatMessage chatMessage);
+  void save(ChatMessage chatMessage);
+
+  Optional<ChatMessage> findById(Long messageId);
+
+  Map<Long, ChatMessage> findLastMessageByChatRoomIds(List<Long> chatRoomIds);
 }
