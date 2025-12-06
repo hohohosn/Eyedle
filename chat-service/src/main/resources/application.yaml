@@ -20,6 +20,10 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  data:
+    redis:
+      host: redis
+      port: 6379
 
 eureka:
   client:
