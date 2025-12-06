@@ -33,6 +33,9 @@ dependencies {
     implementation 'com.github.sparta-Eyedle:msa-common-module:v0.0.6'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
+
     // QueryDSL 추가
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
     annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
