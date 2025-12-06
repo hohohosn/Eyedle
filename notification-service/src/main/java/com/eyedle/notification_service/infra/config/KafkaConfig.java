@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class KafkaConfig {
 
-	private final KafkaTemplate<String, String> kafkaTemplate;
+	private final KafkaTemplate<String, Object> kafkaTemplate;
 
 	@Bean
 	public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
@@ -30,12 +30,21 @@ public class KafkaConfig {
 		ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
 		factory.setConsumerFactory(consumerFactory);
 
-		factory.setCommonErrorHandler(errorHandler());
+		factory.setCommonErrorHandler(dlqErrorHandler());
 
 		return factory;
 	}
 
-	private CommonErrorHandler errorHandler(){
+	@Bean(name = "dlqKafkaListenerContainerFactory")
+	public ConcurrentKafkaListenerContainerFactory<String, Object> dlqKafkaListenerContainerFactory(
+		ConsumerFactory<String, Object> consumerFactory) {
+
+		ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+		factory.setConsumerFactory(consumerFactory);
+		return factory;
+	}
+
+	private CommonErrorHandler dlqErrorHandler(){
 		DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
 			(record, exception) -> {
 				log.error("[kafka] 최종 실패 DLQ로 이동 : Topic: {}, Value: {}", record.topic(), record.value());

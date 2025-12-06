@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 1. PostgreSQL (Comment Service DB)
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: local-postgres
+    restart: always
+    ports:
+      - "5433:5432" # 호스트 5433 -> 컨테이너 5432
+    environment:
+      # .env 없으면 comment/comment/commentDB 사용
+      POSTGRES_USER: ${DB_USERNAME:-comment}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-comment}
+      POSTGRES_DB: ${DB_NAME:-commentDB}
+    volumes:
+      - ./infra-data/postgres:/var/lib/postgresql/data
+    networks:
+      - shared-network
+
+  # ==========================================
+  # 2. MongoDB (Notification Service DB)
+  # ==========================================
+  mongodb:
+    image: mongo:6.0
+    container_name: local-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      # .env 없으면 noti/noti 사용
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-noti}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-noti}
+    volumes:
+      - ./infra-data/mongo:/data/db
+    networks:
+      - shared-network
+
+  # ==========================================
+  # 3. Redis (Global - Pub/Sub용)
+  # ==========================================
+  redis-global:
+    image: redis:alpine
+    container_name: local-redis-global
+    ports:
+      - "6379:6379"
+    networks:
+      - shared-network
+
+  # ==========================================
+  # 4. Redis (Local Cache - Comment Service용)
+  # ==========================================
+  redis-cache:
+    image: redis:alpine
+    container_name: local-redis-cache
+    ports:
+      - "6380:6379"
+    networks:
+      - shared-network
+
+  # ==========================================
+  # 5. Kafka & Zookeeper (통합 이벤트 브로커)
+  # ==========================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: local-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - shared-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: local-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - shared-network
+
+# 네트워크 정의
+networks:
+  shared-network:
+    driver: bridge

@@ -1,6 +1,8 @@
 package com.eyedle.notification_service.infra.kafka;
 
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
 import com.eyedle.notification_service.application.service.NotificationService;
@@ -26,11 +28,6 @@ public class NotificationConsumer {
 		log.info("[Kafka] Received notification event {}", event);
 
 		try {
-			// 테스트용
-			if ("ERROR".equals(event.getMessage())) {
-				throw new RuntimeException("의도된 처리 실패!");
-			}
-
 			NotificationCreateRequestDto notificationCreateRequestDto = event.toRequestDto();
 
 			notificationService.sendNotification(notificationCreateRequestDto);
@@ -43,9 +40,16 @@ public class NotificationConsumer {
 		}
 	}
 
-	@KafkaListener(topics = "notification-topic.DLT", groupId = "dlq-monitor-group")
-	public void listenDLQ(NotificationKafkaDto event) {
-		log.warn("[DLQ] 실패 메시지 수신: {}", event);
+	@KafkaListener(topics = "notification-topic.DLT",
+		groupId = "dlq-monitor-group",
+		containerFactory = "dlqKafkaListenerContainerFactory"
+	)
+	public void listenDLQ(String message,
+		@Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
+		@Header(KafkaHeaders.OFFSET) long offset) {
+		log.warn("[DLQ] 메시지 수신!");
+		log.warn("   -> Topic: {}, Offset: {}", topic, offset);
+		log.warn("   -> Payload: {}", message);
 		// TODO: 슬랙 알림 전송 or 관리자 이메일 발송
 	}
 
