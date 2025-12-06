@@ -64,7 +64,7 @@ public class ChatController {
   @GetMapping("/{chatRoomId}/messages")
   public CommonResponse<List<ChatMessageResDto>> getChatRoomMessages(@PathVariable Long chatRoomId, @RequestParam(required = false) Long before) {
     Long userId = 1L;
-    return CommonResponse.of(OK, chatService.getMessages(userId, chatRoomId, before));
+    return CommonResponse.of(OK, chatService.getChatRoomMessages(userId, chatRoomId, before));
   }
 }
 
