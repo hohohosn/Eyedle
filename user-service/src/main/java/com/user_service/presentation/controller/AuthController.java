@@ -2,6 +2,7 @@ package com.user_service.presentation.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.user_service.application.service.AuthService;
 import com.user_service.presentation.dto.request.LoginRequest;
+import com.user_service.presentation.dto.request.RefreshTokenRequest;
 import com.user_service.presentation.dto.request.SignupRequest;
 import com.user_service.presentation.dto.response.ApiResponse;
 import com.user_service.presentation.dto.response.AuthResponse;
@@ -59,22 +61,27 @@ public class AuthController {
 	}
 
 	/**
-	 * 토큰 갱신
+	 * 토큰 갱신 (보안 강화 버전)
 	 */
 	@PostMapping("/refresh")
-	public ResponseEntity<ApiResponse<AuthResponse>> refresh(
-		@RequestHeader("Authorization") String refreshToken
+	public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(
+		@Valid @RequestBody RefreshTokenRequest request
 	) {
 		log.info("토큰 갱신 요청");
-
-		// Bearer 제거
-		String token = refreshToken.replace("Bearer ", "");
-
-		AuthResponse response = authService.refreshToken(token);
-
-		return ResponseEntity.ok(
-			ApiResponse.success("토큰이 갱신되었습니다.", response)
-		);
+		AuthResponse response = authService.refreshToken(request);
+		return ResponseEntity.ok(ApiResponse.success("토큰이 갱신되었습니다.", response));
 	}
-	
+
+	/**
+	 * 로그아웃
+	 */
+	@PostMapping("/logout")
+	public ResponseEntity<ApiResponse<String>> logout(
+		@AuthenticationPrincipal Long userId
+	) {
+		log.info("로그아웃 요청: userId={}", userId);
+		authService.logout(userId);
+		return ResponseEntity.ok(ApiResponse.success("로그아웃이 완료되었습니다."));
+	}
+
 }

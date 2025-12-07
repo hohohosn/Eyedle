@@ -1,5 +1,8 @@
 package com.user_service.infrastructure.security;
 
+import com.user_service.infrastructure.exception.BusinessException;
+import com.user_service.infrastructure.exception.ErrorCode;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +41,13 @@ public class JwtTokenProvider {
 		Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
 		return Jwts.builder()
-			.subject(String.valueOf(userId))
+			.setSubject(String.valueOf(userId))
 			.claim("email", email)
 			.claim("role", role)
-			.claim("type", "ACCESS")
-			.issuedAt(now)
-			.expiration(expiryDate)
-			.signWith(secretKey)
+			.claim("type", "access")
+			.setIssuedAt(now)
+			.setExpiration(expiryDate)
+			.signWith(secretKey, SignatureAlgorithm.HS256)
 			.compact();
 	}
 
@@ -56,11 +59,11 @@ public class JwtTokenProvider {
 		Date expiryDate = new Date(now.getTime() + refreshTokenExpiration);
 
 		return Jwts.builder()
-			.subject(String.valueOf(userId))
-			.claim("type", "REFRESH")
-			.issuedAt(now)
-			.expiration(expiryDate)
-			.signWith(secretKey)
+			.setSubject(String.valueOf(userId))
+			.claim("type", "refresh")
+			.setIssuedAt(now)
+			.setExpiration(expiryDate)
+			.signWith(secretKey, SignatureAlgorithm.HS256)
 			.compact();
 	}
 
@@ -68,7 +71,7 @@ public class JwtTokenProvider {
 	 * 토큰에서 사용자 ID 추출
 	 */
 	public Long getUserIdFromToken(String token) {
-		Claims claims = parseToken(token);
+		Claims claims = parseClaims(token);
 		return Long.parseLong(claims.getSubject());
 	}
 
@@ -76,47 +79,95 @@ public class JwtTokenProvider {
 	 * 토큰에서 이메일 추출
 	 */
 	public String getEmailFromToken(String token) {
-		Claims claims = parseToken(token);
+		Claims claims = parseClaims(token);
 		return claims.get("email", String.class);
 	}
 
 	/**
-	 * 토큰에서 권한 추출
+	 * 토큰에서 역할 추출
 	 */
 	public String getRoleFromToken(String token) {
-		Claims claims = parseToken(token);
+		Claims claims = parseClaims(token);
 		return claims.get("role", String.class);
 	}
 
 	/**
-	 * 토큰 유효성 검증
+	 * 토큰에서 타입 추출
+	 */
+	public String getTokenType(String token) {
+		Claims claims = parseClaims(token);
+		return claims.get("type", String.class);
+	}
+
+	/**
+	 * 토큰 검증 (유효한 토큰인지)
 	 */
 	public boolean validateToken(String token) {
 		try {
-			parseToken(token);
+			Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token);
 			return true;
-		} catch (SecurityException e) {
-			log.error("잘못된 JWT 서명입니다.");
-		} catch (MalformedJwtException e) {
-			log.error("유효하지 않은 JWT 토큰입니다.");
+		} catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+			log.error("잘못된 JWT 서명입니다.", e);
 		} catch (ExpiredJwtException e) {
-			log.error("만료된 JWT 토큰입니다.");
+			log.error("만료된 JWT 토큰입니다.", e);
 		} catch (UnsupportedJwtException e) {
-			log.error("지원되지 않는 JWT 토큰입니다.");
+			log.error("지원되지 않는 JWT 토큰입니다.", e);
 		} catch (IllegalArgumentException e) {
-			log.error("JWT 토큰이 비어있습니다.");
+			log.error("JWT 토큰이 잘못되었습니다.", e);
 		}
 		return false;
 	}
 
 	/**
-	 * 토큰 파싱
+	 * Access Token이 만료되었는지 확인
 	 */
-	private Claims parseToken(String token) {
-		return Jwts.parser()
-			.verifyWith(secretKey)
-			.build()
-			.parseSignedClaims(token)
-			.getPayload();
+	public boolean isTokenExpired(String token) {
+		try {
+			Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token);
+			return false;
+		} catch (ExpiredJwtException e) {
+			return true;
+		} catch (Exception e) {
+			throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		}
+	}
+
+	/**
+	 * 토큰이 Access Token인지 확인
+	 */
+	public boolean isAccessToken(String token) {
+		String type = getTokenType(token);
+		return "access".equals(type);
+	}
+
+	/**
+	 * 토큰이 Refresh Token인지 확인
+	 */
+	public boolean isRefreshToken(String token) {
+		String type = getTokenType(token);
+		return "refresh".equals(type);
+	}
+
+	/**
+	 * 토큰에서 Claims 파싱 (만료된 토큰도 파싱 가능)
+	 */
+	private Claims parseClaims(String token) {
+		try {
+			return Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+		} catch (ExpiredJwtException e) {
+			return e.getClaims();
+		} catch (Exception e) {
+			throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		}
 	}
 }
