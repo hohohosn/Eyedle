@@ -23,7 +23,7 @@ public class FeedBookmarkService {
                 .orElseThrow(() -> new CustomException(ErrorCode.CONFLICT));
 
         if(feedBookmarkRepository.existsByFeed_IdAndUserId(feedId, userId)){
-            throw new CustomException(ErrorCode.CONFLICT);
+            throw new CustomException(ErrorCode.NOT_FOUND);
         }
 
         feedBookmarkRepository.save(new  FeedBookmark(feed, userId));
