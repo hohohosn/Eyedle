@@ -6,9 +6,8 @@ import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.FeedLike;
 import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.domain.repository.FeedRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +30,6 @@ public class FeedLikeService {
         feedLikeRepository.save(new FeedLike(feed, userId));
     }
 
-    @Transactional
     public void deleteLike(Long feedId, Long userId) {
         feedLikeRepository.deleteByFeed_IdAndUserId(feedId, userId);
     }
