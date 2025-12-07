@@ -23,7 +23,7 @@ public class FeedBookmarkController {
     @DeleteMapping
     public CommonResponse unbookmark(@PathVariable Long feedId) {
         Long userId = 1L;
-        feedBookmarkService.bookmarkFeed(feedId, userId);
+        feedBookmarkService.deleteBookmarkFeed(feedId, userId);
         return CommonResponse.of(SuccessCode.DELETED);
     }
 }
