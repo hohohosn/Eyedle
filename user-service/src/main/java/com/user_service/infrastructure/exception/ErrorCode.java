@@ -19,6 +19,9 @@ public enum ErrorCode {
 	INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH001", "유효하지 않은 토큰입니다."),
 	EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH002", "만료된 토큰입니다."),
 	UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH003", "인증이 필요합니다."),
+	TOKEN_NOT_EXPIRED(HttpStatus.UNAUTHORIZED, "AUTH006", "Access Token이 아직 유효합니다."),
+	REFRESH_TOKEN_NOT_FOUND(HttpStatus.UNAUTHORIZED, "AUTH007", "Refresh Token을 찾을 수 없습니다."),
+	REFRESH_TOKEN_REUSED(HttpStatus.UNAUTHORIZED, "AUTH008", "이미 사용된 Refresh Token입니다."),
 
 	// 403 Forbidden
 	FORBIDDEN(HttpStatus.FORBIDDEN, "AUTH004", "권한이 없습니다."),
