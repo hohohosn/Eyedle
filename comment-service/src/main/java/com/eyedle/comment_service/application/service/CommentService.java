@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import com.common.response.CommonResponse;
 import com.eyedle.comment_service.application.command.CommentCreateCommand;
 import com.eyedle.comment_service.application.command.CommentDeleteCommand;
 import com.eyedle.comment_service.application.command.CommentUpdateCommand;
+import com.eyedle.comment_service.application.dto.message.NotificationEventDto;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.domain.service.CommentPolicy;
@@ -42,23 +44,27 @@ public class CommentService {
 	private final CommentRepository commentRepository;
 	private final UserClient userClient;
 	private final FeedClient feedClient;
-	private UserCacheRepository userCacheRepository;
+	private final UserCacheRepository userCacheRepository;
 	private final CommentPolicy commentPolicy;
+	private final KafkaTemplate<String, Object> kafkaTemplate;
 
 	@Transactional
 	public CommentCreateResponseDto saveComment(CommentCreateCommand commentCreateCommand) {
 
-		validateFeed(commentCreateCommand.getFeedId(), commentCreateCommand.getUserId());
+		Long feedAuthor = validateFeed(commentCreateCommand.getFeedId(), commentCreateCommand.getUserId());
 
+		Comment parentComment = null;
 		if (commentCreateCommand.getParentId() != null) {
-			validateReply(commentCreateCommand.getParentId(), commentCreateCommand.getFeedId());
+			parentComment = getComment(commentCreateCommand.getParentId());
+			validateReply(parentComment, commentCreateCommand.getFeedId());
 		}
 
 		Author author = getUser(commentCreateCommand.getUserId());
 
 		Comment comment = commentCreateCommand.toEntity(author);
-
 		Comment savedComment = commentRepository.save(comment);
+
+		sendNotificationEvent(savedComment, parentComment, feedAuthor);
 
 		return CommentCreateResponseDto.fromEntity(savedComment);
 
@@ -66,14 +72,14 @@ public class CommentService {
 
 	@Transactional(readOnly = true)
 	public SliceResponse<CommentGetResponseDto> getComments(Long userId, Long feedId, Long cursor, Pageable pageable) {
-		validateFeed(feedId, userId);
+		Long feedAuthor = validateFeed(feedId, userId);
 		List<Tuple> comments = commentRepository.findAllByFeedId(feedId, cursor, pageable);
 		return tuplesToSlice(comments, pageable);
 	}
 
 	@Transactional(readOnly = true)
 	public SliceResponse<ReplyGetResponseDto> getReplies(Long userId, Long feedId, Long commentId, Long cursor, Pageable pageable) {
-		validateReply(commentId, feedId);
+		validateReplyById(commentId, feedId);
 		List<Comment> replies = commentRepository.findAllByParentId(feedId, commentId, cursor, pageable);
 		return convertToSlice(replies, pageable, ReplyGetResponseDto::fromEntity);
 	}
@@ -180,12 +186,12 @@ public class CommentService {
 	 */
 	private Author getUser(Long userId) {
 
-		return userCacheRepository.getAuthor(userId)
+		return userCacheRepository.get(userId)
 			.orElseGet(() -> {
 				UserGetResultDto userGetResultDto = userClient.getUser(userId).getData();
 				Author newAuthor = userGetResultDto.toAuthor();
 				// Redis 저장
-				userCacheRepository.saveAuthor(newAuthor);
+				userCacheRepository.save(newAuthor);
 				return newAuthor;
 			});
 	}
@@ -199,7 +205,7 @@ public class CommentService {
 	 * 피드 검증
 	 * @param feedId
 	 */
-	private void validateFeed(Long feedId, Long userId) {
+	private Long validateFeed(Long feedId, Long userId) {
 
 		CommonResponse<FeedGetResultDto> result = feedClient.getFeed(feedId);
 
@@ -212,19 +218,56 @@ public class CommentService {
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
 		commentPolicy.validateFeed(feedId, userId, feedGetResultDto.getUserId(), feedGetResultDto.getPermission());
 
+		return feedGetResultDto.getUserId();
+
 	}
 
 	/**
 	 * 대댓글 검증
-	 * @param parentId
+	 * @param parentComment
 	 * @param feedId
 	 */
-	private void validateReply(Long parentId, Long feedId) {
-
-		Comment parentComment = getComment(parentId);
+	private void validateReply(Comment parentComment, Long feedId) {
 
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
 		commentPolicy.validateReply(parentComment, feedId);
 
+	}
+
+	private void validateReplyById(Long parentId, Long feedId) {
+		Comment parentComment = getComment(parentId);
+		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
+		commentPolicy.validateReply(parentComment, feedId);
+	}
+
+	/**
+	 * Kafka 이벤트 발행
+	 * @param savedComment
+	 */
+	private void sendNotificationEvent(Comment savedComment, Comment parentComment, Long feedAuthor) {
+
+		Long receiverId = setReceiver(parentComment, feedAuthor);
+
+		if(receiverId.equals(savedComment.getAuthor().getId())) {
+			return;
+		}
+
+		NotificationEventDto notificationEventDto = NotificationEventDto.toEvent(savedComment,receiverId);
+		kafkaTemplate.send("notification-topic", notificationEventDto);
+	}
+
+	/**
+	 * 댓글/대댓글시 알림 수신자 확인
+	 * @param parentComment
+	 * @param feedAuthor
+	 * @return
+	 */
+	private Long setReceiver(Comment parentComment, Long feedAuthor) {
+
+		if(parentComment != null){
+			return parentComment.getAuthor().getId();
+		}
+
+		return feedAuthor;
 	}
 }

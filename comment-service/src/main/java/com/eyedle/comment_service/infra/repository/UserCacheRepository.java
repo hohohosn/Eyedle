@@ -15,21 +15,31 @@ import lombok.RequiredArgsConstructor;
 public class UserCacheRepository {
 
 	private final RedisTemplate<String, Object> redisTemplate;
-	private static final Duration TTL = Duration.ofHours(1);
+	private static final Duration TTL = Duration.ofMinutes(30);
 
 	private String getKey(Long userId) {
 		return "user:profile:" + userId;
 	}
 
-	public Optional<Author> getAuthor(Long userId) {
-		Object data = redisTemplate.opsForValue().get(getKey(userId));
-		return Optional.ofNullable((Author) data);
+	public void save(Author author) {
+		if (author == null || author.getId() == null) {
+			return;
+		}
+		redisTemplate.opsForValue().set(getKey(author.getId()), author, TTL);
 	}
 
-	public void saveAuthor(Author author) {
-		if(author != null) {
-			redisTemplate.opsForValue().set(getKey(author.getId()), author, TTL);
+	public Optional<Author> get(Long userId) {
+		if (userId == null) {
+			return Optional.empty();
 		}
+
+		Object data = redisTemplate.opsForValue().get(getKey(userId));
+
+		if (data instanceof Author) {
+			return Optional.of((Author) data);
+		}
+
+		return Optional.empty();
 	}
 
 }
