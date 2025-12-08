@@ -16,6 +16,8 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import static com.chatservice.common.CacheConstants.CHAT_MESSAGE_CACHE_DAYS;
+
 @Configuration
 @EnableCaching
 public class RedisConfig {
@@ -61,7 +63,7 @@ public class RedisConfig {
 
     RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration
         .defaultCacheConfig()
-        .entryTtl(Duration.ofDays(7))   // 캐시 만료기간 7일
+        .entryTtl(Duration.ofDays(CHAT_MESSAGE_CACHE_DAYS))   // 캐시 만료기간 7일
         .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
         .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
