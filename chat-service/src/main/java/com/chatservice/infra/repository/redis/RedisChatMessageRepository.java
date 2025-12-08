@@ -6,7 +6,7 @@ import com.common.exception.CustomException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +23,17 @@ public class RedisChatMessageRepository {
   private final RedisTemplate<String, String> redisTemplate;
   private final ObjectMapper objectMapper;
 
-  private String key(Long chatRoomId) {
-    return "chat:messages:" + chatRoomId;
+  private String zsetKey(Long chatRoomId) {
+    return "chat:messages:z:" + chatRoomId;
+  }
+
+  private String hashKey(Long chatRoomId) {
+    return "chat:messages:h:" + chatRoomId;
   }
 
   public List<ChatMessageResDto> findRecentMessage(Long chatRoomId, long beforeEpochMs, int limit) {
-    String key = key(chatRoomId);
 
-    Set<String> rawMessages = redisTemplate.opsForZSet().reverseRangeByScore(key, 0, beforeEpochMs, 0, limit);
+    Set<String> rawMessages = redisTemplate.opsForZSet().reverseRangeByScore(zsetKey(chatRoomId), 0, beforeEpochMs, 0, limit);
 
     if (rawMessages == null) {
       return List.of();
@@ -62,42 +65,50 @@ public class RedisChatMessageRepository {
   }
 
   public void deleteMessage(Long chatRoomId, Long messageId, LocalDateTime deletedAt) {
-    String key = key(chatRoomId);
 
-    Set<String> rawMessages = redisTemplate.opsForZSet().range(key, 0, -1);
+    String zsetKey = zsetKey(chatRoomId);
+    String hashKey = hashKey(chatRoomId);
 
-    if (rawMessages == null) {
-      return;
+    //  hash에서 원본 json 조회
+    String rawMessage = (String) redisTemplate.opsForHash().get(hashKey, messageId.toString());
+    if (rawMessage == null) {
+      return;   // 없는 메시지
     }
 
-    for (String rawMessage : rawMessages) {
-      try {
-        ChatMessageResDto messageResDto = objectMapper.readValue(rawMessage, ChatMessageResDto.class);
-
-        if (messageResDto.messageId().equals(messageId)) {
-          ChatMessageResDto deletedMessage = new ChatMessageResDto(
-              messageResDto.messageId(),
-              messageResDto.senderId(),
-              null,
-              "삭제된 메시지입니다.",
-              messageResDto.createdAt(),
-              deletedAt
-          );
-
-          String newJson = objectMapper.writeValueAsString(deletedMessage);
-
-          Double score = redisTemplate.opsForZSet().score(key, rawMessage);
-
-          if (score != null) {
-            redisTemplate.opsForZSet().remove(key, rawMessage);
-            redisTemplate.opsForZSet().add(key, newJson, score);
-          }
-          break;
-        }
-      } catch (JsonProcessingException e) {
-        throw new CustomException(MESSAGE_DESERIALIZATION_FAILED);
-      }
+    ChatMessageResDto messageResDto;
+    try {
+      messageResDto = objectMapper.readValue(rawMessage, ChatMessageResDto.class);
+    } catch (JsonProcessingException e) {
+      throw new CustomException(MESSAGE_DESERIALIZATION_FAILED);
     }
+
+    // 이미 삭제된 메세지면 deletedAt 유지
+    ChatMessageResDto deletedMessage = new ChatMessageResDto(
+        messageResDto.messageId(),
+        messageResDto.senderId(),
+        null,
+        "삭제된 메시지입니다.",
+        messageResDto.createdAt(),
+        messageResDto.deletedAt() != null ? messageResDto.deletedAt() : deletedAt
+    );
+
+    // json 직렬화
+    String newJson;
+    try {
+      newJson = objectMapper.writeValueAsString(deletedMessage);
+    } catch (JsonProcessingException e) {
+      throw new CustomException(MESSAGE_SERIALIZATION_FAILED);
+    }
+
+    // zset 업데이트
+    Double score = redisTemplate.opsForZSet().score(zsetKey, rawMessage);
+    if (score != null) {
+      redisTemplate.opsForZSet().remove(zsetKey, rawMessage);
+      redisTemplate.opsForZSet().add(zsetKey, newJson, score);
+    }
+
+    // hash 업데이트
+    redisTemplate.opsForHash().put(hashKey, messageId.toString(), newJson);
   }
 
   public void saveMessage(ChatMessage chatMessage) {
@@ -110,11 +121,9 @@ public class RedisChatMessageRepository {
       throw new CustomException(MESSAGE_SERIALIZATION_FAILED);
     }
 
-    redisTemplate.opsForZSet().add(
-        key(chatMessage.getChatRoomId()),
-        json,
-        chatMessage.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-    );
-  }
+    redisTemplate.opsForZSet()
+        .add(zsetKey(chatMessage.getChatRoomId()), json, chatMessage.getCreatedAt().atZone(ZoneOffset.UTC).toInstant().toEpochMilli());
 
+    redisTemplate.opsForHash().put(hashKey(chatMessage.getChatRoomId()), chatMessageResDto.messageId().toString(), json);
+  }
 }
