@@ -1,8 +1,12 @@
 package com.feed_service.application.service;
 
+import com.common.exception.CustomException;
+import com.common.response.ErrorCode;
 import com.feed_service.domain.model.Feed;
+import com.feed_service.domain.model.FeedMedia;
 import com.feed_service.domain.repository.FeedRepository;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
+import com.feed_service.presentation.request.FeedMediaUploadRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.presentation.response.FeedResponseDto;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,18 +24,32 @@ import org.springframework.stereotype.Service;
 public class FeedService {
 
     private final FeedRepository feedRepository;
+    private final FeedMediaService feedMediaService;
 
     @Transactional
-    public FeedResponseDto createFeed(FeedCreateRequestDto request, Long userId, Long feedId) {
-        Feed feed = request.toEntity(userId, feedId);
-        feed = feedRepository.save(feed);
-        return FeedResponseDto.mapFeed(feed);
+    public Long createFeed(FeedCreateRequestDto request, List<MultipartFile> files, Long userId) {
 
+        Feed feed = Feed.builder()
+                .userId(userId)
+                .content(request.getContent())
+                .permission(request.getPermission())
+                .build();
+
+        feedRepository.save(feed);
+
+        if(request.getMedias() != null){
+            for(FeedMediaUploadRequestDto m : request.getMedias()){
+                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
+                feed.getMediaList().add(media);
+            }
+        }
+
+        return feed.getId();
     }
 
     public FeedResponseDto findFeed(Long feedId) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         return FeedResponseDto.mapFeed(feed);
     }
 
@@ -40,7 +61,7 @@ public class FeedService {
     @Transactional
     public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         feed.updateFeed(request.getContent(), request.getPermission());
         return FeedResponseDto.mapFeed(feed);
     }
@@ -48,7 +69,7 @@ public class FeedService {
     @Transactional
     public void statusDeleted(Long feedId) {
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new IllegalArgumentException("Feed Not Found!"));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         feed.statusDeleted();
     }
 

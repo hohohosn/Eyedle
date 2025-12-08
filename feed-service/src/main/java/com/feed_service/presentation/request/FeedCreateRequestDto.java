@@ -1,27 +1,23 @@
 package com.feed_service.presentation.request;
 
 import com.feed_service.domain.model.Feed;
+import com.feed_service.domain.model.FeedMedia;
 import com.feed_service.domain.model.FeedPermission;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 public class FeedCreateRequestDto {
 
-    @jakarta.validation.constraints.NotNull
+    @NotNull
     private FeedPermission permission;
 
-    @jakarta.validation.constraints.NotBlank
+    @NotBlank
     private String content;
 
-    public Feed toEntity(Long feedId, Long userId) {
-        return Feed.builder()
-                .id(feedId)
-                .userId(userId)
-                .content(content)
-                .permission(permission)
-                .createdAt(java.time.LocalDateTime.now())
-                .isDeleted(false)
-                .build();
-    }
+    private List<FeedMediaUploadRequestDto> medias;
 
 }
