@@ -2,9 +2,6 @@ package com.chatservice.infra.repository.redis;
 
 import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.presentation.response.ChatMessageResDto;
-import com.common.exception.CustomException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -13,15 +10,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import static com.chatservice.common.ChatErrorCode.MESSAGE_DESERIALIZATION_FAILED;
-import static com.chatservice.common.ChatErrorCode.MESSAGE_SERIALIZATION_FAILED;
-
 @Component
 @RequiredArgsConstructor
 public class RedisChatMessageRepository {
 
-  private final RedisTemplate<String, String> redisTemplate;
-  private final ObjectMapper objectMapper;
+  private final RedisTemplate<String, Object> redisTemplate;
 
   private String zsetKey(Long chatRoomId) {
     return "chat:messages:z:" + chatRoomId;
@@ -33,21 +26,14 @@ public class RedisChatMessageRepository {
 
   public List<ChatMessageResDto> findRecentMessage(Long chatRoomId, long beforeEpochMs, int limit) {
 
-    Set<String> rawMessages = redisTemplate.opsForZSet().reverseRangeByScore(zsetKey(chatRoomId), 0, beforeEpochMs, 0, limit);
+    Set<Object> rawMessages = redisTemplate.opsForZSet().reverseRangeByScore(zsetKey(chatRoomId), 0, beforeEpochMs, 0, limit);
 
     if (rawMessages == null) {
       return List.of();
     }
 
     return rawMessages.stream()
-        .map(json -> {
-              try {
-                return objectMapper.readValue(json, ChatMessageResDto.class);
-              } catch (JsonProcessingException e) {
-                throw new CustomException(MESSAGE_DESERIALIZATION_FAILED);
-              }
-            }
-        )
+        .map(o -> (ChatMessageResDto) o)
         .map(msg -> {
           if (msg.deletedAt() != null) {
             return new ChatMessageResDto(
@@ -70,17 +56,12 @@ public class RedisChatMessageRepository {
     String hashKey = hashKey(chatRoomId);
 
     //  hash에서 원본 json 조회
-    String rawMessage = (String) redisTemplate.opsForHash().get(hashKey, messageId.toString());
+    Object rawMessage = redisTemplate.opsForHash().get(hashKey, messageId.toString());
     if (rawMessage == null) {
       return;   // 없는 메시지
     }
 
-    ChatMessageResDto messageResDto;
-    try {
-      messageResDto = objectMapper.readValue(rawMessage, ChatMessageResDto.class);
-    } catch (JsonProcessingException e) {
-      throw new CustomException(MESSAGE_DESERIALIZATION_FAILED);
-    }
+    ChatMessageResDto messageResDto = (ChatMessageResDto) rawMessage;
 
     // 이미 삭제된 메세지면 deletedAt 유지
     ChatMessageResDto deletedMessage = new ChatMessageResDto(
@@ -92,38 +73,25 @@ public class RedisChatMessageRepository {
         messageResDto.deletedAt() != null ? messageResDto.deletedAt() : deletedAt
     );
 
-    // json 직렬화
-    String newJson;
-    try {
-      newJson = objectMapper.writeValueAsString(deletedMessage);
-    } catch (JsonProcessingException e) {
-      throw new CustomException(MESSAGE_SERIALIZATION_FAILED);
-    }
-
     // zset 업데이트
     Double score = redisTemplate.opsForZSet().score(zsetKey, rawMessage);
+
     if (score != null) {
       redisTemplate.opsForZSet().remove(zsetKey, rawMessage);
-      redisTemplate.opsForZSet().add(zsetKey, newJson, score);
+      redisTemplate.opsForZSet().add(zsetKey, deletedMessage, score);
     }
 
     // hash 업데이트
-    redisTemplate.opsForHash().put(hashKey, messageId.toString(), newJson);
+    redisTemplate.opsForHash().put(hashKey, messageId.toString(), deletedMessage);
   }
 
   public void saveMessage(ChatMessage chatMessage) {
     ChatMessageResDto chatMessageResDto = ChatMessageResDto.from(chatMessage);
 
-    String json;
-    try {
-      json = objectMapper.writeValueAsString(chatMessageResDto);
-    } catch (JsonProcessingException e) {
-      throw new CustomException(MESSAGE_SERIALIZATION_FAILED);
-    }
+    double score = chatMessage.getCreatedAt().atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
 
-    redisTemplate.opsForZSet()
-        .add(zsetKey(chatMessage.getChatRoomId()), json, chatMessage.getCreatedAt().atZone(ZoneOffset.UTC).toInstant().toEpochMilli());
+    redisTemplate.opsForZSet().add(zsetKey(chatMessage.getChatRoomId()), chatMessageResDto, score);
 
-    redisTemplate.opsForHash().put(hashKey(chatMessage.getChatRoomId()), chatMessageResDto.messageId().toString(), json);
+    redisTemplate.opsForHash().put(hashKey(chatMessage.getChatRoomId()), chatMessageResDto.messageId().toString(), chatMessageResDto);
   }
 }

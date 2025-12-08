@@ -25,10 +25,6 @@ public enum ChatErrorCode implements BaseErrorCode {
   USER_NOT_FOUND("CHAT5000", "사용자를 찾을 수 없습니다.", 404),
   BLOCKED_USER("CHAT5001", "차단 상태입니다.", 403),
 
-  // Infra/Technical
-  MESSAGE_SERIALIZATION_FAILED("CHAT9000", "채팅 메시지 직렬화에 실패했습니다.", 500),
-  MESSAGE_DESERIALIZATION_FAILED("CHAT9001", "채팅 메시지 역직렬화에 실패했습니다.", 500),
-
   ;
 
   private final String code;
