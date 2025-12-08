@@ -33,20 +33,9 @@ public class RedisChatMessageRepository {
     }
 
     return rawMessages.stream()
-        .map(o -> (ChatMessageResDto) o)
-        .map(msg -> {
-          if (msg.deletedAt() != null) {
-            return new ChatMessageResDto(
-                msg.messageId(),
-                msg.senderId(),
-                null,
-                "삭제된 메시지입니다.",
-                msg.createdAt(),
-                msg.deletedAt()
-            );
-          }
-          return msg;
-        })
+        .filter(ChatMessageResDto.class::isInstance)
+        .map(ChatMessageResDto.class::cast)
+        .map(this::convertIfDeleted)
         .toList();
   }
 
@@ -93,5 +82,20 @@ public class RedisChatMessageRepository {
     redisTemplate.opsForZSet().add(zsetKey(chatMessage.getChatRoomId()), chatMessageResDto, score);
 
     redisTemplate.opsForHash().put(hashKey(chatMessage.getChatRoomId()), chatMessageResDto.messageId().toString(), chatMessageResDto);
+  }
+
+  private ChatMessageResDto convertIfDeleted(ChatMessageResDto resDto) {
+    if (resDto.deletedAt() == null) {
+      return resDto;
+    }
+
+    return new ChatMessageResDto(
+        resDto.messageId(),
+        resDto.senderId(),
+        null,
+        "삭제된 메시지입니다.",
+        resDto.createdAt(),
+        resDto.deletedAt()
+    );
   }
 }
