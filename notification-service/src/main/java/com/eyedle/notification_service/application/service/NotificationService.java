@@ -54,6 +54,7 @@ public class NotificationService {
 	}
 
 	public void sendNotification(NotificationCreateRequestDto notificationCreateRequestDto) {
+		log.info("[Service] sendNotification Start: receiverId={}", notificationCreateRequestDto.getReceiverId());
 		Notification notification = notificationCreateRequestDto.toEntity();
 		Notification savedNotification = notificationRepository.save(notification);
 		NotificationCreateResponseDto notificationCreateResponseDto = NotificationCreateResponseDto.fromEntity(savedNotification);
