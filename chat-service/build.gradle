@@ -27,6 +27,7 @@ repositories {
 
 ext {
     set('springCloudVersion', "2025.0.0")
+    set('querydslVersion', "5.0.0")
 }
 
 dependencies {
@@ -44,8 +45,8 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-    annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
+    implementation 'com.querydsl:querydsl-jpa:${querydslVersion}:jakarta'
+    annotationProcessor 'com.querydsl:querydsl-apt:${querydslVersion}:jakarta'
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api:2.1.1'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api:3.1.0'
 
