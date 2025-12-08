@@ -19,8 +19,8 @@ services:
     container_name: redis
     restart: always
     ports:
-      - "6379:6379"
-    command: [ "redis-server", "--requirepass", "default" ]
+      - "${REDIS_PORT}:6379"
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
     volumes:
       - redis_data:/data
 
@@ -29,7 +29,7 @@ services:
     container_name: redis-insight
     restart: always
     ports:
-      - "5540:5540"
+      - "${REDIS_INSIGHT_PORT}:5540"
     volumes:
       - redis_insight_data:/data
 
