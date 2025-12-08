@@ -45,3 +45,4 @@ comment-service/.env
 
 # Ignore Gradle build output directory
 build
+/infra-data
