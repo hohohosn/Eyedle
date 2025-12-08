@@ -13,6 +13,7 @@ import com.chatservice.infra.client.BlockClient;
 import com.chatservice.infra.client.FollowClient;
 import com.chatservice.infra.client.UserClient;
 import com.chatservice.infra.repository.redis.RedisChatMessageRepository;
+import com.chatservice.presentation.request.ChatMessageReqDto;
 import com.chatservice.presentation.request.CreateChatRoomReqDto;
 import com.chatservice.presentation.response.ChatMessageResDto;
 import com.chatservice.presentation.response.ChatRoomCursorResDto;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.chatservice.common.ChatErrorCode.*;
 import static com.chatservice.domain.model.ChatRoomStatus.OPEN;
 import static com.chatservice.domain.model.ChatRoomStatus.REQUESTED;
+import static java.time.Duration.ofDays;
 
 @Service
 @RequiredArgsConstructor
@@ -141,7 +143,7 @@ public class ChatService {
     List<Long> otherUserIds = new ArrayList<>(chatRoomToOtherUserId.values());
     Map<Long, UserInfo> userInfoMap = userClient.getUserInfos(otherUserIds);
 
-    // 마지막 메세지 조회
+    // 마지막 메시지 조회
     Map<Long, ChatMessage> lastMessageMap = chatMessageRepository.findLastMessageByChatRoomIds(chatRoomIds);
 
     // ChatRoomInfo 매핑
@@ -174,24 +176,24 @@ public class ChatService {
   }
 
   /**
-   * 메세지 삭제
+   * 채팅 메시지 삭제
    */
   @Transactional
   public void deleteMessage(Long chatRoomId, Long messageId, Long userId) {
 
     ChatMessage chatMessage = chatMessageRepository.findById(messageId).orElseThrow(() -> new CustomException(CHAT_MESSAGE_NOT_FOUND));
 
-    // 다른 채팅방 메세지 삭제 방지
+    // 다른 채팅방 메시지 삭제 방지
     if (!chatMessage.getChatRoomId().equals(chatRoomId)) {
       throw new CustomException(MESSAGE_NOT_IN_CHATROOM);
     }
 
-    // 본인이 보낸 메세지인지 확인
+    // 본인이 보낸 메시지인지 확인
     if (!chatMessage.getUserId().equals(userId)) {
       throw new CustomException(NOT_MESSAGE_OWNER);
     }
 
-    // 이미 삭제된 메세지인지 확인
+    // 이미 삭제된 메시지인지 확인
     if (chatMessage.getDeletedAt() != null) {
       throw new CustomException(MESSAGE_ALREADY_DELETED);
     }
@@ -202,6 +204,10 @@ public class ChatService {
     redisChatMessageRepository.deleteMessage(chatRoomId, messageId, deletedAt);
   }
 
+  /**
+   * 채팅 메시지 조회
+   */
+  @Transactional(readOnly = true)
   public List<ChatMessageResDto> getChatRoomMessages(Long userId, Long chatRoomId, Long cursorEpochMs) {
 
     ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
@@ -212,22 +218,38 @@ public class ChatService {
 
     // 현재 시간 기준 계산
     long now = System.currentTimeMillis();
-    long sevenDaysAgo = now - (7L * 24 * 60 * 60 * 1000);
+    long sevenDaysAgo = now - ofDays(7).toMillis();
 
-    // 커서 값 설정 -> 클라이언트에서 전달한 경우 사용, 없으면 최신 메세지 기준
+    // 커서 값 설정 -> 클라이언트에서 전달한 경우 사용, 없으면 최신 메시지 기준
     long cursor = (cursorEpochMs != null) ? cursorEpochMs : now;
 
-    // 최신 7일 메세지이면 redis 조회
+    // 최신 7일 메시지이면 redis 조회
     if (cursor >= sevenDaysAgo) {
       return redisChatMessageRepository.findRecentMessage(chatRoomId, cursor, PAGE_SIZE);
     }
 
-    // 7일 이전 메세지이면 DB 조회
+    // 7일 이전 메시지이면 DB 조회
     LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), ZoneId.systemDefault());
 
     List<ChatMessage> dbMessages = chatMessageRepository.findOldMessages(chatRoomId, cursorDateTime, PAGE_SIZE);
 
     return dbMessages.stream().map(ChatMessageResDto::from).toList();
+  }
+
+  /**
+   * 채팅 메시지 저장
+   */
+  @Transactional
+  public ChatMessageResDto saveChatMessage(Long chatRoomId, Long userId, ChatMessageReqDto reqDto) {
+    ChatMessage chatMessage = ChatMessage.create(chatRoomId, userId, reqDto.contentType(), reqDto.messageContent());
+
+    // DB 저장
+    ChatMessage saveMessage = chatMessageRepository.save(chatMessage);
+
+    // Redis 저장
+    redisChatMessageRepository.saveMessage(saveMessage);
+
+    return ChatMessageResDto.from(saveMessage);
   }
 
   private ChatParticipant getChatParticipate(Long chatRoomId, Long userId) {
