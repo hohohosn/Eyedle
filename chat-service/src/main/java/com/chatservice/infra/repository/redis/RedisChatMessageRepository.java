@@ -1,14 +1,20 @@
 package com.chatservice.infra.repository.redis;
 
+import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.presentation.response.ChatMessageResDto;
+import com.common.exception.CustomException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+
+import static com.chatservice.common.ChatErrorCode.MESSAGE_DESERIALIZATION_FAILED;
+import static com.chatservice.common.ChatErrorCode.MESSAGE_SERIALIZATION_FAILED;
 
 @Component
 @RequiredArgsConstructor
@@ -34,19 +40,18 @@ public class RedisChatMessageRepository {
         .map(json -> {
               try {
                 return objectMapper.readValue(json, ChatMessageResDto.class);
-              } catch (Exception e) {
-                return null;
+              } catch (JsonProcessingException e) {
+                throw new CustomException(MESSAGE_DESERIALIZATION_FAILED);
               }
             }
         )
-        .filter(Objects::nonNull)
         .map(msg -> {
           if (msg.deletedAt() != null) {
             return new ChatMessageResDto(
                 msg.messageId(),
                 msg.senderId(),
                 null,
-                "삭제된 메세지 입니다.",
+                "삭제된 메시지입니다.",
                 msg.createdAt(),
                 msg.deletedAt()
             );
@@ -74,7 +79,7 @@ public class RedisChatMessageRepository {
               messageResDto.messageId(),
               messageResDto.senderId(),
               null,
-              "삭제된 메세지입니다.",
+              "삭제된 메시지입니다.",
               messageResDto.createdAt(),
               deletedAt
           );
@@ -89,9 +94,27 @@ public class RedisChatMessageRepository {
           }
           break;
         }
-      } catch (Exception ignored) {
+      } catch (JsonProcessingException e) {
+        throw new CustomException(MESSAGE_DESERIALIZATION_FAILED);
       }
     }
+  }
+
+  public void saveMessage(ChatMessage chatMessage) {
+    ChatMessageResDto chatMessageResDto = ChatMessageResDto.from(chatMessage);
+
+    String json;
+    try {
+      json = objectMapper.writeValueAsString(chatMessageResDto);
+    } catch (JsonProcessingException e) {
+      throw new CustomException(MESSAGE_SERIALIZATION_FAILED);
+    }
+
+    redisTemplate.opsForZSet().add(
+        key(chatMessage.getChatRoomId()),
+        json,
+        chatMessage.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    );
   }
 
 }
