@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ChatMessageRepository {
 
-  void save(ChatMessage chatMessage);
+  ChatMessage save(ChatMessage chatMessage);
 
   Optional<ChatMessage> findById(Long messageId);
 
