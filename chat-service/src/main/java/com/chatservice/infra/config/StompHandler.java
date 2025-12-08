@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StompHandler implements ChannelInterceptor {
 
-  //@Value("${jwt.secretKey}")
+  @Value("${jwt.secret.key}")
   private String key;
 
   @Override

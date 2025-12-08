@@ -38,3 +38,7 @@ eureka:
 
 instance:
   node-id: 13
+
+jwt:
+  secret:
+    key: ${SECRET_KEY}
