@@ -27,7 +27,7 @@ public enum ChatErrorCode implements BaseErrorCode {
 
   // Infra/Technical
   MESSAGE_SERIALIZATION_FAILED("CHAT9000", "채팅 메시지 직렬화에 실패했습니다.", 500),
-  MESSAGE_DESERIALIZATION_FAILED("CHAT9000", "채팅 메시지 역직렬화에 실패했습니다.", 500),
+  MESSAGE_DESERIALIZATION_FAILED("CHAT9001", "채팅 메시지 역직렬화에 실패했습니다.", 500),
 
   ;
 
