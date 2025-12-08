@@ -25,6 +25,7 @@ public class FeedService {
 
     private final FeedRepository feedRepository;
     private final FeedMediaService feedMediaService;
+    private final TagService tagService;
 
     @Transactional
     public Long createFeed(FeedCreateRequestDto request, List<MultipartFile> files, Long userId) {
@@ -44,6 +45,8 @@ public class FeedService {
             }
         }
 
+        tagService.applyTags(feed, request.getTags());
+
         return feed.getId();
     }
 
@@ -62,7 +65,11 @@ public class FeedService {
     public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request) {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
         feed.updateFeed(request.getContent(), request.getPermission());
+
+        tagService.updateTags(feed, request.getTags());
+
         return FeedResponseDto.mapFeed(feed);
     }
 
