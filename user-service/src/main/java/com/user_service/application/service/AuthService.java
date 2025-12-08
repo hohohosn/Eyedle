@@ -145,7 +145,7 @@ public class AuthService {
 		refreshTokenService.validateRefreshToken(userId, refreshToken);
 
 		// 사용자 조회
-		User user = userRepository.findByIdAndIsDeletedFalse(userId)
+		User user = userRepository.findByIdAndDeletedFalse(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		// 계정 상태 확인

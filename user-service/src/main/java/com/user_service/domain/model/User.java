@@ -49,7 +49,7 @@ public class User {
 
 	@Column(nullable = false)
 	@Builder.Default
-	private boolean isDeleted = false;
+	private boolean deleted = false;
 
 	// Auditing 필드
 	@CreatedDate
@@ -94,7 +94,7 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.USER)
 			.status(UserStatus.ACTIVE)
-			.isDeleted(false)
+			.deleted(false)
 			.createdBy(createdBy)
 			.build();
 	}
@@ -111,7 +111,7 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.ADMIN)
 			.status(UserStatus.ACTIVE)
-			.isDeleted(false)
+			.deleted(false)
 			.createdBy(createdBy)
 			.build();
 	}
@@ -140,7 +140,7 @@ public class User {
 	 * 회원 탈퇴 (Soft Delete)
 	 */
 	public void softDelete(String deletedBy) {
-		this.isDeleted = true;
+		this.deleted = true;
 		this.status = UserStatus.DELETED;
 		this.deletedAt = LocalDateTime.now();
 		this.deletedBy = deletedBy;
@@ -150,7 +150,7 @@ public class User {
 	 * 회원 복구
 	 */
 	public void restore(String updatedBy) {
-		this.isDeleted = false;
+		this.deleted = false;
 		this.status = UserStatus.ACTIVE;
 		this.deletedAt = null;
 		this.deletedBy = null;
@@ -177,13 +177,13 @@ public class User {
 	 * 계정 활성화 여부
 	 */
 	public boolean isActive() {
-		return this.status == UserStatus.ACTIVE && !this.isDeleted;
+		return this.status == UserStatus.ACTIVE && !this.deleted;
 	}
 
 	/**
 	 * 삭제된 계정인지 확인
 	 */
-	public boolean isDeleted() {
-		return this.isDeleted;
+	public boolean deleted() {
+		return this.deleted;
 	}
 }
