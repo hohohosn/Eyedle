@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.chatservice.common.ChatErrorCode.*;
 import static com.chatservice.domain.model.ChatRoomStatus.OPEN;
 import static com.chatservice.domain.model.ChatRoomStatus.REQUESTED;
+import static java.lang.Long.MAX_VALUE;
 import static java.time.Duration.ofDays;
 
 @Service
@@ -124,7 +125,7 @@ public class ChatService {
   @Transactional(readOnly = true)
   public ChatRoomCursorResDto getChatRoomList(Long userId, Long cursor) {
     // 커서 값 없으면 가장 큰 값으로 초기화(최신 방부터 조회)
-    Long effectiveCursor = (cursor == null) ? Long.MAX_VALUE : cursor;
+    Long effectiveCursor = (cursor == null) ? MAX_VALUE : cursor;
     Pageable pageable = PageRequest.of(0, PAGE_SIZE);
 
     // 커서 기준 채팅방 조회
@@ -221,7 +222,7 @@ public class ChatService {
     long sevenDaysAgo = now - ofDays(7).toMillis();
 
     // 커서 값 설정 -> 클라이언트에서 전달한 경우 사용, 없으면 최신 메시지 기준
-    long cursor = (cursorEpochMs != null) ? cursorEpochMs : now;
+    long cursor = (cursorEpochMs != null) ? cursorEpochMs : MAX_VALUE;
 
     // 최신 7일 메시지이면 redis 조회
     if (cursor >= sevenDaysAgo) {
