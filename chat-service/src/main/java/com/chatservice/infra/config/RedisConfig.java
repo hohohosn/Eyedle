@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -25,24 +26,30 @@ public class RedisConfig {
   @Value("${spring.data.redis.port}")
   private int port;
 
+  @Value("${spring.data.redis.password}")
+  private String password;
+
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
-    return new LettuceConnectionFactory(host, port);
+    RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+    redisStandaloneConfiguration.setHostName(host);
+    redisStandaloneConfiguration.setPort(port);
+    redisStandaloneConfiguration.setPassword(password);
+    return new LettuceConnectionFactory(redisStandaloneConfiguration);
   }
 
   @Bean
-  public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+  public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
 
-    RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+    RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
     redisTemplate.setConnectionFactory(redisConnectionFactory);
 
     StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-    GenericJackson2JsonRedisSerializer genericJackson2JsonRedisSerializer = new GenericJackson2JsonRedisSerializer();
 
     redisTemplate.setKeySerializer(stringRedisSerializer);
-    redisTemplate.setValueSerializer(genericJackson2JsonRedisSerializer);
+    redisTemplate.setValueSerializer(stringRedisSerializer);
     redisTemplate.setHashKeySerializer(stringRedisSerializer);
-    redisTemplate.setHashValueSerializer(genericJackson2JsonRedisSerializer);
+    redisTemplate.setHashValueSerializer(stringRedisSerializer);
 
     redisTemplate.afterPropertiesSet();
     return redisTemplate;
