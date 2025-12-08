@@ -21,7 +21,7 @@ import com.chatservice.presentation.response.CreateChatRoomResDto;
 import com.common.exception.CustomException;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -229,7 +229,7 @@ public class ChatService {
     }
 
     // 7일 이전 메시지이면 DB 조회
-    LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), ZoneId.systemDefault());
+    LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), ZoneOffset.UTC);
 
     List<ChatMessage> dbMessages = chatMessageRepository.findOldMessages(chatRoomId, cursorDateTime, PAGE_SIZE);
 
