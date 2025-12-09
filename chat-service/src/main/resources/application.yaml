@@ -20,6 +20,11 @@ spring:
       ddl-auto: update
     show-sql: true
 
+  data:
+    redis:
+      host: localhost
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
 
 eureka:
   client:
@@ -33,3 +38,7 @@ eureka:
 
 instance:
   node-id: 13
+
+jwt:
+  secret:
+    key: ${SECRET_KEY}
