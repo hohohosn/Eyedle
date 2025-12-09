@@ -29,6 +29,19 @@ public class CommentPolicy {
 
 	public void validateFeed(Long feedId, Long requestUserId, Long feedAuthorId, String permission) {
 
+		if (requestUserId.equals(feedAuthorId)){
+			return;
+		}
+
+		if (permission.equals("PUBLIC")){
+			return;
+		}
+
+		if(permission.equals("PRIVATE")){
+			throw new CustomException(CommentErrorCode.COMMENT_FORBIDDEN);
+		}
+
+
 	}
 
 }
