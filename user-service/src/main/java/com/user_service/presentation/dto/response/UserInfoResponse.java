@@ -4,7 +4,10 @@ import com.user_service.domain.model.User;
 import com.user_service.domain.model.UserRole;
 import com.user_service.domain.model.UserStatus;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -12,32 +15,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserResponse {
-
+public class UserInfoResponse {
 	private Long id;
 	private String email;
 	private String username;
-	private String slackId;
 	private UserRole role;
 	private UserStatus status;
-	private Boolean deleted;
 	private LocalDateTime createdAt;
-	private String createdBy;
-	private LocalDateTime updatedAt;
-	private String updatedBy;
 
-	public static UserResponse from(User user) {
-		return UserResponse.builder()
+	public static UserInfoResponse from(User user) {
+		return UserInfoResponse.builder()
 			.id(user.getId())
 			.email(user.getEmail())
 			.username(user.getUsername())
 			.role(user.getRole())
 			.status(user.getStatus())
-			.deleted(user.deleted())
 			.createdAt(user.getCreatedAt())
-			.createdBy(user.getCreatedBy())
-			.updatedAt(user.getUpdatedAt())
-			.updatedBy(user.getUpdatedBy())
 			.build();
 	}
 }

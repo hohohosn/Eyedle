@@ -29,7 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	/**
 	 * ID로 사용자 조회 (삭제되지 않은 사용자만)
 	 */
-	Optional<User> findByIdAndIsDeletedFalse(Long id);
+	Optional<User> findByIdAndDeletedFalse(Long id);
 
 	/**
 	 * 이메일 중복 체크
@@ -40,6 +40,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 * 사용자명 중복 체크
 	 */
 	boolean existsByUsername(String username);
+
+	/**
+	 * 이메일 또는 사용자명으로 검색
+	 */
+	Page<User> findByEmailContainingOrUsernameContaining(
+		String email, String username, Pageable pageable);
 
 	/**
 	 * 상태별 사용자 조회
@@ -54,7 +60,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	/**
 	 * 활성 사용자 목록 조회
 	 */
-	@Query("SELECT u FROM User u WHERE u.status = 'ACTIVE' AND u.isDeleted = false")
+	@Query("SELECT u FROM User u WHERE u.deleted = false")
 	Page<User> findActiveUsers(Pageable pageable);
 
 	/**
@@ -62,7 +68,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	 */
 	@Query("SELECT u FROM User u WHERE " +
 		"(u.email LIKE %:keyword% OR u.username LIKE %:keyword%) " +
-		"AND u.isDeleted = false")
+		"AND u.deleted = false")
 	Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 
 }
