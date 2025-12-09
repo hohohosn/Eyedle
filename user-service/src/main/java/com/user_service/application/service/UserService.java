@@ -44,10 +44,10 @@ public class UserService {
 	}
 
 	/**
-	 * 특정 사용자 조회 (관리자용)
+	 * 특정 사용자 조회 (관리용)
 	 */
 	public UserInfoResponse getUserInfo(Long targetUserId) {
-		log.info("사용자 정보 조회 (관리자): targetUserId={}", targetUserId);
+		log.info("사용자 정보 조회 : targetUserId={}", targetUserId);
 
 		User user = userRepository.findById(targetUserId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -56,8 +56,7 @@ public class UserService {
 	}
 
 	/**
-	 * 사용자 검색 (관리자용)
-	 * 이메일 또는 사용자명으로 검색
+	 * 사용자 검색 (관리용)
 	 */
 	public UserSearchResponse searchUsers(String keyword, Pageable pageable) {
 		log.info("사용자 검색: keyword={}, page={}", keyword, pageable.getPageNumber());
@@ -81,7 +80,6 @@ public class UserService {
 	 */
 	@Transactional
 	public UserInfoResponse updateMyInfo(Long userId, UpdateUserRequest request) {
-		log.info("사용자 정보 수정 시작: userId={}", userId);
 
 		User user = userRepository.findByIdAndDeletedFalse(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -89,7 +87,8 @@ public class UserService {
 		// Username 변경
 		if (request.getUsername() != null) {
 			// 중복 체크
-			if (userRepository.existsByUsername(request.getUsername())) {
+			if (!user.getUsername().equals(request.getUsername()) &&
+				userRepository.existsByUsername(request.getUsername())) {
 				throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
 			}
 			user.updateProfile(request.getUsername(), String.valueOf(userId));
@@ -120,7 +119,6 @@ public class UserService {
 	 */
 	@Transactional
 	public void deleteMyAccount(Long userId) {
-		log.info("회원 탈퇴 시작: userId={}", userId);
 
 		User user = userRepository.findByIdAndDeletedFalse(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -133,7 +131,6 @@ public class UserService {
 
 	/**
 	 * 유저 일괄 조회 (Internal)
-	 * 여러 유저의 정보를 한 번에 조회
 	 */
 	public Map<Long, UserInternalResponse> getUsersByIds(List<Long> userIds) {
 		log.info("유저 일괄 조회: count={}", userIds.size());
@@ -146,7 +143,7 @@ public class UserService {
 		List<Long> distinctUserIds = userIds.stream().distinct().toList();
 		List<User> users = userRepository.findAllById(distinctUserIds);
 
-		// Map으로 변환 (userId -> UserInternalResponse)
+		// Map으로 변환(userId -> UserInternalResponse)
 		return users.stream()
 			.filter(user -> !user.isDeleted())
 			.collect(Collectors.toMap(
