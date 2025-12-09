@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.eyedle.comment_service.infra.client.dto.UserGetResultDto;
 
-@FeignClient(name = "user-service", url = "/internal")
+@FeignClient(name = "user-service", path = "/internal")
 public interface UserClient {
 
 	@GetMapping("/users/{userId}")
@@ -21,7 +21,7 @@ public interface UserClient {
 	@PostMapping("/users")
 	Map<Long, UserGetResultDto> getUsers(@RequestBody List<Long> userIds);
 
-	@GetMapping("/followers/is-following")
+	@GetMapping("/follows/is-following")
 	boolean isFollowing(@RequestParam("fromUserId") Long fromUserId, @RequestParam("toUserId") Long toUserId);
 
 }
