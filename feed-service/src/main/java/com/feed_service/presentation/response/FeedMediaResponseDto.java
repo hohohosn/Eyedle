@@ -1,6 +1,7 @@
 package com.feed_service.presentation.response;
 
 import com.feed_service.domain.model.FeedMedia;
+import com.feed_service.domain.model.MediaType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -9,7 +10,7 @@ import lombok.Getter;
 public class FeedMediaResponseDto {
     private Long mediaId;
     private String mediaUrl;
-    private Enum mediaType;
+    private MediaType mediaType;
 
     public static FeedMediaResponseDto from(FeedMedia fm) {
         return new FeedMediaResponseDto(
