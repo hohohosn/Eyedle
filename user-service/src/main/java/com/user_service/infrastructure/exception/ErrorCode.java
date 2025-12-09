@@ -14,6 +14,9 @@ public enum ErrorCode {
 	INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "USER002", "비밀번호가 일치하지 않습니다."),
 	DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "USER003", "이미 사용 중인 이메일입니다."),
 	DUPLICATE_USERNAME(HttpStatus.BAD_REQUEST, "USER004", "이미 사용 중인 사용자명입니다."),
+	CANNOT_FOLLOW_YOURSELF(HttpStatus.BAD_REQUEST, "FOLLOW001", "자기 자신을 팔로우할 수 없습니다."),
+	ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW002", "이미 팔로우 중입니다."),
+	NOT_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW003", "팔로우 관계가 존재하지 않습니다."),
 
 	// 401 Unauthorized
 	INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH001", "유효하지 않은 토큰입니다."),
