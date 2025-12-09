@@ -267,28 +267,23 @@ public class CommentService {
 	 */
 	private Long validateFeed(Long feedId, Long userId) {
 
-		CommonResponse<FeedGetResultDto> result = feedClient.getFeed(feedId);
-
-		if (result == null || result.getData() == null) {
-			throw new CustomException(FEED_NOT_FOUND);
 		}
 
-		FeedGetResultDto feedGetResultDto = result.getData();
 		Long feedAuthor = feedGetResultDto.getUserId();
 
-		boolean isFolloing = false;
+		boolean isFollowing = false;
 		boolean isFollowed = false;
 
 		if (!feedGetResultDto.getUserId().equals(userId)) {
-			isFolloing = userClient.isFollowing(userId, feedAuthor);
+			isFollowing = userClient.isFollowing(userId, feedAuthor);
 		}
 
-		if (isFolloing) {
+		if (isFollowing) {
 			isFollowed = userClient.isFollowing(feedAuthor, userId);
 		}
 
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
-		commentPolicy.validateFeed(userId, feedAuthor, feedGetResultDto.getPermission(), isFolloing, isFollowed);
+		commentPolicy.validateFeed(userId, feedAuthor, feedGetResultDto.getPermission(), isFollowing, isFollowed);
 
 		return feedGetResultDto.getUserId();
 
