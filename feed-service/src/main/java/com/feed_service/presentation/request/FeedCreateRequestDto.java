@@ -20,4 +20,6 @@ public class FeedCreateRequestDto {
 
     private List<FeedMediaUploadRequestDto> medias;
 
+    private List<String> tags;
+
 }
