@@ -44,10 +44,22 @@ public class UserService {
 	}
 
 	/**
-	 * 특정 사용자 조회 (관리용)
+	 * 특정 사용자 조회 (관리자용 - 활성 회원만)
 	 */
 	public UserInfoResponse getUserInfo(Long targetUserId) {
-		log.info("사용자 정보 조회 : targetUserId={}", targetUserId);
+		log.info("사용자 정보 조회 (관리자): targetUserId={}", targetUserId);
+
+		User user = userRepository.findByIdAndDeletedFalse(targetUserId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		return UserInfoResponse.from(user);
+	}
+
+	/**
+	 * 특정 사용자 조회 (관리자용 - 탈퇴 포함)
+	 */
+	public UserInfoResponse getUserInfoIncludingDeleted(Long targetUserId) {
+		log.info("사용자 정보 조회 (탈퇴 포함): targetUserId={}", targetUserId);
 
 		User user = userRepository.findById(targetUserId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

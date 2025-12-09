@@ -27,14 +27,11 @@ public class UserController {
 
 	/**
 	 * 내 정보 조회
-	 * GET /api/users/me
 	 */
 	@GetMapping("/me")
 	public ResponseEntity<ApiResponse<UserInfoResponse>> getMyInfo(
 		@AuthenticationPrincipal Long userId
 	) {
-		log.info("내 정보 조회: userId={}", userId);
-
 		UserInfoResponse response = userService.getMyInfo(userId);
 
 		return ResponseEntity.ok(
@@ -44,15 +41,12 @@ public class UserController {
 
 	/**
 	 * 내 정보 수정
-	 * PATCH /api/users/me
 	 */
 	@PatchMapping("/me")
 	public ResponseEntity<ApiResponse<UserInfoResponse>> updateMyInfo(
 		@AuthenticationPrincipal Long userId,
 		@Valid @RequestBody UpdateUserRequest request
 	) {
-		log.info("내 정보 수정: userId={}", userId);
-
 		UserInfoResponse response = userService.updateMyInfo(userId, request);
 
 		return ResponseEntity.ok(
@@ -62,14 +56,11 @@ public class UserController {
 
 	/**
 	 * 회원 탈퇴
-	 * DELETE /api/users/me
 	 */
 	@DeleteMapping("/me")
 	public ResponseEntity<ApiResponse<String>> deleteMyAccount(
 		@AuthenticationPrincipal Long userId
 	) {
-		log.info("회원 탈퇴: userId={}", userId);
-
 		userService.deleteMyAccount(userId);
 
 		return ResponseEntity.ok(
@@ -78,15 +69,12 @@ public class UserController {
 	}
 
 	/**
-	 * 특정 사용자 정보 조회 (관리자용)
-	 * GET /api/users/{userId}
+	 * 특정 사용자 조회 (활성 회원)
 	 */
 	@GetMapping("/{userId}")
 	public ResponseEntity<ApiResponse<UserInfoResponse>> getUserInfo(
 		@PathVariable Long userId
 	) {
-		log.info("사용자 정보 조회 (관리자): targetUserId={}", userId);
-
 		UserInfoResponse response = userService.getUserInfo(userId);
 
 		return ResponseEntity.ok(
@@ -95,8 +83,21 @@ public class UserController {
 	}
 
 	/**
-	 * 사용자 검색 (관리자용)
-	 * GET /api/users/search?keyword=검색어&page=0&size=20
+	 * 특정 사용자 조회 (탈퇴 회원 포함)
+	 */
+	@GetMapping("/{userId}/with-deleted")
+	public ResponseEntity<ApiResponse<UserInfoResponse>> getUserInfoWithDeleted(
+		@PathVariable Long userId
+	) {
+		UserInfoResponse response = userService.getUserInfoIncludingDeleted(userId);
+
+		return ResponseEntity.ok(
+			ApiResponse.success("사용자 정보를 조회했습니다.", response)
+		);
+	}
+
+	/**
+	 * 사용자 검색 (관리용)
 	 */
 	@GetMapping("/search")
 	public ResponseEntity<ApiResponse<UserSearchResponse>> searchUsers(
