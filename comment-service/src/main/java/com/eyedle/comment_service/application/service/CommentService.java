@@ -274,9 +274,21 @@ public class CommentService {
 		}
 
 		FeedGetResultDto feedGetResultDto = result.getData();
+		Long feedAuthor = feedGetResultDto.getUserId();
+
+		boolean isFolloing = false;
+		boolean isFollowed = false;
+
+		if (!feedGetResultDto.getUserId().equals(userId)) {
+			isFolloing = userClient.isFollowing(userId, feedAuthor);
+		}
+
+		if (isFolloing) {
+			isFollowed = userClient.isFollowing(feedAuthor, userId);
+		}
 
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
-		commentPolicy.validateFeed(feedId, userId, feedGetResultDto.getUserId(), feedGetResultDto.getPermission());
+		commentPolicy.validateFeed(userId, feedAuthor, feedGetResultDto.getPermission(), isFolloing, isFollowed);
 
 		return feedGetResultDto.getUserId();
 
