@@ -21,9 +21,10 @@ public enum ChatErrorCode implements BaseErrorCode {
   NOT_MESSAGE_OWNER("CHAT2002", "다른 사용자의 메세지는 삭제할 수 없습니다.", 403),
   MESSAGE_ALREADY_DELETED("CHAT2003", "이미 삭제된 메세지입니다.", 400),
 
-  // USER
+  // User
   USER_NOT_FOUND("CHAT5000", "사용자를 찾을 수 없습니다.", 404),
   BLOCKED_USER("CHAT5001", "차단 상태입니다.", 403),
+
   ;
 
   private final String code;

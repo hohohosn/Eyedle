@@ -35,7 +35,20 @@ public class ChatMessage extends BaseTimeEntity {
 
   private LocalDateTime deletedAt;
 
-  public void delete() {
-    this.deletedAt = LocalDateTime.now();
+  /**
+   * 채팅 메세지 생성을 위한 정적 팩토리 메서드
+   */
+  public static ChatMessage create(Long chatRoomId, Long userId, ContentType contentType, String messageContent) {
+    ChatMessage chatMessage = new ChatMessage();
+    chatMessage.chatRoomId = chatRoomId;
+    chatMessage.userId = userId;
+    chatMessage.contentType = contentType;
+    chatMessage.messageContent = messageContent;
+    chatMessage.isReported = false;
+    return chatMessage;
+  }
+
+  public void delete(LocalDateTime deletedAt) {
+    this.deletedAt = deletedAt;
   }
 }
