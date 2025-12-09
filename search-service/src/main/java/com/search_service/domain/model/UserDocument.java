@@ -22,8 +22,11 @@ public class UserDocument {
 	private Long id;
 
 	@Field(type = FieldType.Text, analyzer = "nori")
-	private String userId;
+	private String username;
 
 	@Field(type = FieldType.Keyword, index = false)
 	private String profileImageUrl;
+
+	@Field(type = FieldType.Keyword, index = false) // 상태값(ACTIVE 등) 필터링용
+	private String status;
 }

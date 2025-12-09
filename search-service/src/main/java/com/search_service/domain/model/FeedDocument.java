@@ -1,5 +1,6 @@
 package com.search_service.domain.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -33,8 +34,20 @@ public class FeedDocument {
 	private String imageUrl;
 
 	@Field(type = FieldType.Keyword, index = false)
-	private String authorUserId;
+	private Long userId;
+
+	@Field(type = FieldType.Keyword, index = false)
+	private String username;
+
+	@Field(type = FieldType.Keyword, index = false)
+	private String userProfileUrl;
 
 	@Field(type = FieldType.Integer)
 	private Integer likeCount;
+
+	@Field(type = FieldType.Date)
+	private LocalDateTime createdAt;
+
+	@Field(type = FieldType.Boolean)
+	private Boolean isDeleted;
 }
