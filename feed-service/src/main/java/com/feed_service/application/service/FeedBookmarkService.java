@@ -20,10 +20,10 @@ public class FeedBookmarkService {
     public void bookmarkFeed(Long feedId, Long userId){
 
         Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new CustomException(ErrorCode.CONFLICT));
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
         if(feedBookmarkRepository.existsByFeed_IdAndUserId(feedId, userId)){
-            throw new CustomException(ErrorCode.NOT_FOUND);
+            throw new CustomException(ErrorCode.CONFLICT);
         }
 
         feedBookmarkRepository.save(new  FeedBookmark(feed, userId));
