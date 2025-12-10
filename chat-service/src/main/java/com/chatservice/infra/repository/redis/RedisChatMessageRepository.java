@@ -2,19 +2,23 @@ package com.chatservice.infra.repository.redis;
 
 import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.presentation.response.ChatMessageResDto;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RedisChatMessageRepository {
 
   private final RedisTemplate<String, Object> redisTemplate;
+  private final ObjectMapper objectMapper;
 
   private String zsetKey(Long chatRoomId) {
     return "chat:messages:z:" + chatRoomId;
@@ -26,15 +30,17 @@ public class RedisChatMessageRepository {
 
   public List<ChatMessageResDto> findRecentMessage(Long chatRoomId, long beforeEpochMs, int limit) {
 
+    log.info("redis zsetKey={}", zsetKey(chatRoomId));
+    log.info("redis hashKey={}", hashKey(chatRoomId));
     Set<Object> rawMessages = redisTemplate.opsForZSet().reverseRangeByScore(zsetKey(chatRoomId), 0, beforeEpochMs, 0, limit);
+    log.info("redis  ={}", rawMessages);
 
     if (rawMessages == null) {
       return List.of();
     }
 
     return rawMessages.stream()
-        .filter(ChatMessageResDto.class::isInstance)
-        .map(ChatMessageResDto.class::cast)
+        .map(o -> objectMapper.convertValue(o, ChatMessageResDto.class))
         .map(this::convertIfDeleted)
         .toList();
   }
