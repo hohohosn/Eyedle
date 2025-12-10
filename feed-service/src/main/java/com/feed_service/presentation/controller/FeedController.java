@@ -29,8 +29,8 @@ public class FeedController {
     ){
 
         Long userId = 1L;
-
-        return CommonResponse.of(SuccessCode.OK, feedService.createFeed(request, files, userId));
+        Long id = feedService.createFeed(request, files, userId);
+        return CommonResponse.of(SuccessCode.OK, id);
     }
 
     @GetMapping("/{feedId}")
@@ -38,13 +38,13 @@ public class FeedController {
         return CommonResponse.of(SuccessCode.OK, feedService.findFeed(feedId));
     }
 
-    @GetMapping
-    public CommonResponse getFeeds(
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
-        return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable));
-    }
+//    @GetMapping
+//    public CommonResponse getFeeds(
+//            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+//            Pageable pageable
+//    ) {
+//        return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable));
+//    }
 
     @PatchMapping("/{feedId}")
     public CommonResponse  updateFeed(@PathVariable Long feedId, @RequestBody FeedUpdateRequestDto request){

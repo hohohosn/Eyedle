@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Where;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,7 +15,9 @@ import java.util.List;
 @Entity
 @Table(name = "p_feed")
 @Getter
+@Where(clause = "is_deleted = false")
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Feed extends BaseTimeEntity {
 
     @Column(nullable = false)
@@ -27,7 +31,7 @@ public class Feed extends BaseTimeEntity {
     private FeedPermission permission;
 
     @Column(nullable = false)
-    private boolean isDeleted = false;
+    private boolean isDeleted;
 
     private LocalDateTime deletedAt;
 
