@@ -1,10 +1,8 @@
 package com.chatservice.infra.repository.impl;
 
 import com.chatservice.domain.model.ChatMessage;
-import com.chatservice.domain.model.QChatMessage;
 import com.chatservice.domain.repository.ChatMessageRepository;
 import com.chatservice.infra.repository.jpa.ChatMessageJpaRepository;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,19 +34,16 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
 
   @Override
   public Map<Long, ChatMessage> findLastMessageByChatRoomIds(List<Long> chatRoomIds) {
-    QChatMessage m1 = new QChatMessage("m1");
-    QChatMessage m2 = new QChatMessage("m2");
 
     List<ChatMessage> lastMessages = jpaQueryFactory
-        .select(m1)
-        .from(m1)
-        .where(m1.createdAt.eq(
-                JPAExpressions
-                    .select(m2.createdAt.max())
-                    .from(m2)
-                    .where(m2.chatRoomId.eq(m1.chatRoomId)))
-            .and(m1.chatRoomId.in(chatRoomIds)))
-        .orderBy(m1.chatRoomId.asc(), m1.id.desc())
+        .select(chatMessage)
+        .from(chatMessage)
+        .where(chatMessage.chatRoomId.in(chatRoomIds))
+        .orderBy(
+            chatMessage.chatRoomId.asc(),     // DISTINCT ON 기준
+            chatMessage.createdAt.desc()      // 최신 메세지 정렬
+        )
+        .distinct()
         .fetch();
 
     return lastMessages.stream().collect(Collectors.toMap(ChatMessage::getChatRoomId, Function.identity()));
