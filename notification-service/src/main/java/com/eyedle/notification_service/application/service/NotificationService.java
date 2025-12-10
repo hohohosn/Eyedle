@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.common.exception.CustomException;
 import com.eyedle.notification_service.domain.model.Notification;
 import com.eyedle.notification_service.domain.repository.NotificationRepository;
+import com.eyedle.notification_service.domain.service.NotificationPolicy;
 import com.eyedle.notification_service.infra.config.RedisConfig;
 import com.eyedle.notification_service.infra.repository.SseEmitterRepository;
 import com.eyedle.notification_service.presentation.dto.SliceResponse;
@@ -28,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NotificationService {
 
-	private final NotificationPolicy  notificationPolicy;
+	private final NotificationPolicy notificationPolicy;
 	private final NotificationRepository notificationRepository;
 	private final SseEmitterRepository emitterRepository;
 	private final StringRedisTemplate redisTemplate;
