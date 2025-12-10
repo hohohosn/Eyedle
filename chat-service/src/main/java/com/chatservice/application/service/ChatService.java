@@ -6,6 +6,7 @@ import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.domain.model.ChatParticipant;
 import com.chatservice.domain.model.ChatRoom;
 import com.chatservice.domain.model.ChatRoomStatus;
+import com.chatservice.domain.repository.ChatMessageReadRepository;
 import com.chatservice.domain.repository.ChatMessageRepository;
 import com.chatservice.domain.repository.ChatParticipantRepository;
 import com.chatservice.domain.repository.ChatRoomRepository;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,14 +40,15 @@ import static com.chatservice.domain.model.ChatRoomStatus.REQUESTED;
 import static java.lang.Long.MAX_VALUE;
 import static java.time.Duration.ofDays;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
 
-  private final static int PAGE_SIZE = 20;
   private final ChatRoomRepository chatRoomRepository;
   private final ChatParticipantRepository chatParticipantRepository;
   private final ChatMessageRepository chatMessageRepository;
+  private final ChatMessageReadRepository chatMessageReadRepository;
   private final RedisChatMessageRepository redisChatMessageRepository;
   private final UserClient userClient;
   private final BlockClient blockClient;
@@ -57,35 +60,11 @@ public class ChatService {
   @Transactional
   public CreateChatRoomResDto createDirectChatRoom(Long userId, CreateChatRoomReqDto reqDto) {
 
-    // 두 유저가 같은 사람인지 확인
-    if (reqDto.receiverId().equals(userId)) {
-      throw new CustomException(SELF_CHAT_NOT_ALLOWED);
-    }
-
-    // 상대가 존재하는 유저인지 확인
-    UserInfo receiverInfo = userClient.getUserInfo(reqDto.receiverId());
-    if (receiverInfo == null) {
-      throw new CustomException(USER_NOT_FOUND);
-    }
-
-    // 내가 상대를 차단했는지
-    boolean blockedByMe = blockClient.isBlocked(userId, reqDto.receiverId());
-    //상대가 나를 차단했는지
-    boolean blockedMe = blockClient.isBlocked(reqDto.receiverId(), userId);
-
-    if (blockedByMe || blockedMe) {
-      throw new CustomException(BLOCKED_USER);
-    }
+    // 유효성 검증
+    validateDirectChatRequest(userId, reqDto);
 
     return chatRoomRepository.findDirectChatRoom(userId, reqDto.receiverId())
-        .map(existingChatRoom -> {
-          boolean meLeft = chatParticipantRepository.isLeft(existingChatRoom.getId(), userId);
-          boolean receiverLeft = chatParticipantRepository.isLeft(existingChatRoom.getId(), reqDto.receiverId());
-
-          // 둘 다 방을 떠났으면 새 채팅방 생성
-          return (meLeft && receiverLeft) ? createNewChatRoom(userId, reqDto.receiverId())
-              : CreateChatRoomResDto.from(existingChatRoom);
-        })
+        .map(existingChatRoom -> handleExistingDirectChatRoom(existingChatRoom, userId, reqDto.receiverId()))
         // 기존 방이 없으면 새 채팅방 생성
         .orElseGet(() -> createNewChatRoom(userId, reqDto.receiverId()));
   }
@@ -96,14 +75,20 @@ public class ChatService {
   @Transactional
   public void acceptChatRoom(Long chatRoomId, Long userId) {
 
-    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new CustomException(CHAT_ROOM_NOT_FOUND));
+    ChatRoom chatRoom = getChatRoom(chatRoomId);
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
 
-    // REQUESTED 상태를 OPEN으로 전환
-    if (chatRoom.getChatRoomStatus() == REQUESTED) {
-      chatRoom.changeRoomStatus(OPEN);
+    if (chatRoom.getChatRoomStatus() == OPEN) {
+      throw new CustomException(ALREADY_OPEN_CHAT_ROOM_STATUS);
     }
 
-    ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
+    // REQUESTED 상태를 OPEN으로 전환
+    if (chatRoom.getChatRoomStatus() != REQUESTED) {
+      throw new CustomException(CANNOT_OPEN_CHAT_ROOM_STATUS);
+    }
+
+    // 채팅방 상태 변경
+    chatRoom.changeRoomStatus(OPEN);
 
     // 채팅 참여
     chatParticipant.join();
@@ -114,7 +99,19 @@ public class ChatService {
    */
   @Transactional
   public void rejectChatRoom(Long chatRoomId, Long userId) {
-    ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
+
+    ChatRoom chatRoom = getChatRoom(chatRoomId);
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
+
+    // 채팅방 상태가 요청 상태일 때만 거절 가능
+    if (chatRoom.getChatRoomStatus() != REQUESTED) {
+      throw new CustomException(CANNOT_REJECT_CHAT_ROOM);
+    }
+
+    // 이미 나간 채팅방은 거절 불가
+    if (chatParticipant.isLeft()) {
+      throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
+    }
 
     // 채팅 거절
     chatParticipant.leave();
@@ -124,10 +121,10 @@ public class ChatService {
    * 채팅방 목록 조회
    */
   @Transactional(readOnly = true)
-  public ChatRoomCursorResDto getChatRoomList(Long userId, Long cursor) {
+  public ChatRoomCursorResDto getChatRoomList(Long userId, Long cursor, int pageSize) {
     // 커서 값 없으면 가장 큰 값으로 초기화(최신 방부터 조회)
     Long effectiveCursor = (cursor == null) ? MAX_VALUE : cursor;
-    Pageable pageable = PageRequest.of(0, PAGE_SIZE);
+    Pageable pageable = PageRequest.of(0, pageSize);
 
     // 커서 기준 채팅방 조회
     List<ChatRoom> chatRooms = chatRoomRepository.findChatRooms(userId, effectiveCursor, pageable);
@@ -158,7 +155,7 @@ public class ChatService {
         }).toList();
 
     // 다음 커서
-    Long nextCursor = (chatRooms.size() < PAGE_SIZE) ? null : chatRooms.get(chatRooms.size() - 1).getId();
+    Long nextCursor = (chatRooms.size() < pageSize) ? null : chatRooms.get(chatRooms.size() - 1).getId();
 
     return ChatRoomCursorResDto.of(chatRoomInfos, nextCursor);
   }
@@ -168,8 +165,10 @@ public class ChatService {
    */
   @Transactional
   public void leaveChatRoom(Long chatRoomId, Long userId) {
-    ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
 
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
+
+    // 이미 나간 채팅방인지 확인
     if (chatParticipant.isLeft()) {
       throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
     }
@@ -210,9 +209,9 @@ public class ChatService {
    * 채팅 메시지 조회
    */
   @Transactional(readOnly = true)
-  public List<ChatMessageResDto> getChatRoomMessages(Long userId, Long chatRoomId, Long cursorEpochMs) {
+  public List<ChatMessageResDto> getChatRoomMessages(Long userId, Long chatRoomId, Long cursorEpochMs, int pageSize) {
 
-    ChatParticipant chatParticipant = getChatParticipate(chatRoomId, userId);
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
 
     if (chatParticipant.isLeft()) {
       throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
@@ -227,13 +226,13 @@ public class ChatService {
 
     // 최신 7일 메시지이면 redis 조회
     if (cursor >= sevenDaysAgo) {
-      return redisChatMessageRepository.findRecentMessage(chatRoomId, cursor, PAGE_SIZE);
+      return redisChatMessageRepository.findRecentMessage(chatRoomId, cursor, pageSize);
     }
 
     // 7일 이전 메시지이면 DB 조회
     LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), ZoneOffset.UTC);
 
-    List<ChatMessage> dbMessages = chatMessageRepository.findOldMessages(chatRoomId, cursorDateTime, PAGE_SIZE);
+    List<ChatMessage> dbMessages = chatMessageRepository.findOldMessages(chatRoomId, cursorDateTime, pageSize);
 
     return dbMessages.stream().map(ChatMessageResDto::from).toList();
   }
@@ -254,10 +253,73 @@ public class ChatService {
     return ChatMessageResDto.from(saveMessage);
   }
 
-  private ChatParticipant getChatParticipate(Long chatRoomId, Long userId) {
+  private ChatParticipant getChatParticipant(Long chatRoomId, Long userId) {
 
     return chatParticipantRepository.findByChatRoomIdAndUserId(chatRoomId, userId)
         .orElseThrow(() -> new CustomException(CHAT_PARTICIPANT_NOT_FOUND));
+  }
+
+  private ChatRoom getChatRoom(Long chatRoomId) {
+
+    return chatRoomRepository.findById(chatRoomId).orElseThrow(() -> new CustomException(CHAT_ROOM_NOT_FOUND));
+  }
+
+  private void validateDirectChatRequest(Long userId, CreateChatRoomReqDto reqDto) {
+
+    // 두 유저가 같은 사람인지 확인
+    if (reqDto.receiverId().equals(userId)) {
+      throw new CustomException(SELF_CHAT_NOT_ALLOWED);
+    }
+
+    // 상대가 존재하는 유저인지 확인
+    if (userClient.getUserInfo(reqDto.receiverId()) == null) {
+      throw new CustomException(USER_NOT_FOUND);
+    }
+
+    // 내가 상대를 차단했는지
+    boolean blockedByMe = blockClient.isBlocked(userId, reqDto.receiverId());
+    //상대가 나를 차단했는지
+    boolean blockedMe = blockClient.isBlocked(reqDto.receiverId(), userId);
+
+    if (blockedByMe || blockedMe) {
+      throw new CustomException(BLOCKED_USER);
+    }
+  }
+
+  private CreateChatRoomResDto handleExistingDirectChatRoom(ChatRoom chatRoom, Long userId, Long receiverId) {
+
+    validateParticipantCount(chatRoom.getId());
+
+    ChatParticipant me = getChatParticipant(chatRoom.getId(), userId);
+    ChatParticipant receiver = getChatParticipant(chatRoom.getId(), receiverId);
+
+    boolean meLeft = me.isLeft();
+    boolean receiverLeft = receiver.isLeft();
+
+    // 둘 다 방을 떠났으면 새 채팅방 생성
+    if (meLeft && receiverLeft) {
+      return createNewChatRoom(userId, receiverId);
+    }
+
+    // 한 명만 나간 경우 재참여 처리
+    if (meLeft) {
+      me.join();
+    }
+
+    if (receiverLeft) {
+      receiver.join();
+    }
+
+    return CreateChatRoomResDto.from(chatRoom);
+  }
+
+  private void validateParticipantCount(Long chatRoomId) {
+
+    int count = chatParticipantRepository.countParticipants(chatRoomId);
+
+    if (count != 2) {
+      throw new CustomException(CHATROOM_PARTICIPANT_LIMIT_EXCEEDED);
+    }
   }
 
   private CreateChatRoomResDto createNewChatRoom(Long userId, Long receiverId) {
@@ -281,4 +343,23 @@ public class ChatService {
 
     return CreateChatRoomResDto.from(newChatRoom);
   }
+
+//  /**
+//   * 읽음 확인
+//   */
+//  @Transactional
+//  public void markAsRead(ChatMessageReadReqDto reqDto) {
+//
+//    boolean alreadyReads = chatMessageReadRepository.findByChatMessageIdAndUserId(reqDto.chatMessageId(), reqDto.userId()).isPresent();
+//
+//    // 이미 읽은 메시지는 무시
+//    if (alreadyReads) {
+//      return;
+//    }
+//
+//    chatMessageReadRepository.save(ChatMessageRead.create(reqDto));
+//  }
+
+// TODO:  읽음 확인
+
 }
