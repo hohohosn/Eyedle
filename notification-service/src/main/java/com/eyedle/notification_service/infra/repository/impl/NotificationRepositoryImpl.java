@@ -96,4 +96,9 @@ public class NotificationRepositoryImpl implements NotificationRepository {
 		Query query = new Query(criteria);
 		return mongoTemplate.count(query, Notification.class);
 	}
+
+	@Override
+	public List<Notification> saveAll(List<Notification> notifications) {
+		return notificationMongoRepository.saveAll(notifications);
+	}
 }
