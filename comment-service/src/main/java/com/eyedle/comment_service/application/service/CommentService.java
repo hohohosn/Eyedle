@@ -268,7 +268,12 @@ public class CommentService {
 	 */
 	private Long validateFeed(Long feedId, Long userId) {
 
-		}
+		CommonResponse<FeedGetResultDto> result = feedClient.getFeed(feedId);
+
+		 if (result == null || result.getData() == null) {
+		 	throw new CustomException(FEED_NOT_FOUND);
+		 }
+		FeedGetResultDto feedGetResultDto = result.getData();
 
 		Long feedAuthor = feedGetResultDto.getUserId();
 
@@ -344,14 +349,10 @@ public class CommentService {
 	}
 
 	/**
-	 * 댓글/대댓글시 알림 수신자 확인
 	 * 댓글 작성자에게 알림
 	 * @param comment
 	 * @param parentComment
-	 * @param feedAuthor
-	 * @return
 	 */
-	private Long setReceiver(Comment parentComment, Long feedAuthor) {
 	private void sendToParentAuthor(Comment comment, Comment parentComment) {
 
 		NotificationReceivers receivers = new NotificationReceivers();
@@ -362,8 +363,8 @@ public class CommentService {
 			return;
 		}
 
-		return feedAuthor;
 		kafkaTemplate.send("notification-topic", NotificationEventDto.toEvent(comment, receivers.toList(), "COMMENT_REPLY"));
+
 	}
 
 }
