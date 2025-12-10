@@ -11,8 +11,8 @@ public enum ChatErrorCode implements BaseErrorCode {
   SELF_CHAT_NOT_ALLOWED("CHAT0001", "자기 자신과의 채팅방은 만들 수 없습니다.", 400),
   CHATROOM_PARTICIPANT_LIMIT_EXCEEDED("CHAT0002", "채팅방 참여자 수를 초과했습니다.", 409),
   ALREADY_OPEN_CHAT_ROOM_STATUS("CHAT0003", "이미 열린 채팅방입니다.", 409),
-  CANNOT_OPEN_CHAT_ROOM_STATUS("CHAT0003", "채팅방을 열 수 없는 상태입니다.", 409),
-  CANNOT_REJECT_CHAT_ROOM("CHAT0003", "채팅을 거절할 수 없는 상태입니다.", 409),
+  CANNOT_OPEN_CHAT_ROOM_STATUS("CHAT0004", "채팅방을 열 수 없는 상태입니다.", 409),
+  CANNOT_REJECT_CHAT_ROOM("CHAT0005", "채팅을 거절할 수 없는 상태입니다.", 409),
 
   // ChatParticipant
   CHAT_PARTICIPANT_NOT_FOUND("CHAT1000", "채팅 참여자를 찾을 수 없습니다.", 404),
