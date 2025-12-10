@@ -1,4 +1,4 @@
-package com.eyedle.notification_service.application.service;
+package com.eyedle.notification_service.domain.service;
 
 import org.springframework.stereotype.Component;
 

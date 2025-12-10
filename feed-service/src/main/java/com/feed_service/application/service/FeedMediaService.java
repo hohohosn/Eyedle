@@ -1,10 +1,12 @@
 package com.feed_service.application.service;
 
-import com.common.utils.s3.S3Uploader;
+
 import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.FeedMedia;
 import com.feed_service.domain.model.MediaType;
 import com.feed_service.domain.repository.FeedMediaRepository;
+import com.feed_service.infra.s3.S3Uploader;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,6 +15,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class FeedMediaService {
 
     private final FeedMediaRepository feedMediaRepository;
@@ -28,7 +31,6 @@ public class FeedMediaService {
             MediaType mediaType = detectMediaType(file);
 
             FeedMedia media = new FeedMedia(feed, url, mediaType);
-
             feedMediaRepository.save(media);
         }
     }

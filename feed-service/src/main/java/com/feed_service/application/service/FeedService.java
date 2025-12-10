@@ -38,12 +38,13 @@ public class FeedService {
 
         feedRepository.save(feed);
 
-        if(request.getMedias() != null){
-            for(FeedMediaUploadRequestDto m : request.getMedias()){
-                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
-                feed.getMediaList().add(media);
-            }
-        }
+//        if(request.getMedias() != null){
+//            for(FeedMediaUploadRequestDto m : request.getMedias()){
+//                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
+//                feed.getMediaList().add(media);
+//            }
+//        }
+        feedMediaService.uploadMedias(feed, files);
 
         tagService.applyTags(feed, request.getTags());
 
@@ -56,10 +57,10 @@ public class FeedService {
         return FeedResponseDto.mapFeed(feed);
     }
 
-    public Page<FeedResponseDto> findAllFeeds(Pageable pageable) {
-        Page<Feed> feeds = feedRepository.findFeeds(pageable);
-        return feeds.map(FeedResponseDto::mapFeed);
-    }
+//    public Page<FeedResponseDto> findAllFeeds(Pageable pageable) {
+//        Page<Feed> feeds = feedRepository.findFeeds(pageable);
+//        return feeds.map(FeedResponseDto::mapFeed);
+//    }
 
     @Transactional
     public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request) {

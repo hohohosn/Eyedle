@@ -4,11 +4,13 @@ import com.common.database.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Getter
 @NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
 @Entity
 @Table(name = "p_feed_media")
+@EntityListeners(AuditingEntityListener.class)
 public class FeedMedia extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

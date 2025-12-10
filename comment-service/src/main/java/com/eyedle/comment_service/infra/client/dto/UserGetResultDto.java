@@ -13,13 +13,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserGetResultDto {
 	private Long id;
-	private String userId;
+	private String username;
 	private String profileImageUrl;
 
 	public Author toAuthor() {
 		return Author.builder()
 			.id(this.id)
-			.name(this.userId)
+			.name(this.username)
 			.profileImgUrl(this.profileImageUrl)
 			.build();
 	}
