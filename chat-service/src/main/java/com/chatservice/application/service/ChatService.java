@@ -276,12 +276,10 @@ public class ChatService {
       throw new CustomException(USER_NOT_FOUND);
     }
 
-    // 내가 상대를 차단했는지
-    boolean blockedByMe = blockClient.isBlocked(userId, reqDto.receiverId());
-    //상대가 나를 차단했는지
-    boolean blockedMe = blockClient.isBlocked(reqDto.receiverId(), userId);
+    // 차단 여부 확인
+    boolean isNotBlocked = blockClient.isNotBlocked(userId, reqDto.receiverId());
 
-    if (blockedByMe || blockedMe) {
+    if (!isNotBlocked) {
       throw new CustomException(BLOCKED_USER);
     }
   }
@@ -324,12 +322,11 @@ public class ChatService {
 
   private CreateChatRoomResDto createNewChatRoom(Long userId, Long receiverId) {
 
-    // 팔로우 관계 확인
-    boolean iFollowReceiver = followClient.isFollowing(userId, receiverId);
-    boolean receiverFollowMe = followClient.isFollowing(receiverId, userId);
+    // 팔로우 여부 확인
+    boolean isFollowing = followClient.isFollowing(userId, receiverId);
 
     // 한쪽이라도 팔로우 중이면 바로 OPEN
-    ChatRoomStatus chatRoomStatus = (iFollowReceiver || receiverFollowMe) ? OPEN : REQUESTED;
+    ChatRoomStatus chatRoomStatus = isFollowing ? OPEN : REQUESTED;
 
     // 채팅방 생성
     ChatRoom newChatRoom = ChatRoom.createOneToOne(chatRoomStatus);
