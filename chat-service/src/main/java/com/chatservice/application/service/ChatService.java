@@ -33,7 +33,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.chatservice.common.CacheConstants.CHAT_MESSAGE_CACHE_DAYS;
 import static com.chatservice.common.ChatErrorCode.*;
 import static com.chatservice.domain.model.ChatRoomStatus.OPEN;
 import static com.chatservice.domain.model.ChatRoomStatus.REQUESTED;
@@ -219,7 +218,7 @@ public class ChatService {
 
     // 현재 시간 기준 계산
     long now = System.currentTimeMillis();
-    long sevenDaysAgo = now - ofDays(CHAT_MESSAGE_CACHE_DAYS).toMillis();
+    long sevenDaysAgo = now - ofDays(3).toMillis();
 
     // 커서 값 설정 -> 클라이언트에서 전달한 경우 사용, 없으면 최신 메시지 기준
     long cursor = (cursorEpochMs != null) ? cursorEpochMs : MAX_VALUE;
