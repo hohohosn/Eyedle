@@ -31,6 +31,7 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'com.github.sparta-Eyedle:msa-common-module:v0.0.6'
+    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
     runtimeOnly 'org.postgresql:postgresql'
 
     // Kafka

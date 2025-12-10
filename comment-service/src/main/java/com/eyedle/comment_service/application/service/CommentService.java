@@ -25,6 +25,7 @@ import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.domain.service.CommentPolicy;
 import com.eyedle.comment_service.domain.vo.Author;
+import com.eyedle.comment_service.domain.vo.NotificationReceivers;
 import com.eyedle.comment_service.infra.client.FeedClient;
 import com.eyedle.comment_service.infra.client.UserClient;
 import com.eyedle.comment_service.infra.client.dto.FeedGetResultDto;
@@ -267,7 +268,12 @@ public class CommentService {
 	 */
 	private Long validateFeed(Long feedId, Long userId) {
 
-		}
+		CommonResponse<FeedGetResultDto> result = feedClient.getFeed(feedId);
+
+		 if (result == null || result.getData() == null) {
+		 	throw new CustomException(FEED_NOT_FOUND);
+		 }
+		FeedGetResultDto feedGetResultDto = result.getData();
 
 		Long feedAuthor = feedGetResultDto.getUserId();
 
@@ -301,6 +307,11 @@ public class CommentService {
 
 	}
 
+	/**
+	 * 대댓글 검증 + 조회
+	 * @param parentId
+	 * @param feedId
+	 */
 	private void validateReplyById(Long parentId, Long feedId) {
 		Comment parentComment = getComment(parentId);
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
@@ -309,32 +320,51 @@ public class CommentService {
 
 	/**
 	 * Kafka 이벤트 발행
-	 * @param savedComment
+	 * @param savedComment, parentComment, feedAuthor
 	 */
 	private void sendNotificationEvent(Comment savedComment, Comment parentComment, Long feedAuthor) {
-
-		Long receiverId = setReceiver(parentComment, feedAuthor);
-
-		if(receiverId.equals(savedComment.getAuthor().getId())) {
-			return;
+		sendToFeedOwner(savedComment, feedAuthor);
+		if (parentComment != null) {
+			sendToParentAuthor(savedComment, parentComment);
 		}
-
-		NotificationEventDto notificationEventDto = NotificationEventDto.toEvent(savedComment,receiverId);
-		kafkaTemplate.send("notification-topic", notificationEventDto);
 	}
 
 	/**
-	 * 댓글/대댓글시 알림 수신자 확인
-	 * @param parentComment
-	 * @param feedAuthor
-	 * @return
+	 * 피드 작성자한테 알림
+	 * @param comment
+	 * @param feedAuthorId
 	 */
-	private Long setReceiver(Comment parentComment, Long feedAuthor) {
+	private void sendToFeedOwner(Comment comment, Long feedAuthorId) {
 
-		if(parentComment != null){
-			return parentComment.getAuthor().getId();
+		NotificationReceivers receivers = new NotificationReceivers();
+		receivers.add(feedAuthorId);
+		receivers.remove(comment.getAuthor().getId());
+
+		if (receivers.isEmpty()) {
+			return;
 		}
 
-		return feedAuthor;
+		kafkaTemplate.send("notification-topic", NotificationEventDto.toEvent(comment, receivers.toList(), "FEED_COMMENT"));
+
 	}
+
+	/**
+	 * 댓글 작성자에게 알림
+	 * @param comment
+	 * @param parentComment
+	 */
+	private void sendToParentAuthor(Comment comment, Comment parentComment) {
+
+		NotificationReceivers receivers = new NotificationReceivers();
+		receivers.add(parentComment.getAuthor().getId());
+		receivers.remove(comment.getAuthor().getId());
+
+		if (receivers.isEmpty()) {
+			return;
+		}
+
+		kafkaTemplate.send("notification-topic", NotificationEventDto.toEvent(comment, receivers.toList(), "COMMENT_REPLY"));
+
+	}
+
 }

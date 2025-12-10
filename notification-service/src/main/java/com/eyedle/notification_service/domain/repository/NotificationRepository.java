@@ -18,4 +18,6 @@ public interface NotificationRepository {
 	Long deleteAllByReceiverId(Long receiverId);
 
 	Long countByReceiverIdAndReadAtIsNullAndDeletedAtIsNull(Long receiverId);
+
+	List<Notification> saveAll(List<Notification> notifications);
 }

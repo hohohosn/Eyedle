@@ -1,5 +1,7 @@
 package com.eyedle.notification_service.presentation.dto.request;
 
+import java.util.List;
+
 import com.common.exception.CustomException;
 import com.eyedle.notification_service.domain.model.NotificationType;
 import com.eyedle.notification_service.presentation.enums.NotificationErrorCode;
@@ -17,11 +19,12 @@ import lombok.ToString;
 @ToString
 public class NotificationKafkaDto {
 	private Long id;           // 알림 ID
-	private Long receiverId;   // 수신자 ID
+	private List<Long> receiverIds;   // 수신자 ID
 	private String type;
 	private String message;
 	private Long targetId;
 	private Long subTargetId;
+	private String sender;
 	private String createdAt;
 
 	public NotificationCreateRequestDto toRequestDto() {
@@ -34,7 +37,8 @@ public class NotificationKafkaDto {
 		}
 
 		return NotificationCreateRequestDto.builder()
-			.receiverId(this.receiverId)
+			.receiverIds(this.getReceiverIds())
+			.sender(this.getSender())
 			.type(enumType)
 			.message(this.message)
 			.targetId(this.targetId)
