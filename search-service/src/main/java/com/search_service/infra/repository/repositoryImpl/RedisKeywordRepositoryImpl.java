@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.redis.connection.zset.Aggregate;
+import org.springframework.data.redis.connection.zset.Weights;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
@@ -39,5 +41,20 @@ public class RedisKeywordRepositoryImpl implements KeywordRepository {
 		return results.stream()
 			.map(tuple -> new KeywordScore(tuple.getValue(), tuple.getScore()))
 			.collect(Collectors.toList());
+	}
+
+	@Override
+	public void decayKeywordScores() {
+		ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
+
+		zSetOps.unionAndStore(
+			KEYWORD_RANKING_KEY,
+			Collections.emptyList(),
+			KEYWORD_RANKING_KEY,
+			Aggregate.SUM,
+			Weights.of(0.5)
+		);
+
+		zSetOps.removeRangeByScore(KEYWORD_RANKING_KEY, 0, 0.9);
 	}
 }
