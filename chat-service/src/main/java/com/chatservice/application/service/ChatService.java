@@ -204,36 +204,89 @@ public class ChatService {
     redisChatMessageRepository.deleteMessage(chatRoomId, messageId, deletedAt);
   }
 
+//  /**
+//   * 채팅 메시지 조회
+//   */
+//  @Transactional(readOnly = true)
+//  public List<ChatMessageResDto> getChatRoomMessages(Long userId, Long chatRoomId, Long cursorEpochMs, int pageSize) {
+//
+//    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
+//
+//    if (chatParticipant.isLeft()) {
+//      throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
+//    }
+//
+//    // 현재 시간 기준 계산
+//    long now = System.currentTimeMillis();
+//    long threeDaysAgo = now - ofDays(3).toMillis();
+//
+//    // 커서 값 설정 -> 클라이언트에서 전달한 경우 사용, 없으면 최신 메시지 기준
+//    long cursor = (cursorEpochMs != null) ? cursorEpochMs : MAX_VALUE;
+//
+//    // 최신 3일 메시지이면 redis 조회
+//    if (cursor >= threeDaysAgo) {
+//      return redisChatMessageRepository.findRecentMessage(chatRoomId, cursor, pageSize);
+//    }
+//
+//    // 3일 이전 메시지이면 DB 조회
+//    LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), ZoneOffset.UTC);
+//
+//    List<ChatMessage> dbMessages = chatMessageRepository.findOldMessages(chatRoomId, cursorDateTime, pageSize);
+//
+//    return dbMessages.stream().map(ChatMessageResDto::from).toList();
+//  }
+
   /**
-   * 채팅 메시지 조회
+   * 채팅 메세지 조회(최근)
    */
   @Transactional(readOnly = true)
-  public List<ChatMessageResDto> getChatRoomMessages(Long userId, Long chatRoomId, Long cursorEpochMs, int pageSize) {
+  public List<ChatMessageResDto> getChatRoomMessages(Long userId, Long chatRoomId, Long cursor, int pageSize) {
 
     ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
 
+    // 채팅방 참여 여부 확인
     if (chatParticipant.isLeft()) {
       throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
     }
 
-    // 현재 시간 기준 계산
+    // 3일 전
     long now = System.currentTimeMillis();
-    long sevenDaysAgo = now - ofDays(3).toMillis();
+    long threeDaysAgo = now - ofDays(3).toMillis();
 
-    // 커서 값 설정 -> 클라이언트에서 전달한 경우 사용, 없으면 최신 메시지 기준
-    long cursor = (cursorEpochMs != null) ? cursorEpochMs : MAX_VALUE;
+    long targetCursor = (cursor != null) ? cursor : MAX_VALUE;
 
-    // 최신 7일 메시지이면 redis 조회
-    if (cursor >= sevenDaysAgo) {
-      return redisChatMessageRepository.findRecentMessage(chatRoomId, cursor, pageSize);
+    // 3일보다 이전 메세지는 redis에 없으므로 빈 배열
+    if (targetCursor < threeDaysAgo) {
+      return List.of();
     }
 
-    // 7일 이전 메시지이면 DB 조회
-    LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), ZoneOffset.UTC);
+    return redisChatMessageRepository.findRecentMessage(chatRoomId, targetCursor, pageSize);
+  }
 
-    List<ChatMessage> dbMessages = chatMessageRepository.findOldMessages(chatRoomId, cursorDateTime, pageSize);
+  /**
+   * 채팅 메세지 더보기
+   */
+  @Transactional(readOnly = true)
+  public List<ChatMessageResDto> loadMoreChatMessages(Long userId, Long chatRoomId, Long cursor, int dayRange, int pageSize) {
 
-    return dbMessages.stream().map(ChatMessageResDto::from).toList();
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
+
+    // 채팅방 참여 여부 확인
+    if (chatParticipant.isLeft()) {
+      throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
+    }
+
+    long targetCursor = (cursor != null) ? cursor : System.currentTimeMillis();
+
+    // 커서 epoch 값을 local date time 변환
+    LocalDateTime cursorTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(targetCursor), ZoneOffset.UTC);
+
+    // 조회 범위
+    LocalDateTime from = cursorTime.minusDays(dayRange);
+
+    List<ChatMessage> chatMessages = chatMessageRepository.findChatMessagesBetween(chatRoomId, from, cursorTime, pageSize);
+
+    return chatMessages.stream().map(ChatMessageResDto::from).toList();
   }
 
   /**
@@ -241,7 +294,13 @@ public class ChatService {
    */
   @Transactional
   public ChatMessageResDto saveChatMessage(Long chatRoomId, Long userId, ChatMessageReqDto reqDto) {
+
     ChatMessage chatMessage = ChatMessage.create(chatRoomId, userId, reqDto.contentType(), reqDto.messageContent());
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
+
+    if (chatParticipant.isLeft()) {
+      throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
+    }
 
     // DB 저장
     ChatMessage saveMessage = chatMessageRepository.save(chatMessage);
