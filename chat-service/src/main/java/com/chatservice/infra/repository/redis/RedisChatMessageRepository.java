@@ -3,9 +3,11 @@ package com.chatservice.infra.repository.redis;
 import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.presentation.response.ChatMessageResDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,43 +22,51 @@ public class RedisChatMessageRepository {
   private final RedisTemplate<String, Object> redisTemplate;
   private final ObjectMapper objectMapper;
 
+  // 순서, 페이징
   private String zsetKey(Long chatRoomId) {
     return "chat:messages:z:" + chatRoomId;
   }
 
-  private String hashKey(Long chatRoomId) {
-    return "chat:messages:h:" + chatRoomId;
+  // 데이터 저장
+  private String chatMessageKey(Long chatRoomId, Long chatMessageId) {
+    return "chat:messages:" + chatRoomId + ":" + chatMessageId;
   }
 
   public List<ChatMessageResDto> findRecentMessage(Long chatRoomId, long beforeEpochMs, int limit) {
 
-    log.info("redis zsetKey={}", zsetKey(chatRoomId));
-    log.info("redis hashKey={}", hashKey(chatRoomId));
-    Set<Object> rawMessages = redisTemplate.opsForZSet().reverseRangeByScore(zsetKey(chatRoomId), 0, beforeEpochMs, 0, limit);
-    log.info("redis  ={}", rawMessages);
+    Set<Object> messageIds = redisTemplate.opsForZSet().reverseRangeByScore(zsetKey(chatRoomId), 0, beforeEpochMs, 0, limit);
 
-    if (rawMessages == null) {
+    if (messageIds == null || messageIds.isEmpty()) {
       return List.of();
     }
 
-    return rawMessages.stream()
-        .map(o -> objectMapper.convertValue(o, ChatMessageResDto.class))
+    return messageIds.stream()
+        .map(id -> {
+          String key = chatMessageKey(chatRoomId, Long.parseLong(id.toString()));
+          Object raw = redisTemplate.opsForValue().get(key);
+
+          if (raw == null) {
+            redisTemplate.opsForZSet().remove(zsetKey(chatRoomId), id);   // TTL 만료 메세지 삭제
+            return null;
+          }
+          return objectMapper.convertValue(raw, ChatMessageResDto.class);
+        })
+        .filter(Objects::nonNull)
+        .map(obj -> objectMapper.convertValue(obj, ChatMessageResDto.class))
         .map(this::convertIfDeleted)
         .toList();
   }
 
   public void deleteMessage(Long chatRoomId, Long messageId, LocalDateTime deletedAt) {
 
-    String zsetKey = zsetKey(chatRoomId);
-    String hashKey = hashKey(chatRoomId);
+    String chatMessageKey = chatMessageKey(chatRoomId, messageId);
+    Object rawMessage = redisTemplate.opsForValue().get(chatMessageKey);
 
-    //  hash에서 원본 json 조회
-    Object rawMessage = redisTemplate.opsForHash().get(hashKey, messageId.toString());
     if (rawMessage == null) {
-      return;   // 없는 메시지
+      return;
     }
 
-    ChatMessageResDto messageResDto = (ChatMessageResDto) rawMessage;
+    ChatMessageResDto messageResDto = objectMapper.convertValue(rawMessage, ChatMessageResDto.class);
 
     // 이미 삭제된 메세지면 deletedAt 유지
     ChatMessageResDto deletedMessage = new ChatMessageResDto(
@@ -68,26 +78,24 @@ public class RedisChatMessageRepository {
         messageResDto.deletedAt() != null ? messageResDto.deletedAt() : deletedAt
     );
 
-    // zset 업데이트
-    Double score = redisTemplate.opsForZSet().score(zsetKey, rawMessage);
+    // TTL 설정 -> 없으면 3일, 있으면 기존 TTL 유지
+    Duration ttl = redisTemplate.getExpire(chatMessageKey) > 0 ? Duration.ofSeconds(redisTemplate.getExpire(chatMessageKey)) : Duration.ofDays(3);
 
-    if (score != null) {
-      redisTemplate.opsForZSet().remove(zsetKey, rawMessage);
-      redisTemplate.opsForZSet().add(zsetKey, deletedMessage, score);
-    }
-
-    // hash 업데이트
-    redisTemplate.opsForHash().put(hashKey, messageId.toString(), deletedMessage);
+    redisTemplate.opsForValue().set(chatMessageKey, deletedMessage, ttl);
   }
 
   public void saveMessage(ChatMessage chatMessage) {
+
     ChatMessageResDto chatMessageResDto = ChatMessageResDto.from(chatMessage);
 
     double score = chatMessage.getCreatedAt().atZone(ZoneOffset.UTC).toInstant().toEpochMilli();
 
-    redisTemplate.opsForZSet().add(zsetKey(chatMessage.getChatRoomId()), chatMessageResDto, score);
+    // zset
+    redisTemplate.opsForZSet().add(zsetKey(chatMessage.getChatRoomId()), chatMessageResDto.messageId().toString(), score);
 
-    redisTemplate.opsForHash().put(hashKey(chatMessage.getChatRoomId()), chatMessageResDto.messageId().toString(), chatMessageResDto);
+    // 메시지 본문 dto
+    redisTemplate.opsForValue()
+        .set(chatMessageKey(chatMessage.getChatRoomId(), chatMessageResDto.messageId()), chatMessageResDto, Duration.ofDays(3));
   }
 
   private ChatMessageResDto convertIfDeleted(ChatMessageResDto resDto) {
