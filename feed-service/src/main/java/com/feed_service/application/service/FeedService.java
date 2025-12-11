@@ -4,6 +4,8 @@ import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
 import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.FeedMedia;
+import com.feed_service.domain.repository.FeedBookmarkRepository;
+import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.domain.repository.FeedRepository;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedMediaUploadRequestDto;
@@ -27,6 +29,9 @@ public class FeedService {
     private final FeedMediaService feedMediaService;
     private final TagService tagService;
 
+    private final FeedLikeRepository feedLikeRepository;
+    private final FeedBookmarkRepository feedBookmarkRepository;
+
     @Transactional
     public Long createFeed(FeedCreateRequestDto request, List<MultipartFile> files, Long userId) {
 
@@ -38,12 +43,12 @@ public class FeedService {
 
         feedRepository.save(feed);
 
-//        if(request.getMedias() != null){
-//            for(FeedMediaUploadRequestDto m : request.getMedias()){
-//                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
-//                feed.getMediaList().add(media);
-//            }
-//        }
+        if(request.getMedias() != null){
+            for(FeedMediaUploadRequestDto m : request.getMedias()){
+                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
+                feed.getMediaList().add(media);
+            }
+        }
         feedMediaService.uploadMedias(feed, files);
 
         tagService.applyTags(feed, request.getTags());
@@ -51,16 +56,26 @@ public class FeedService {
         return feed.getId();
     }
 
-    public FeedResponseDto findFeed(Long feedId) {
+    public FeedResponseDto findFeed(Long feedId, Long userId) {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
-        return FeedResponseDto.mapFeed(feed);
+
+        boolean liked = feedLikeRepository.existsByFeed_IdAndUserId(feedId, userId);
+        boolean bookmarked = feedBookmarkRepository.existsByFeed_IdAndUserId(feedId, userId);
+
+        return FeedResponseDto.of(feed, liked, bookmarked);
     }
 
-//    public Page<FeedResponseDto> findAllFeeds(Pageable pageable) {
-//        Page<Feed> feeds = feedRepository.findFeeds(pageable);
-//        return feeds.map(FeedResponseDto::mapFeed);
-//    }
+    public Page<FeedResponseDto> findAllFeeds(Pageable pageable, Long userId) {
+
+        Page<Feed> feeds = feedRepository.findFeeds(pageable);
+
+        return feeds.map(feed -> {
+            boolean liked = feedLikeRepository.existsByFeed_IdAndUserId(feed.getId(), userId);
+            boolean bookmarked = feedBookmarkRepository.existsByFeed_IdAndUserId(feed.getId(), userId);
+            return FeedResponseDto.of(feed, liked, bookmarked);
+        });
+    }
 
     @Transactional
     public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request) {
@@ -68,10 +83,9 @@ public class FeedService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
         feed.updateFeed(request.getContent(), request.getPermission());
-
         tagService.updateTags(feed, request.getTags());
 
-        return FeedResponseDto.mapFeed(feed);
+        return FeedResponseDto.of(feed, false, false);
     }
 
     @Transactional
@@ -80,5 +94,4 @@ public class FeedService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
         feed.statusDeleted();
     }
-
 }
