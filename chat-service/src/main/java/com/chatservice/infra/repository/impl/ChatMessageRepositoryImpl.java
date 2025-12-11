@@ -24,11 +24,13 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
 
   @Override
   public ChatMessage save(ChatMessage chatMessage) {
+
     return chatMessageJpaRepository.save(chatMessage);
   }
 
   @Override
   public Optional<ChatMessage> findById(Long messageId) {
+
     return chatMessageJpaRepository.findById(messageId);
   }
 
@@ -50,12 +52,13 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
   }
 
   @Override
-  public List<ChatMessage> findOldMessages(Long chatRoomId, LocalDateTime dateTime, int limit) {
+  public List<ChatMessage> findChatMessagesBetween(Long chatRoomId, LocalDateTime from, LocalDateTime to, int pageSize) {
+
     return jpaQueryFactory
         .selectFrom(chatMessage)
-        .where(chatMessage.chatRoomId.eq(chatRoomId).and(chatMessage.createdAt.lt(dateTime)))
+        .where(chatMessage.chatRoomId.eq(chatRoomId).and(chatMessage.createdAt.between(from, to)))
         .orderBy(chatMessage.createdAt.desc())
-        .limit(limit)
+        .limit(pageSize)
         .fetch();
   }
 }
