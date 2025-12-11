@@ -23,7 +23,7 @@ public class UserRepositoryImpl implements UserRepository {
 
 	@Override
 	public List<UserDocument> searchByNickname(String keyword){
-		return esUserSearchRepository.findByUserIdContaining(keyword);
+		return esUserSearchRepository.findByUsernameContaining(keyword);
 	}
 
 	@Override
