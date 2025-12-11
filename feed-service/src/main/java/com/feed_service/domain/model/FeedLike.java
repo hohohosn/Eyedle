@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "feed_likes")
+@Table(name = "feed_likes", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"feed_id", "userId"})
+        }// 복합 유니크 키(Unique Key) 제약조건을 정의
+)
 public class FeedLike extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
