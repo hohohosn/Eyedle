@@ -1,9 +1,12 @@
 package com.feed_service.presentation.controller;
 
 import com.common.response.CommonResponse;
+import com.common.response.ErrorCode;
 import com.common.response.SuccessCode;
 import com.feed_service.application.service.FeedLikeService;
+import com.feed_service.domain.model.FeedBookmark;
 import com.feed_service.domain.model.FeedLike;
+import com.feed_service.presentation.response.FeedLikeResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,16 +18,10 @@ public class FeedLikeController {
     private final FeedLikeService feedLikeService;
 
     @PostMapping
-    public CommonResponse like(@PathVariable Long feedId) {
+    public CommonResponse toggleLike(@PathVariable Long feedId){
         Long userId = 1L;
-        feedLikeService.createLike(feedId, userId);
-        return CommonResponse.of(SuccessCode.CREATED);
-    }
+        FeedLikeResponseDto responseDto = feedLikeService.toggleLike(feedId, userId);
 
-    @DeleteMapping
-    public CommonResponse unlike(@PathVariable Long feedId) {
-        Long userId = 1L;
-        feedLikeService.deleteLike(feedId, userId);
-        return CommonResponse.of(SuccessCode.DELETED);
+        return CommonResponse.of(SuccessCode.OK, responseDto);
     }
 }
