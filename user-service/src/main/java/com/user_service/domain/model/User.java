@@ -47,7 +47,7 @@ public class User {
 	@Builder.Default
 	private UserStatus status = UserStatus.ACTIVE;
 
-	@Column(nullable = false)
+	@Column(nullable = false, name = "deleted")
 	@Builder.Default
 	private boolean deleted = false;
 
@@ -121,8 +121,8 @@ public class User {
 	/**
 	 * 비밀번호 변경
 	 */
-	public void updatePassword(String encodedPassword, String updatedBy) {
-		this.password = encodedPassword;
+	public void updatePassword(String newPassword, String updatedBy) {
+		this.password = newPassword;
 		this.updatedBy = updatedBy;
 	}
 
@@ -130,9 +130,22 @@ public class User {
 	 * 프로필 수정
 	 */
 	public void updateProfile(String username, String updatedBy) {
-		if (username != null && !username.isBlank()) {
-			this.username = username;
-		}
+		this.username = username;
+		this.updatedBy = updatedBy;
+	}
+
+	/**
+	 * 계정 활성화 여부 확인
+	 */
+	public boolean isActive() {
+		return this.status == UserStatus.ACTIVE && !this.deleted;  // ⭐ isDeleted() 사용
+	}
+
+	/**
+	 * 계정 상태 변경
+	 */
+	public void updateStatus(UserStatus newStatus, String updatedBy) {
+		this.status = newStatus;
 		this.updatedBy = updatedBy;
 	}
 
@@ -144,46 +157,5 @@ public class User {
 		this.status = UserStatus.DELETED;
 		this.deletedAt = LocalDateTime.now();
 		this.deletedBy = deletedBy;
-	}
-
-	/**
-	 * 회원 복구
-	 */
-	public void restore(String updatedBy) {
-		this.deleted = false;
-		this.status = UserStatus.ACTIVE;
-		this.deletedAt = null;
-		this.deletedBy = null;
-		this.updatedBy = updatedBy;
-	}
-
-	/**
-	 * 권한 변경 (관리자용)
-	 */
-	public void changeRole(UserRole role, String updatedBy) {
-		this.role = role;
-		this.updatedBy = updatedBy;
-	}
-
-	/**
-	 * 계정 상태 변경
-	 */
-	public void changeStatus(UserStatus status, String updatedBy) {
-		this.status = status;
-		this.updatedBy = updatedBy;
-	}
-
-	/**
-	 * 계정 활성화 여부
-	 */
-	public boolean isActive() {
-		return this.status == UserStatus.ACTIVE && !this.deleted;
-	}
-
-	/**
-	 * 삭제된 계정인지 확인
-	 */
-	public boolean deleted() {
-		return this.deleted;
 	}
 }

@@ -1,5 +1,8 @@
 package com.chatservice.infra.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
@@ -15,8 +18,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import static com.chatservice.common.CacheConstants.CHAT_MESSAGE_CACHE_DAYS;
 
 @Configuration
 @EnableCaching
@@ -46,8 +47,12 @@ public class RedisConfig {
     RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
     redisTemplate.setConnectionFactory(redisConnectionFactory);
 
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+    objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
     StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-    GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer = new GenericJackson2JsonRedisSerializer();
+    GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer = new GenericJackson2JsonRedisSerializer(objectMapper);
 
     redisTemplate.setKeySerializer(stringRedisSerializer);
     redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
@@ -63,7 +68,7 @@ public class RedisConfig {
 
     RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration
         .defaultCacheConfig()
-        .entryTtl(Duration.ofDays(CHAT_MESSAGE_CACHE_DAYS))   // 캐시 만료기간 7일
+        .entryTtl(Duration.ofDays(3))   // 캐시 만료기간 3일
         .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
         .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()));
 

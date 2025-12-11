@@ -16,5 +16,5 @@ public interface ChatMessageRepository {
 
   Map<Long, ChatMessage> findLastMessageByChatRoomIds(List<Long> chatRoomIds);
 
-  List<ChatMessage> findOldMessages(Long chatRoomId, LocalDateTime dateTime, int limit);
+  List<ChatMessage> findChatMessagesBetween(Long chatRoomId, LocalDateTime from, LocalDateTime to, int pageSize);
 }

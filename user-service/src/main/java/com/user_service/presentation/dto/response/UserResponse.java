@@ -33,7 +33,7 @@ public class UserResponse {
 			.username(user.getUsername())
 			.role(user.getRole())
 			.status(user.getStatus())
-			.deleted(user.deleted())
+			.deleted(user.isDeleted())
 			.createdAt(user.getCreatedAt())
 			.createdBy(user.getCreatedBy())
 			.updatedAt(user.getUpdatedAt())
