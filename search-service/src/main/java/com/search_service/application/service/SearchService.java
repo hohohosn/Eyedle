@@ -3,6 +3,8 @@ package com.search_service.application.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -43,6 +45,8 @@ public class SearchService {
 	private final UserFeignClient userFeignClient;
 	private final FeedFeignClient feedFeignClient;
 
+	private LocalDateTime lastSyncTime = LocalDateTime.now().minusMinutes(10);
+
 	public SearchResponse search(String keyword) {
 		if (keyword == null || keyword.trim().isEmpty()) {
 			throw new CustomException(ErrorCode.BAD_REQUEST);
@@ -54,14 +58,23 @@ public class SearchService {
 			log.error("키워드 점수 증가 실패: {}", e.getMessage());
 		}
 
-		List<UserDocument> users = userRepository.findByUsernameContaining(keyword);
-		List<FeedDocument> feeds = feedRepository.findByContentContainingOrTagsContaining(keyword, keyword);
+		List<UserDocument> esUsers = userRepository.findByUsernameContaining(keyword);
+		List<FeedDocument> esFeeds = feedRepository.findByContentContainingOrTagsContaining(keyword, keyword);
+
+		LocalDateTime searchSince = (lastSyncTime != null) ? lastSyncTime : LocalDateTime.now().minusMinutes(10);
+
+		List<UserDocument> liveUsers = getLiveUsers(keyword, searchSince);
+		List<FeedDocument> liveFeeds = getLiveFeeds(keyword, searchSince);
+
+		// 중복 제거
+		List<UserDocument> mergedUsers = mergeUsers(esUsers, liveUsers);
+		List<FeedDocument> mergedFeeds = mergeFeeds(esFeeds, liveFeeds);
 
 		return SearchResponse.builder()
 			.keyword(keyword)
 			.result(SearchResponse.SearchResult.builder()
-				.users(users)
-				.feeds(feeds)
+				.users(mergedUsers)
+				.feeds(mergedFeeds)
 				.build())
 			.build();
 	}
@@ -143,9 +156,80 @@ public class SearchService {
 
 		feedRepository.saveAll(feedDocs);
 
+		this.lastSyncTime = LocalDateTime.now();
 		log.info("Sync complete. Users: {}, Feeds: {}", userDocs.size(), feedDocs.size());
 	}
 
+	private List<UserDocument> getLiveUsers(String keyword, LocalDateTime since) {
+		try {
+			List<UserClientResponse> responses = userFeignClient.searchRecentUsers(keyword, since);
+			if (responses == null) return Collections.emptyList();
+
+			return responses.stream()
+				.map(this::convertToUserDocument)
+				.toList();
+		} catch (Exception e) {
+			log.warn("User Service 실시간 조회 실패ㅣ {}", e.getMessage());
+			return Collections.emptyList();
+		}
+	}
+
+	private List<FeedDocument> getLiveFeeds(String keyword, LocalDateTime since) {
+		try {
+			List<FeedClientResponse> responses = feedFeignClient.searchRecentFeeds(keyword, since);
+			if (responses == null) return Collections.emptyList();
+
+			return responses.stream()
+				.map(this::convertToFeedDocument)
+				.toList();
+		} catch (Exception e) {
+			log.warn("Feed Service 실시간 조회 실패: {}", e.getMessage());
+			return Collections.emptyList();
+		}
+	}
+
+	private List<FeedDocument> mergeFeeds(List<FeedDocument> esList, List<FeedDocument> liveList) {
+		Map<Long, FeedDocument> map = new HashMap<>();
+		esList.forEach(f -> map.put(f.getId(), f));
+		liveList.forEach(f -> map.put(f.getId(), f));
+
+		return map.values().stream()
+			.sorted(Comparator.comparing(FeedDocument::getCreatedAt).reversed())
+			.toList();
+	}
+
+	private List<UserDocument> mergeUsers(List<UserDocument> esList, List<UserDocument> liveList) {
+		Map<Long, UserDocument> map = new HashMap<>();
+		esList.forEach(u -> map.put(u.getId(), u));
+		liveList.forEach(u -> map.put(u.getId(), u));
+
+		return new ArrayList<>(map.values());
+	}
+
+	private FeedDocument convertToFeedDocument(FeedClientResponse response) {
+		String mainImageUrl = (response.getMedias() != null && !response.getMedias().isEmpty()) ? response.getMedias().get(0).getThumbnailUrl() : null;
+
+		return FeedDocument.builder()
+			.id(response.getFeedId())
+			.content(response.getContent())
+			.tags(response.getTags())
+			.userId(response.getUserId())
+			.username("Live User") // 리팩토링
+			.imageUrl(mainImageUrl)
+			.likeCount(response.getLikeCount())
+			.createdAt(response.getCreatedAt())
+			.isDeleted(response.getIsDeleted())
+			.build();
+	}
+
+	private UserDocument convertToUserDocument(UserClientResponse responce) {
+		return UserDocument.builder()
+			.id(responce.getId())
+			.username(responce.getUsername())
+			.profileImageUrl(responce.getProfileImageUrl())
+			.status(responce.getStatus())
+			.build();
+	}
 	// private final UserRepository userRepository;
 	// private final FeedRepository feedRepository;
 	//
