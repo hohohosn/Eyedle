@@ -102,8 +102,18 @@ public class SearchService {
 			.build();
 	}
 
+	@Scheduled(fixedDelay = 3600000) // 1시간
+	public void decayKeywordScores() {
+		log.info("인기 검색어 점수 반감");
+		try {
+			keywordRepository.decayKeywordScores();
+		} catch (Exception e) {
+			log.error("인기 검색어 반감 처리 실패: {}", e.getMessage());
+		}
+	}
+
 	@Transactional
-	@Scheduled(fixedDelay = 600000)
+	@Scheduled(fixedDelay = 600000) // 10분
 	public void syncData() {
 		log.info("Start data synchronization...");
 
