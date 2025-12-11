@@ -42,9 +42,12 @@ public class ChatController {
   }
 
   @GetMapping
-  public CommonResponse<ChatRoomCursorResDto> getChatRoomList(@RequestParam(required = false) Long cursor) {
+  public CommonResponse<ChatRoomCursorResDto> getChatRoomList(
+      @RequestParam(value = "cursor", required = false) Long cursor,
+      @RequestParam(value = "pageSize", defaultValue = "10") int pageSize
+  ) {
     Long userId = 1L;
-    return CommonResponse.of(OK, chatService.getChatRoomList(userId, cursor));
+    return CommonResponse.of(OK, chatService.getChatRoomList(userId, cursor, pageSize));
   }
 
   @DeleteMapping("/{chatRoomId}/leave")
@@ -62,9 +65,24 @@ public class ChatController {
   }
 
   @GetMapping("/{chatRoomId}/messages")
-  public CommonResponse<List<ChatMessageResDto>> getChatRoomMessages(@PathVariable Long chatRoomId, @RequestParam(required = false) Long before) {
+  public CommonResponse<List<ChatMessageResDto>> getChatRoomMessages(
+      @PathVariable Long chatRoomId,
+      @RequestParam(value = "cursor", required = false) Long cursor,
+      @RequestParam(value = "pageSize", defaultValue = "30") int pageSize
+  ) {
     Long userId = 1L;
-    return CommonResponse.of(OK, chatService.getChatRoomMessages(userId, chatRoomId, before));
+    return CommonResponse.of(OK, chatService.getChatRoomMessages(userId, chatRoomId, cursor, pageSize));
+  }
+
+  @GetMapping("/{chatRoomId}/messages/more")
+  public CommonResponse<List<ChatMessageResDto>> loadMoreChatMessages(
+      @PathVariable Long chatRoomId,
+      @RequestParam(value = "cursor", required = false) Long cursor,
+      @RequestParam(value = "dayRange", defaultValue = "7") int dayRange,
+      @RequestParam(value = "pageSize", defaultValue = "30") int pageSize
+  ) {
+    Long userId = 1L;
+    return CommonResponse.of(OK, chatService.loadMoreChatMessages(userId, chatRoomId, cursor, dayRange, pageSize));
   }
 }
 
