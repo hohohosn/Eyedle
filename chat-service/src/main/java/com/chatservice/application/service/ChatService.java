@@ -23,9 +23,7 @@ import com.common.exception.CustomException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -204,38 +202,6 @@ public class ChatService {
     redisChatMessageRepository.deleteMessage(chatRoomId, messageId, deletedAt);
   }
 
-//  /**
-//   * 채팅 메시지 조회
-//   */
-//  @Transactional(readOnly = true)
-//  public List<ChatMessageResDto> getChatRoomMessages(Long userId, Long chatRoomId, Long cursorEpochMs, int pageSize) {
-//
-//    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
-//
-//    if (chatParticipant.isLeft()) {
-//      throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
-//    }
-//
-//    // 현재 시간 기준 계산
-//    long now = System.currentTimeMillis();
-//    long threeDaysAgo = now - ofDays(3).toMillis();
-//
-//    // 커서 값 설정 -> 클라이언트에서 전달한 경우 사용, 없으면 최신 메시지 기준
-//    long cursor = (cursorEpochMs != null) ? cursorEpochMs : MAX_VALUE;
-//
-//    // 최신 3일 메시지이면 redis 조회
-//    if (cursor >= threeDaysAgo) {
-//      return redisChatMessageRepository.findRecentMessage(chatRoomId, cursor, pageSize);
-//    }
-//
-//    // 3일 이전 메시지이면 DB 조회
-//    LocalDateTime cursorDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(cursor), ZoneOffset.UTC);
-//
-//    List<ChatMessage> dbMessages = chatMessageRepository.findOldMessages(chatRoomId, cursorDateTime, pageSize);
-//
-//    return dbMessages.stream().map(ChatMessageResDto::from).toList();
-//  }
-
   /**
    * 채팅 메세지 조회(최근)
    */
@@ -249,18 +215,35 @@ public class ChatService {
       throw new CustomException(ALREADY_LEFT_CHAT_ROOM);
     }
 
-    // 3일 전
     long now = System.currentTimeMillis();
+
+    // redis에는 최근 3일치만 캐싱
     long threeDaysAgo = now - ofDays(3).toMillis();
 
     long targetCursor = (cursor != null) ? cursor : MAX_VALUE;
 
-    // 3일보다 이전 메세지는 redis에 없으므로 빈 배열
-    if (targetCursor < threeDaysAgo) {
-      return List.of();
+    // redis에서 가져오기
+    List<ChatMessageResDto> redisMessages = redisChatMessageRepository.findRecentMessage(chatRoomId, targetCursor, pageSize);
+    List<ChatMessageResDto> messages = new ArrayList<>(redisMessages);
+
+    // redis에 캐싱되어있던 메시지가 적을 경우 DB조회(3일 이전의 채팅은 redis에 있으므로 그 이후의 채팅 메시지 조회)
+    int remaining = pageSize - redisMessages.size();
+    if (remaining > 0) {
+      LocalDateTime from = Instant.ofEpochMilli(threeDaysAgo).atZone(ZoneOffset.UTC).toLocalDateTime();
+      LocalDateTime to = Instant.ofEpochMilli(targetCursor).atZone(ZoneOffset.UTC).toLocalDateTime();
+
+      List<ChatMessage> dbMessages = chatMessageRepository.findChatMessagesBetween(chatRoomId, from, to, remaining);
+      List<ChatMessageResDto> dbMessageDtos = dbMessages.stream().map(ChatMessageResDto::from).toList();
+      messages.addAll(dbMessageDtos);
     }
 
-    return redisChatMessageRepository.findRecentMessage(chatRoomId, targetCursor, pageSize);
+    // redis + DB 합친 뒤 중복 제거
+    Map<Long, ChatMessageResDto> deleteDuplicate = new HashMap<>();
+    for (ChatMessageResDto message : messages) {
+      deleteDuplicate.put(message.messageId(), message);
+    }
+
+    return deleteDuplicate.values().stream().sorted(Comparator.comparing(ChatMessageResDto::createdAt)).toList();
   }
 
   /**
