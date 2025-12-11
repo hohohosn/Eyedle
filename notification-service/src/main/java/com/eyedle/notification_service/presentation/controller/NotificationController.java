@@ -14,8 +14,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.common.response.CommonResponse;
 import com.common.response.SuccessCode;
 import com.eyedle.notification_service.application.service.NotificationService;
-import com.eyedle.notification_service.global.annotation.CurrentUser;
-import com.eyedle.notification_service.global.dto.UserContext;
 import com.eyedle.notification_service.presentation.dto.SliceResponse;
 import com.eyedle.notification_service.presentation.dto.response.NotificationCountsResponseDto;
 import com.eyedle.notification_service.presentation.dto.response.NotificationGetResponseDto;
