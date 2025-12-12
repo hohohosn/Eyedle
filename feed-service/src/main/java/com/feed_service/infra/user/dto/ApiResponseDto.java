@@ -1,4 +1,4 @@
-package com.feed_service.infra.user.response;
+package com.feed_service.infra.user.dto;
 
 import lombok.Getter;
 import lombok.Setter;
