@@ -35,6 +35,9 @@ eureka:
     service-url:
       defaultZone: http://localhost:19090/eureka/
 
-app:
-  storage:
-    type: mock
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 5000
