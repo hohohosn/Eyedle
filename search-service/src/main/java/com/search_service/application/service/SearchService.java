@@ -153,7 +153,7 @@ public class SearchService {
 					.id(f.getFeedId())
 					.content(f.getContent())
 					.tags(f.getTags())
-					.userId(f.getUserId()) // Long 타입
+					.userId(f.getUserId())
 					.username(username)
 					.userProfileUrl(profileUrl)
 					.imageUrl(mainImageUrl)

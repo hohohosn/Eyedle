@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.search_service.infra.client.dto.UserClientResponse;
 
-@FeignClient(name = "user-service", path = "/user")
+//@FeignClient(name = "user-service", path = "/user")
+@FeignClient(name = "user-service", url = "http://localhost:19600", path = "/mock/user")
 public interface UserFeignClient {
 
 	@GetMapping("/{userId}")
@@ -20,7 +21,8 @@ public interface UserFeignClient {
 	@GetMapping
 	List<UserClientResponse> getAllUsers(); // 파라미터(시간 등등) 추가해서 최근 10분에 대한 데이터만 반영하도록
 
-	@GetMapping("/search/recent")
+	//@GetMapping("/search/recent")
+	@GetMapping("/recent")
 	List<UserClientResponse> searchRecentUsers(
 		@RequestParam("keyword") String keyword,
 		@RequestParam("since")LocalDateTime since

@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.search_service.infra.client.dto.FeedClientResponse;
 
-@FeignClient(name = "feed-service", path = "/feeds")
+//@FeignClient(name = "feed-service", path = "/feeds")
+@FeignClient(name = "feed-service", url = "http://localhost:19600", path = "/mock/feeds")
 public interface FeedFeignClient {
 
 	@GetMapping
@@ -19,7 +20,8 @@ public interface FeedFeignClient {
 	@GetMapping("/{feedId}")
 	FeedClientResponse getFeedById(@PathVariable("feedId") Long feedId);
 
-	@GetMapping("/search/recent")
+	//@GetMapping("/search/recent")
+	@GetMapping("/recent")
 	List<FeedClientResponse> searchRecentFeeds(
 		@RequestParam("keyword") String keyword,
 		@RequestParam("since")LocalDateTime since
