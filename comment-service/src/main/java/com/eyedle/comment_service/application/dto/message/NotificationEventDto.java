@@ -1,5 +1,7 @@
 package com.eyedle.comment_service.application.dto.message;
 
+import java.util.List;
+
 import com.eyedle.comment_service.domain.model.Comment;
 
 import lombok.AllArgsConstructor;
@@ -13,29 +15,26 @@ import lombok.NoArgsConstructor;
 @Builder
 public class NotificationEventDto {
 
-	private Long receiverId;
+	private List<Long> receiverIds;
 	private Long targetId;
 	private Long subTargetId;
 	private String type;
-	private String message;
+	private String sender;
 
-	public static NotificationEventDto toEvent(Comment comment, Long receiverId) {
-		String authorName = comment.getAuthor().getName();
-		String type = "FEED_COMMENT";
-		String message  = authorName + "님이 회원님의 게시글에 댓글을 남겼습니다.";
+	public static NotificationEventDto toEvent(Comment comment
+		, List<Long> receiverIds
+		, String type) {
 
 		Long subTargetId = comment.getId();
 
 		if (comment.getParentId() != null) {
-			type = "COMMENT_REPLY";
-			message = authorName + "님이 회원님의 댓글에 답글을 남겼습니다";
 			subTargetId = comment.getParentId();
 		}
 
 		return NotificationEventDto.builder()
-			.receiverId(receiverId)
+			.receiverIds(receiverIds)
 			.type(type)
-			.message(message)
+			.sender(comment.getAuthor().getName())
 			.targetId(comment.getFeedId())
 			.subTargetId(subTargetId)
 			.build();

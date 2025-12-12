@@ -32,7 +32,7 @@ public class NotificationConsumer {
 
 			notificationService.sendNotification(notificationCreateRequestDto);
 
-			log.info("[Kafka] Notification sent successfully! to {} ", notificationCreateRequestDto.getReceiverId());
+			log.info("[Kafka] Notification sent successfully! to {} ", notificationCreateRequestDto.getReceiverIds());
 
 		}catch (Exception e) {
 			log.error("[Kafka] Notification sent failed! {} ", e.getMessage());

@@ -2,8 +2,13 @@ package com.eyedle.comment_service.application.service;
 
 import static com.eyedle.comment_service.presentation.enums.CommentErrorCode.*;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,6 +25,7 @@ import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.repository.CommentRepository;
 import com.eyedle.comment_service.domain.service.CommentPolicy;
 import com.eyedle.comment_service.domain.vo.Author;
+import com.eyedle.comment_service.domain.vo.NotificationReceivers;
 import com.eyedle.comment_service.infra.client.FeedClient;
 import com.eyedle.comment_service.infra.client.UserClient;
 import com.eyedle.comment_service.infra.client.dto.FeedGetResultDto;
@@ -138,11 +144,23 @@ public class CommentService {
 			nextCursor = lastComment.getId();
 		}
 
+		Set<Long> userIds = results.stream()
+			.map(tuple -> tuple.get(0, Comment.class).getAuthor().getId())
+			.collect(Collectors.toSet());
+
+		Map<Long, Author> authorMap = getAuthors(userIds);
+
 		List<CommentGetResponseDto> dtos = results.stream()
 			.map(tuple -> {
 				Comment comment = tuple.get(0, Comment.class); // 댓글
 				Long replyCount = tuple.get(1, Long.class); // 대댓글 카운트
-				Author author = getUser(comment.getAuthor().getId());
+				Author author = authorMap.get(comment.getAuthor().getId());
+				if (author == null) {
+					author = Author.builder()
+						.id(comment.getAuthor().getId())
+						.name("(알 수 없음)")
+						.build();
+				}
 				return CommentGetResponseDto.fromEntity(comment, author, replyCount);
 			})
 			.toList();
@@ -169,9 +187,21 @@ public class CommentService {
 			nextCursor = comments.get(comments.size() - 1).getId();
 		}
 
+		Set<Long> userIds = comments.stream()
+			.map(comment -> comment.getAuthor().getId())
+			.collect(Collectors.toSet());
+
+		Map<Long, Author> authorMap = getAuthors(userIds);
+
 		List<T> dtoList = comments.stream()
 			.map(comment -> {
-				Author author = getUser(comment.getAuthor().getId());
+				Author author = authorMap.get(comment.getAuthor().getId());
+				if (author == null) {
+					author = Author.builder()
+						.id(comment.getAuthor().getId())
+						.name("(알 수 없음)")
+						.build();
+				}
 				return mapper.apply(comment, author);
 			})
 			.toList();
@@ -188,12 +218,43 @@ public class CommentService {
 
 		return userCacheRepository.get(userId)
 			.orElseGet(() -> {
-				UserGetResultDto userGetResultDto = userClient.getUser(userId).getData();
+				UserGetResultDto userGetResultDto = userClient.getUser(userId);
 				Author newAuthor = userGetResultDto.toAuthor();
 				// Redis 저장
 				userCacheRepository.save(newAuthor);
 				return newAuthor;
 			});
+	}
+
+	private Map<Long, Author> getAuthors(Set<Long> userIds) {
+		if (userIds == null || userIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Long, Author> cachedAuthors = userCacheRepository.getAuthors(userIds);
+
+		List<Long> missingUserIds = userIds.stream()
+			.filter(id -> !cachedAuthors.containsKey(id))
+			.collect(Collectors.toList());
+
+		Map<Long, UserGetResultDto> getResult = new HashMap<>();
+
+		if (!missingUserIds.isEmpty()) {
+			getResult = userClient.getUsers(missingUserIds);
+		}
+
+		if (!getResult.isEmpty()) {
+			List<Author> authors = getResult.values().stream()
+				.map(UserGetResultDto::toAuthor)
+				.collect(Collectors.toList());
+
+			userCacheRepository.saveAll(authors);
+			for( Author author : authors ) {
+				cachedAuthors.put(author.getId(), author);
+			}
+		}
+
+		return cachedAuthors;
 	}
 
 	private Comment getComment(Long commentId) {
@@ -209,14 +270,26 @@ public class CommentService {
 
 		CommonResponse<FeedGetResultDto> result = feedClient.getFeed(feedId);
 
-		if (result == null || result.getData() == null) {
-			throw new CustomException(FEED_NOT_FOUND);
-		}
-
+		 if (result == null || result.getData() == null) {
+		 	throw new CustomException(FEED_NOT_FOUND);
+		 }
 		FeedGetResultDto feedGetResultDto = result.getData();
 
+		Long feedAuthor = feedGetResultDto.getUserId();
+
+		boolean isFollowing = false;
+		boolean isFollowed = false;
+
+		if (!feedGetResultDto.getUserId().equals(userId)) {
+			isFollowing = userClient.isFollowing(userId, feedAuthor);
+		}
+
+		if (isFollowing) {
+			isFollowed = userClient.isFollowing(feedAuthor, userId);
+		}
+
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
-		commentPolicy.validateFeed(feedId, userId, feedGetResultDto.getUserId(), feedGetResultDto.getPermission());
+		commentPolicy.validateFeed(userId, feedAuthor, feedGetResultDto.getPermission(), isFollowing, isFollowed);
 
 		return feedGetResultDto.getUserId();
 
@@ -234,6 +307,11 @@ public class CommentService {
 
 	}
 
+	/**
+	 * 대댓글 검증 + 조회
+	 * @param parentId
+	 * @param feedId
+	 */
 	private void validateReplyById(Long parentId, Long feedId) {
 		Comment parentComment = getComment(parentId);
 		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
@@ -242,32 +320,51 @@ public class CommentService {
 
 	/**
 	 * Kafka 이벤트 발행
-	 * @param savedComment
+	 * @param savedComment, parentComment, feedAuthor
 	 */
 	private void sendNotificationEvent(Comment savedComment, Comment parentComment, Long feedAuthor) {
-
-		Long receiverId = setReceiver(parentComment, feedAuthor);
-
-		if(receiverId.equals(savedComment.getAuthor().getId())) {
-			return;
+		sendToFeedOwner(savedComment, feedAuthor);
+		if (parentComment != null) {
+			sendToParentAuthor(savedComment, parentComment);
 		}
-
-		NotificationEventDto notificationEventDto = NotificationEventDto.toEvent(savedComment,receiverId);
-		kafkaTemplate.send("notification-topic", notificationEventDto);
 	}
 
 	/**
-	 * 댓글/대댓글시 알림 수신자 확인
-	 * @param parentComment
-	 * @param feedAuthor
-	 * @return
+	 * 피드 작성자한테 알림
+	 * @param comment
+	 * @param feedAuthorId
 	 */
-	private Long setReceiver(Comment parentComment, Long feedAuthor) {
+	private void sendToFeedOwner(Comment comment, Long feedAuthorId) {
 
-		if(parentComment != null){
-			return parentComment.getAuthor().getId();
+		NotificationReceivers receivers = new NotificationReceivers();
+		receivers.add(feedAuthorId);
+		receivers.remove(comment.getAuthor().getId());
+
+		if (receivers.isEmpty()) {
+			return;
 		}
 
-		return feedAuthor;
+		kafkaTemplate.send("notification-topic", NotificationEventDto.toEvent(comment, receivers.toList(), "FEED_COMMENT"));
+
 	}
+
+	/**
+	 * 댓글 작성자에게 알림
+	 * @param comment
+	 * @param parentComment
+	 */
+	private void sendToParentAuthor(Comment comment, Comment parentComment) {
+
+		NotificationReceivers receivers = new NotificationReceivers();
+		receivers.add(parentComment.getAuthor().getId());
+		receivers.remove(comment.getAuthor().getId());
+
+		if (receivers.isEmpty()) {
+			return;
+		}
+
+		kafkaTemplate.send("notification-topic", NotificationEventDto.toEvent(comment, receivers.toList(), "COMMENT_REPLY"));
+
+	}
+
 }

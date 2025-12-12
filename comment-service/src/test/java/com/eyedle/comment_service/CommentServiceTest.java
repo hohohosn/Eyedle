@@ -56,12 +56,11 @@ public class CommentServiceTest {
 	private void setupUserClientMock(Long userId) {
 		UserGetResultDto mockUserResult = UserGetResultDto.builder()
 			.id(userId)
-			.userId("tester")
+			.userName("tester")
 			.profileImageUrl("/img.png")
 			.build();
 
-		CommonResponse<UserGetResultDto> response = CommonResponse.of(OK, mockUserResult);
-		given(userClient.getUser(userId)).willReturn(response);
+		given(userClient.getUser(userId)).willReturn(mockUserResult);
 
 	}
 
@@ -90,7 +89,7 @@ public class CommentServiceTest {
 
 		UserGetResultDto mockUserResult = UserGetResultDto.builder()
 			.id(userId)
-			.userId("tester")
+			.userName("tester")
 			.profileImageUrl("/tester.png")
 			.build();
 

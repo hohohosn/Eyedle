@@ -50,5 +50,6 @@ public class ChatParticipant extends BaseTimeEntity {
 
   public void join() {
     this.isLeft = false;
+    this.leftAt = null;
   }
 }

@@ -26,25 +26,29 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
 
   @Override
   public ChatMessage save(ChatMessage chatMessage) {
+
     return chatMessageJpaRepository.save(chatMessage);
   }
 
   @Override
   public Optional<ChatMessage> findById(Long messageId) {
+
     return chatMessageJpaRepository.findById(messageId);
   }
 
   @Override
   public Map<Long, ChatMessage> findLastMessageByChatRoomIds(List<Long> chatRoomIds) {
-    QChatMessage m1 = new QChatMessage("m1");
-    QChatMessage m2 = new QChatMessage("m2");
+
+    QChatMessage m1 = new QChatMessage("m1");    // 가져올 메시지
+    QChatMessage m2 = new QChatMessage("m2");    // 서브 쿼리용 메시지 -> 각 채팅방의 최신 메시지 시각 계산
 
     List<ChatMessage> lastMessages = jpaQueryFactory
         .select(m1)
         .from(m1)
-        .where(m1.createdAt.eq(
+        // 각 채팅방에서 가장 최신 메시지인지 확인
+        .where(m1.createdAt.eq(                   // m1의 메시지 중에서 서브쿼리에서 나온 최대 시간과 같은 메시지 선택
                 JPAExpressions
-                    .select(m2.createdAt.max())
+                    .select(m2.createdAt.max())   // m1과 같은 채팅방 안에서 나온 가장 최신 시간
                     .from(m2)
                     .where(m2.chatRoomId.eq(m1.chatRoomId)))
             .and(m1.chatRoomId.in(chatRoomIds)))
@@ -55,12 +59,13 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
   }
 
   @Override
-  public List<ChatMessage> findOldMessages(Long chatRoomId, LocalDateTime dateTime, int limit) {
+  public List<ChatMessage> findChatMessagesBetween(Long chatRoomId, LocalDateTime from, LocalDateTime to, int pageSize) {
+
     return jpaQueryFactory
         .selectFrom(chatMessage)
-        .where(chatMessage.chatRoomId.eq(chatRoomId).and(chatMessage.createdAt.lt(dateTime)))
+        .where(chatMessage.chatRoomId.eq(chatRoomId).and(chatMessage.createdAt.between(from, to)))
         .orderBy(chatMessage.createdAt.desc())
-        .limit(limit)
+        .limit(pageSize)
         .fetch();
   }
 }

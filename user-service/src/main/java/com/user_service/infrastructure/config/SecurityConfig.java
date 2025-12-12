@@ -43,6 +43,9 @@ public class SecurityConfig {
 				.requestMatchers("/actuator/**").permitAll()
 				.requestMatchers("/health").permitAll()
 
+				// Internal API
+				.requestMatchers("/internal/**").permitAll()
+
 				// 관리자 전용
 				.requestMatchers("/api/users/search").hasRole("ADMIN")
 				.requestMatchers("/api/users/{userId}").hasRole("ADMIN")

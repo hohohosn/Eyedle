@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 public record ChatRoomInfo(
     Long chatRoomId,
     Long receiverId,
-    String receiverUserId,
+    String receiverUserName,
     String lastMessage,
     LocalDateTime lastMessageAt
 ) {
@@ -15,7 +15,7 @@ public record ChatRoomInfo(
     return new ChatRoomInfo(
         chatRoomId,
         receiverInfo.receiverId(),
-        receiverInfo.receiverUserId(),
+        receiverInfo.receiverUserName(),
         lastMessage != null ? lastMessage.getMessageContent() : null,
         lastMessage != null ? lastMessage.getCreatedAt() : null
     );

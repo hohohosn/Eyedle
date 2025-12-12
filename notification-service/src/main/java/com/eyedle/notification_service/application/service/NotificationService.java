@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.common.exception.CustomException;
 import com.eyedle.notification_service.domain.model.Notification;
 import com.eyedle.notification_service.domain.repository.NotificationRepository;
+import com.eyedle.notification_service.domain.service.NotificationPolicy;
 import com.eyedle.notification_service.infra.config.RedisConfig;
 import com.eyedle.notification_service.infra.repository.SseEmitterRepository;
 import com.eyedle.notification_service.presentation.dto.SliceResponse;
@@ -28,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NotificationService {
 
-	private final NotificationPolicy  notificationPolicy;
+	private final NotificationPolicy notificationPolicy;
 	private final NotificationRepository notificationRepository;
 	private final SseEmitterRepository emitterRepository;
 	private final StringRedisTemplate redisTemplate;
@@ -54,24 +55,16 @@ public class NotificationService {
 	}
 
 	public void sendNotification(NotificationCreateRequestDto notificationCreateRequestDto) {
-		log.info("[Service] sendNotification Start: receiverId={}", notificationCreateRequestDto.getReceiverId());
-		Notification notification = notificationCreateRequestDto.toEntity();
-		Notification savedNotification = notificationRepository.save(notification);
-		NotificationCreateResponseDto notificationCreateResponseDto = NotificationCreateResponseDto.fromEntity(savedNotification);
 
-		try {
-			String messageJson = objectMapper.writeValueAsString(notificationCreateResponseDto);
-			redisTemplate.convertAndSend(RedisConfig.SSE_TOPIC, messageJson);
-			log.info("Redis Published for user: {}", notificationCreateResponseDto.getReceiverId());
-		} catch (JsonProcessingException e) {
-			log.error("Redis 발송 실패",e);
-		}
+		String message = notificationCreateRequestDto.getType()
+			.getMessageTemplate(notificationCreateRequestDto.getSender(),
+			notificationCreateRequestDto.getMessage());
 
-	}
+		List<Notification> notifications = notificationCreateRequestDto.toEntities(message);
+		List<Notification> savedNotifications = notificationRepository.saveAll(notifications);
 
-	public SliceResponse<NotificationGetResponseDto> getNotifications(Long id, Long cursor, int size) {
-		List<Notification> notifications = notificationRepository.findAllByReceiverId(id,cursor,size);
-		return convertToSlice(notifications, size);
+		savedNotifications.forEach(this::sendToRedis);
+
 	}
 
 	public void readNotification(Long userId, Long notificationId) {
@@ -109,6 +102,23 @@ public class NotificationService {
 		return NotificationCountsResponseDto.toDto(
 			notificationRepository.countByReceiverIdAndReadAtIsNullAndDeletedAtIsNull(userId)
 		);
+	}
+
+	private void sendToRedis(Notification notification){
+		try {
+			NotificationCreateResponseDto notificationCreateResponseDto = NotificationCreateResponseDto.fromEntity(notification);
+			String messageJson = objectMapper.writeValueAsString(notificationCreateResponseDto);
+			redisTemplate.convertAndSend(RedisConfig.SSE_TOPIC, messageJson);
+			log.info("Redis Published for user: {}", notificationCreateResponseDto.getReceiverId());
+		} catch (JsonProcessingException e) {
+			log.error("Redis 발송 실패",e);
+		}
+	}
+
+
+	public SliceResponse<NotificationGetResponseDto> getNotifications(Long id, Long cursor, int size) {
+		List<Notification> notifications = notificationRepository.findAllByReceiverId(id,cursor,size);
+		return convertToSlice(notifications, size);
 	}
 
 	private Notification getNotification(Long notificationId) {
