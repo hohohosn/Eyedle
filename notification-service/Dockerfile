@@ -6,4 +6,4 @@ COPY ${JAR_FILE_PATH} app.jar
 # 애플리케이션 포트 오픈
 EXPOSE 19400
 # 애플리케이션 실행
-ENTRYPOINT ["java", "-jar", "/app.jar", "--server.port=19200"]
+ENTRYPOINT ["java", "-jar", "/app.jar", "--server.port=19400"]
