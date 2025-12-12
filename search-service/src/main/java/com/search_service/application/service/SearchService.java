@@ -37,8 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SearchService {
 
-	private final EsFeedSearchRepository feedRepository;
-	private final EsUserSearchRepository userRepository;
+	private final EsFeedSearchRepository esFeedRepository;
+	private final EsUserSearchRepository esUserRepository;
 
 	private final KeywordRepository keywordRepository;
 
@@ -58,8 +58,8 @@ public class SearchService {
 			log.error("키워드 점수 증가 실패: {}", e.getMessage());
 		}
 
-		List<UserDocument> esUsers = userRepository.findByUsernameContaining(keyword);
-		List<FeedDocument> esFeeds = feedRepository.findByContentContainingOrTagsContaining(keyword, keyword);
+		List<UserDocument> esUsers = esUserRepository.findByUsernameContaining(keyword);
+		List<FeedDocument> esFeeds = esFeedRepository.findByContentContainingOrTagsContaining(keyword, keyword);
 
 		LocalDateTime searchSince = (lastSyncTime != null) ? lastSyncTime : LocalDateTime.now().minusMinutes(10);
 
@@ -129,7 +129,7 @@ public class SearchService {
 				.build())
 			.toList();
 
-		userRepository.saveAll(userDocs);
+		esUserRepository.saveAll(userDocs);
 
 		Map<Long, UserClientResponse> userMap = users.stream()
 			.collect(Collectors.toMap(UserClientResponse::getId, Function.identity(), (p1, p2) -> p1));
@@ -164,7 +164,7 @@ public class SearchService {
 			})
 			.toList();
 
-		feedRepository.saveAll(feedDocs);
+		esFeedRepository.saveAll(feedDocs);
 
 		this.lastSyncTime = LocalDateTime.now();
 		log.info("Sync complete. Users: {}, Feeds: {}", userDocs.size(), feedDocs.size());
