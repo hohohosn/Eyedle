@@ -8,6 +8,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+import com.user_service.infrastructure.exception.BusinessException;
+import com.user_service.infrastructure.exception.ErrorCode;
+
 @Entity
 @Table(name = "follows", indexes = {
 	@Index(name = "idx_following_id", columnList = "following_id"),
@@ -47,16 +50,13 @@ public class Follow {
 	 * 팔로우 관계 생성
 	 */
 	public static Follow create(Long followerId, Long followingId) {
+		if (followerId.equals(followingId)) {
+			throw new BusinessException(ErrorCode.CANNOT_FOLLOW_YOURSELF);
+		}
+
 		return Follow.builder()
 			.followerId(followerId)
 			.followingId(followingId)
 			.build();
-	}
-
-	/**
-	 * 자기 자신을 팔로우하는지 확인
-	 */
-	public boolean isSelfFollow() {
-		return this.followerId.equals(this.followingId);
 	}
 }
