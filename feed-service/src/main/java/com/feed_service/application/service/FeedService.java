@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -89,9 +90,20 @@ public class FeedService {
     }
 
     @Transactional
-    public void statusDeleted(Long feedId) {
-        Feed feed = feedRepository.findById(feedId)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+    public boolean statusDeleted(Long feedId) {
+        Optional<Feed> feedOpt = feedRepository.findById(feedId);
+
+        if (feedOpt.isEmpty()) {
+            return false;
+        }
+
+        Feed feed = feedOpt.get();
+
+        if (feed.isDeleted()) {
+            return false;
+        }
+
         feed.statusDeleted();
+        return true;
     }
 }
