@@ -1,6 +1,7 @@
 package com.feed_service.presentation.controller;
 
 import com.common.response.CommonResponse;
+import com.common.response.ErrorCode;
 import com.common.response.SuccessCode;
 import com.feed_service.application.service.FeedService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
@@ -55,7 +56,12 @@ public class FeedController {
 
     @DeleteMapping("/{feedId}")
     public CommonResponse deleteFeed(@PathVariable Long feedId){
-        feedService.statusDeleted(feedId);
+        boolean result = feedService.statusDeleted(feedId);
+
+        if(!result){
+            return CommonResponse.of(ErrorCode.NOT_FOUND);
+        }
+
         return CommonResponse.of(SuccessCode.DELETED);
     }
 }
