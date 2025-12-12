@@ -29,7 +29,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	/**
 	 * ID로 사용자 조회 (삭제되지 않은 사용자만)
 	 */
-	Optional<User> findByIdAndDeletedFalse(Long id);
+	@Query("SELECT u FROM User u WHERE u.id = :id AND u.deletedAt IS NULL")
+	Optional<User> findByIdAndNotDeleted(@Param("id") Long id);
 
 	/**
 	 * 이메일 중복 체크
@@ -58,17 +59,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Page<User> findByRole(UserRole role, Pageable pageable);
 
 	/**
-	 * 활성 사용자 목록 조회
+	 * 활성 사용자 목록 조회 (deletedAt IS NULL)
 	 */
-	@Query("SELECT u FROM User u WHERE u.deleted = false")
+	@Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
 	Page<User> findActiveUsers(Pageable pageable);
 
 	/**
-	 * 이메일 또는 사용자명으로 검색
+	 * 이메일 또는 사용자명으로 검색 (deletedAt IS NULL)
 	 */
 	@Query("SELECT u FROM User u WHERE " +
 		"(u.email LIKE %:keyword% OR u.username LIKE %:keyword%) " +
-		"AND u.deleted = false")
+		"AND u.deletedAt IS NULL")
 	Page<User> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
-
 }

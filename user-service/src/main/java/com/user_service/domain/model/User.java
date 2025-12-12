@@ -14,7 +14,8 @@ import java.time.LocalDateTime;
 @Table(name = "users", indexes = {
 	@Index(name = "idx_email", columnList = "email"),
 	@Index(name = "idx_username", columnList = "username"),
-	@Index(name = "idx_status", columnList = "status")
+	@Index(name = "idx_status", columnList = "status"),
+	@Index(name = "idx_deleted_at", columnList = "deleted_at")
 })
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -47,10 +48,6 @@ public class User {
 	@Builder.Default
 	private UserStatus status = UserStatus.ACTIVE;
 
-	@Column(nullable = false, name = "deleted")
-	@Builder.Default
-	private boolean deleted = false;
-
 	// Auditing 필드
 	@CreatedDate
 	@Column(nullable = false, updatable = false)
@@ -66,6 +63,7 @@ public class User {
 	@Column(length = 50)
 	private String updatedBy;
 
+	// 논리적 삭제 필드 (Nullable)
 	@Column
 	private LocalDateTime deletedAt;
 
@@ -94,7 +92,6 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.USER)
 			.status(UserStatus.ACTIVE)
-			.deleted(false)
 			.createdBy(createdBy)
 			.build();
 	}
@@ -111,7 +108,6 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.ADMIN)
 			.status(UserStatus.ACTIVE)
-			.deleted(false)
 			.createdBy(createdBy)
 			.build();
 	}
@@ -135,10 +131,17 @@ public class User {
 	}
 
 	/**
-	 * 계정 활성화 여부 확인
+	 * 계정 활성화 여부 확인(deletedAt 필드로 판단)
 	 */
 	public boolean isActive() {
-		return this.status == UserStatus.ACTIVE && !this.deleted;  // ⭐ isDeleted() 사용
+		return this.status == UserStatus.ACTIVE && this.deletedAt == null;
+	}
+
+	/**
+	 * 삭제 여부 확인(deletedAt 필드로 판단)
+	 */
+	public boolean isDeleted() {
+		return this.deletedAt != null;
 	}
 
 	/**
@@ -153,7 +156,6 @@ public class User {
 	 * 회원 탈퇴 (Soft Delete)
 	 */
 	public void softDelete(String deletedBy) {
-		this.deleted = true;
 		this.status = UserStatus.DELETED;
 		this.deletedAt = LocalDateTime.now();
 		this.deletedBy = deletedBy;
