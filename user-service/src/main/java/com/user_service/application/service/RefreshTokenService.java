@@ -2,6 +2,7 @@ package com.user_service.application.service;
 
 import com.user_service.infrastructure.exception.BusinessException;
 import com.user_service.infrastructure.exception.ErrorCode;
+import com.user_service.infrastructure.security.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,16 +18,26 @@ import java.util.concurrent.TimeUnit;
 public class RefreshTokenService {
 
 	private final RedisTemplate<String, String> redisTemplate;
+	private final JwtTokenProvider jwtTokenProvider;
+
 	private static final String REFRESH_TOKEN_PREFIX = "refresh_token:";
-	private static final long REFRESH_TOKEN_EXPIRE_TIME = 7; // 7일
 
 	/**
-	 * Refresh Token 저장
+	 * Refresh Token 저장(토큰 만료 시간(7일) 일치)
 	 */
 	public void saveRefreshToken(Long userId, String refreshToken) {
 		String key = REFRESH_TOKEN_PREFIX + userId;
-		redisTemplate.opsForValue().set(key, refreshToken, REFRESH_TOKEN_EXPIRE_TIME, TimeUnit.DAYS);
-		log.info("Refresh Token 저장: userId={}", userId);
+
+		long expirationMs = jwtTokenProvider.getRefreshTokenExpiration();
+
+		redisTemplate.opsForValue().set(
+			key,
+			refreshToken,
+			expirationMs,
+			TimeUnit.MILLISECONDS
+		);
+
+		log.info("Refresh Token 저장: userId={}, TTL={}ms", userId, expirationMs);
 	}
 
 	/**
@@ -63,5 +74,13 @@ public class RefreshTokenService {
 		String key = REFRESH_TOKEN_PREFIX + userId;
 		redisTemplate.delete(key);
 		log.info("Refresh Token 삭제: userId={}", userId);
+	}
+
+	/**
+	 * 남은 TTL 조회 (디버깅용)
+	 */
+	public Long getTimeToLive(Long userId) {
+		String key = REFRESH_TOKEN_PREFIX + userId;
+		return redisTemplate.getExpire(key, TimeUnit.SECONDS);
 	}
 }
