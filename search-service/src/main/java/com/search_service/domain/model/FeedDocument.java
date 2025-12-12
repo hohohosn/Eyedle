@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -45,7 +46,7 @@ public class FeedDocument {
 	@Field(type = FieldType.Integer)
 	private Integer likeCount;
 
-	@Field(type = FieldType.Date)
+	@Field(type = FieldType.Date, format = {DateFormat.date_hour_minute_second_millis, DateFormat.date_hour_minute_second, DateFormat.date})
 	private LocalDateTime createdAt;
 
 	@Field(type = FieldType.Boolean)
