@@ -4,7 +4,9 @@ import io.hypersistence.tsid.TSID;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -53,6 +55,7 @@ public class User {
 	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
+	@CreatedBy
 	@Column(updatable = false, length = 50)
 	private String createdBy;
 
@@ -60,6 +63,7 @@ public class User {
 	@Column(nullable = false)
 	private LocalDateTime updatedAt;
 
+	@LastModifiedBy
 	@Column(length = 50)
 	private String updatedBy;
 
@@ -83,8 +87,7 @@ public class User {
 	public static User createUser(
 		String email,
 		String username,
-		String encodedPassword,
-		String createdBy
+		String encodedPassword
 	) {
 		return User.builder()
 			.email(email)
@@ -92,15 +95,13 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.USER)
 			.status(UserStatus.ACTIVE)
-			.createdBy(createdBy)
 			.build();
 	}
 
 	public static User createAdmin(
 		String email,
 		String username,
-		String encodedPassword,
-		String createdBy
+		String encodedPassword
 	) {
 		return User.builder()
 			.email(email)
@@ -108,7 +109,6 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.ADMIN)
 			.status(UserStatus.ACTIVE)
-			.createdBy(createdBy)
 			.build();
 	}
 
@@ -117,17 +117,15 @@ public class User {
 	/**
 	 * 비밀번호 변경
 	 */
-	public void updatePassword(String newPassword, String updatedBy) {
+	public void updatePassword(String newPassword) {
 		this.password = newPassword;
-		this.updatedBy = updatedBy;
 	}
 
 	/**
 	 * 프로필 수정
 	 */
-	public void updateProfile(String username, String updatedBy) {
+	public void updateProfile(String username) {
 		this.username = username;
-		this.updatedBy = updatedBy;
 	}
 
 	/**
@@ -147,9 +145,8 @@ public class User {
 	/**
 	 * 계정 상태 변경
 	 */
-	public void updateStatus(UserStatus newStatus, String updatedBy) {
+	public void updateStatus(UserStatus newStatus) {
 		this.status = newStatus;
-		this.updatedBy = updatedBy;
 	}
 
 	/**

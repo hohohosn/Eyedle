@@ -52,8 +52,7 @@ public class AuthService {
 		User user = User.createUser(
 			request.getEmail(),
 			request.getUsername(),
-			encodedPassword,
-			"SYSTEM"
+			encodedPassword
 		);
 		User savedUser = userRepository.save(user);
 
@@ -69,14 +68,8 @@ public class AuthService {
 	public AuthResponse login(LoginRequest request) {
 		log.info("로그인 시도: email={}", request.getEmail());
 
-		// 사용자 조회
-		User user = userRepository.findByEmail(request.getEmail())
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-		// 계정 상태 확인
-		if (!user.isActive()) {
-			throw new BusinessException(ErrorCode.ACCOUNT_NOT_ACTIVE);
-		}
+		// 사용자 조회 및 계정 상태 확인
+		User user = findActiveUserByEmail(request.getEmail());
 
 		// 비밀번호 검증
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -95,15 +88,8 @@ public class AuthService {
 	public AuthResponse refreshToken(String refreshToken) {
 		log.info("토큰 갱신 시도");
 
-		// Refresh Token 타입 검증
-		if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
-			throw new BusinessException(ErrorCode.INVALID_TOKEN);
-		}
-
-		// Refresh Token 유효성 검증
-		if (!jwtTokenProvider.validateToken(refreshToken)) {
-			throw new BusinessException(ErrorCode.INVALID_TOKEN);
-		}
+		//Refresh Token 통합 검증
+		jwtTokenProvider.validateRefreshToken(refreshToken);
 
 		// 사용자 ID 추출
 		Long userId = jwtTokenProvider.getUserIdFromToken(refreshToken);
@@ -111,22 +97,17 @@ public class AuthService {
 		// Refresh Token 재사용 검증
 		refreshTokenService.validateRefreshToken(userId, refreshToken);
 
-		// 사용자 조회
-		User user = userRepository.findByIdAndNotDeleted(userId)
-			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-		// 계정 상태 확인
-		if (!user.isActive()) {
-			throw new BusinessException(ErrorCode.ACCOUNT_NOT_ACTIVE);
-		}
+		// 사용자 조회 및 계정 상태 확인
+		User user = findActiveUserById(userId);
 
 		log.info("토큰 갱신 완료: userId={}", userId);
 
+		//토큰 생성 로직 공통 메서드 사용
 		return generateTokenResponse(user);
 	}
 
 	/**
-	 * 로그아웃 (더미 액세스 토큰으로 기존 토큰 무효화)
+	 * 로그아웃
 	 */
 	@Transactional
 	public LogoutResponse logout(Long userId) {
@@ -135,6 +116,7 @@ public class AuthService {
 		// Redis에서 Refresh Token 삭제
 		refreshTokenService.deleteRefreshToken(userId);
 
+		// 더미 액세스 토큰 생성
 		String dummyAccessToken = jwtTokenProvider.generateDummyAccessToken();
 
 		log.info("로그아웃 완료: userId={}", userId);
@@ -146,7 +128,7 @@ public class AuthService {
 	}
 
 	/**
-	 * 토큰 생성 및 응답 반환 (중복 제거)
+	 * 토큰 생성 및 응답 반환
 	 */
 	private AuthResponse generateTokenResponse(User user) {
 		// JWT 토큰 생성
@@ -161,5 +143,33 @@ public class AuthService {
 
 		// 응답 반환
 		return AuthResponse.of(user, accessToken, refreshToken);
+	}
+
+	/**
+	 * 이메일로 활성 사용자 조회 (조회 + 상태 확인 통합)
+	 */
+	private User findActiveUserByEmail(String email) {
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		if (!user.isActive()) {
+			throw new BusinessException(ErrorCode.ACCOUNT_NOT_ACTIVE);
+		}
+
+		return user;
+	}
+
+	/**
+	 * ID로 활성 사용자 조회 (조회 + 상태 확인 통합)
+	 */
+	private User findActiveUserById(Long userId) {
+		User user = userRepository.findByIdAndNotDeleted(userId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+		if (!user.isActive()) {
+			throw new BusinessException(ErrorCode.ACCOUNT_NOT_ACTIVE);
+		}
+
+		return user;
 	}
 }

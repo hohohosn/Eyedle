@@ -103,7 +103,7 @@ public class UserService {
 				userRepository.existsByUsername(request.getUsername())) {
 				throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
 			}
-			user.updateProfile(request.getUsername(), String.valueOf(userId));
+			user.updateProfile(request.getUsername());
 			log.info("Username 변경: userId={}, newUsername={}", userId, request.getUsername());
 		}
 
@@ -116,7 +116,7 @@ public class UserService {
 
 			// 새 비밀번호 암호화 및 저장
 			String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
-			user.updatePassword(encodedNewPassword, String.valueOf(userId));
+			user.updatePassword(encodedNewPassword);
 			log.info("비밀번호 변경 완료: userId={}", userId);
 		}
 
