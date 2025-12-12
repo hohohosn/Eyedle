@@ -12,7 +12,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FeedLikeQueryService {
 
-    private final FeedLikeService feedLikeService;
     private final FeedLikeRepository feedLikeRepository;
 
     public List<FeedSummaryDto> getUserLikedFeeds(Long userId) {
@@ -23,7 +22,7 @@ public class FeedLikeQueryService {
                 .map(like -> FeedSummaryDto.from(
                     like.getFeed(),
                         true,
-                        false
+                        false // 나중에 고도화 예정
                 ))
                 .toList();
     }
