@@ -7,12 +7,14 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
@@ -46,6 +48,8 @@ public class SearchService {
 	private final FeedFeignClient feedFeignClient;
 
 	private LocalDateTime lastSyncTime = LocalDateTime.now().minusMinutes(10);
+
+	//private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
 	public SearchResponse search(String keyword) {
 		if (keyword == null || keyword.trim().isEmpty()) {
@@ -112,7 +116,6 @@ public class SearchService {
 		}
 	}
 
-	@Transactional
 	@Scheduled(fixedDelay = 600000) // 10분
 	public void syncData() {
 		log.info("Start data synchronization...");
@@ -169,6 +172,10 @@ public class SearchService {
 		this.lastSyncTime = LocalDateTime.now();
 		log.info("Sync complete. Users: {}, Feeds: {}", userDocs.size(), feedDocs.size());
 	}
+
+	// public SseEmitter subscribe() {
+	//
+	// }
 
 	private List<UserDocument> getLiveUsers(String keyword, LocalDateTime since) {
 		try {
