@@ -1,6 +1,7 @@
 package com.search_service.presentation.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,10 +22,16 @@ public class SearchController {
 
 	private final SearchService searchService;
 
-	@GetMapping("/init")
-	public CommonResponse<String> initData(){
-		searchService.createMockData();
-		return CommonResponse.of(SuccessCode.CREATED, "Mock Data Inserted");
+	// @GetMapping("/init")
+	// public CommonResponse<String> initData(){
+	// 	searchService.createMockData();
+	// 	return CommonResponse.of(SuccessCode.CREATED, "Mock Data Inserted");
+	// }
+
+	@PostMapping("/sync")
+	public CommonResponse<String> syncData(){
+		searchService.syncData();
+		return CommonResponse.of(SuccessCode.OK, "Data Synchronized Successfully");
 	}
 
 	@GetMapping
@@ -40,9 +47,9 @@ public class SearchController {
 		return CommonResponse.of(SuccessCode.OK, result);
 	}
 
-	@GetMapping("/clear")
-	public CommonResponse<String> clear(){
-		searchService.clearAll();
-		return CommonResponse.of(SuccessCode.DELETED, "All cleared");
-	}
+	// @GetMapping("/clear")
+	// public CommonResponse<String> clear(){
+	// 	searchService.clearAll();
+	// 	return CommonResponse.of(SuccessCode.DELETED, "All cleared");
+	// }
 }

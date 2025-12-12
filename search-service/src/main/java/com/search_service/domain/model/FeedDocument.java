@@ -1,8 +1,10 @@
 package com.search_service.domain.model;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -33,8 +35,20 @@ public class FeedDocument {
 	private String imageUrl;
 
 	@Field(type = FieldType.Keyword, index = false)
-	private String authorUserId;
+	private Long userId;
+
+	@Field(type = FieldType.Keyword, index = false)
+	private String username;
+
+	@Field(type = FieldType.Keyword, index = false)
+	private String userProfileUrl;
 
 	@Field(type = FieldType.Integer)
 	private Integer likeCount;
+
+	@Field(type = FieldType.Date, format = {DateFormat.date_hour_minute_second_millis, DateFormat.date_hour_minute_second, DateFormat.date})
+	private LocalDateTime createdAt;
+
+	@Field(type = FieldType.Boolean)
+	private Boolean isDeleted;
 }

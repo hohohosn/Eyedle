@@ -38,6 +38,7 @@ dependencies {
 
     implementation 'com.github.sparta-Eyedle:msa-common-module:v0.0.6'
 
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 }
 
 dependencyManagement {

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -22,8 +21,6 @@ import com.eyedle.comment_service.application.command.CommentCreateCommand;
 import com.eyedle.comment_service.application.service.CommentService;
 import com.eyedle.comment_service.domain.model.Comment;
 import com.eyedle.comment_service.domain.vo.Author;
-import com.eyedle.comment_service.global.config.SecurityConfig;
-import com.eyedle.comment_service.global.config.WebConfig;
 import com.eyedle.comment_service.infra.client.dto.UserGetResultDto;
 import com.eyedle.comment_service.presentation.controller.CommentController;
 import com.eyedle.comment_service.presentation.dto.request.CommentCreateRequestDto;
@@ -31,7 +28,6 @@ import com.eyedle.comment_service.presentation.dto.response.CommentCreateRespons
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(CommentController.class)
-@Import({SecurityConfig.class, WebConfig.class})
 @DisplayName("Comment Controller Test")
 public class CommentControllerTest {
 
@@ -61,7 +57,7 @@ public class CommentControllerTest {
 
 		UserGetResultDto userGetResultDto = UserGetResultDto.builder()
 			.id(userId)
-			.userId(userName)
+			//.userId(userName)
 			.profileImageUrl(profileUrl)
 			.build();
 

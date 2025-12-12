@@ -56,7 +56,7 @@ public class CommentServiceTest {
 	private void setupUserClientMock(Long userId) {
 		UserGetResultDto mockUserResult = UserGetResultDto.builder()
 			.id(userId)
-			.userName("tester")
+			//.userName("tester")
 			.profileImageUrl("/img.png")
 			.build();
 
@@ -89,7 +89,7 @@ public class CommentServiceTest {
 
 		UserGetResultDto mockUserResult = UserGetResultDto.builder()
 			.id(userId)
-			.userName("tester")
+			//.userName("tester")
 			.profileImageUrl("/tester.png")
 			.build();
 

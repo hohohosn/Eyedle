@@ -37,7 +37,7 @@ public class UserService {
 	public UserInfoResponse getMyInfo(Long userId) {
 		log.info("사용자 정보 조회: userId={}", userId);
 
-		User user = userRepository.findByIdAndDeletedFalse(userId)
+		User user = userRepository.findByIdAndNotDeleted(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		return UserInfoResponse.from(user);
@@ -49,7 +49,7 @@ public class UserService {
 	public UserInfoResponse getUserInfo(Long targetUserId) {
 		log.info("사용자 정보 조회 (관리자): targetUserId={}", targetUserId);
 
-		User user = userRepository.findByIdAndDeletedFalse(targetUserId)
+		User user = userRepository.findByIdAndNotDeleted(targetUserId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		return UserInfoResponse.from(user);
@@ -93,7 +93,7 @@ public class UserService {
 	@Transactional
 	public UserInfoResponse updateMyInfo(Long userId, UpdateUserRequest request) {
 
-		User user = userRepository.findByIdAndDeletedFalse(userId)
+		User user = userRepository.findByIdAndNotDeleted(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		// Username 변경
@@ -103,7 +103,7 @@ public class UserService {
 				userRepository.existsByUsername(request.getUsername())) {
 				throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
 			}
-			user.updateProfile(request.getUsername(), String.valueOf(userId));
+			user.updateProfile(request.getUsername());
 			log.info("Username 변경: userId={}, newUsername={}", userId, request.getUsername());
 		}
 
@@ -116,7 +116,7 @@ public class UserService {
 
 			// 새 비밀번호 암호화 및 저장
 			String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
-			user.updatePassword(encodedNewPassword, String.valueOf(userId));
+			user.updatePassword(encodedNewPassword);
 			log.info("비밀번호 변경 완료: userId={}", userId);
 		}
 
@@ -132,7 +132,7 @@ public class UserService {
 	@Transactional
 	public void deleteMyAccount(Long userId) {
 
-		User user = userRepository.findByIdAndDeletedFalse(userId)
+		User user = userRepository.findByIdAndNotDeleted(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		user.softDelete(String.valueOf(userId));
@@ -170,7 +170,7 @@ public class UserService {
 	public UserInternalResponse getInternalUserInfo(Long userId) {
 		log.info("내부 API 유저 정보 조회: userId={}", userId);
 
-		User user = userRepository.findByIdAndDeletedFalse(userId)
+		User user = userRepository.findByIdAndNotDeleted(userId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		return UserInternalResponse.from(user);

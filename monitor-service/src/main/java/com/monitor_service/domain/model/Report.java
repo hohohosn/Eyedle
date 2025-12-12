@@ -76,4 +76,8 @@ public class Report extends BaseTimeEntity{
 		this.status = newStatus;
 		this.processedAt = LocalDateTime.now();
 	}
+
+	public void deleteReport() {
+		this.deletedAt = LocalDateTime.now();
+	}
 }

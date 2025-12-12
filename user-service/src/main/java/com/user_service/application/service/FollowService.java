@@ -38,23 +38,18 @@ public class FollowService {
 	public FollowResponse follow(Long followerId, Long followingId) {
 		log.info("팔로우 시도: followerId={}, followingId={}", followerId, followingId);
 
-		// 자기 자신을 팔로우하는지 검증
-		if (followerId.equals(followingId)) {
-			throw new BusinessException(ErrorCode.CANNOT_FOLLOW_YOURSELF);
-		}
-
 		// 이미 팔로우 중인지 확인
 		if (followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
 			throw new BusinessException(ErrorCode.ALREADY_FOLLOWING);
 		}
 
-		//팔로우 관계 생성
+		// 팔로우 관계 생성
 		Follow follow = Follow.create(followerId, followingId);
 		followRepository.save(follow);
 
 		log.info("팔로우 완료: followerId={}, followingId={}", followerId, followingId);
 
-		//응답 생성
+		// 응답 생성
 		return FollowResponse.builder()
 			.followerId(followerId)
 			.followingId(followingId)
