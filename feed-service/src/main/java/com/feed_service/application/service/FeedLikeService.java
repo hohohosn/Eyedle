@@ -20,17 +20,17 @@ public class FeedLikeService {
     private final FeedRepository feedRepository;
     private final FeedLikeRepository feedLikeRepository;
 
-    public FeedLikeResponseDto toggleLike(Long feedId, Long feedLikeId) {
+    public FeedLikeResponseDto toggleLike(Long feedId, Long userId) {
 
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
-        boolean exists = feedLikeRepository.existsByFeed_IdAndUserId(feedId, feedLikeId);
+        boolean exists = feedLikeRepository.existsByFeed_IdAndUserId(feedId, userId);
 
         if(exists) {
-            feedLikeRepository.deleteByFeed_IdAndUserId(feedId, feedLikeId);
+            feedLikeRepository.deleteByFeed_IdAndUserId(feedId, userId);
         } else{
-            feedLikeRepository.save(new FeedLike(feed, feedLikeId));
+            feedLikeRepository.save(new FeedLike(feed, userId));
         }
 
         long likeCount = feedLikeRepository.countByFeed_Id(feedId);
