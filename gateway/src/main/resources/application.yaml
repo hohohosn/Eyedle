@@ -16,32 +16,49 @@ spring:
             uri: lb://user-service
             predicates:
               - Path=/user/**, /auth/**, /blocks/**
-            filters:
-              - JwtAuthenticationFilter
+
           - id: comment-service
             uri: lb://comment-service
             predicates:
               - Path=/comments/**, /feeds/*/comments/**
+            filters:
+              - JwtAuthenticationFilter
+
           - id: notification-service
             uri: lb://notification-service
             predicates:
               - Path=/notification/**
+            filters:
+              - JwtAuthenticationFilter
+
           - id: chat-service
             uri: lb://chat-service
             predicates:
               - Path=/chats/**
+            filters:
+              - JwtAuthenticationFilter
+
           - id: monitor-service
             uri: lb://monitor-service
             predicates:
               - Path=/monitor/**
+            filters:
+              - JwtAuthenticationFilter
+
           - id: feed-service
             uri: lb://feed-service
             predicates:
               - Path=/feeds/**
+            filters:
+              - JwtAuthenticationFilter
+
           - id: search-service
             uri: lb://search-service
             predicates:
               - Path=/search/**
+            filters:
+              - JwtAuthenticationFilter
+
 
 jwt:
   secret: ${JWT_SECRET_KEY}
