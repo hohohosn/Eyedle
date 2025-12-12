@@ -3,8 +3,8 @@ package com.feed_service.infra.user.service;
 import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
 import com.feed_service.infra.user.UserClient;
-import com.feed_service.infra.user.response.ApiResponseDto;
-import com.feed_service.infra.user.response.UserInfoResponseDto;
+import com.feed_service.infra.user.dto.ApiResponseDto;
+import com.feed_service.infra.user.dto.UserInfoResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
