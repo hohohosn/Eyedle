@@ -17,7 +17,7 @@ public class FeedBookmarkController {
     @PostMapping
     public CommonResponse toggleBookmark(@PathVariable Long feedId) {
         Long userId = 1L;
-        FeedBookmarkResponseDto responseDto = feedBookmarkService.toggleBookmakr(userId, feedId);
+        FeedBookmarkResponseDto responseDto = feedBookmarkService.toggleBookmark(feedId, userId);
 
         return CommonResponse.of(SuccessCode.OK, responseDto);
     }
