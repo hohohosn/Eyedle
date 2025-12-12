@@ -76,7 +76,7 @@ public class ReportService {
 		Report report = reportRepository.findById(reportId)
 			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
-		reportRepository.delete(report);
+		report.deleteReport();
 
 		return report.getId();
 	}
