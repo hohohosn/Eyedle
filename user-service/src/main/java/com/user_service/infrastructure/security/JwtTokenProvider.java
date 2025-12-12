@@ -165,6 +165,21 @@ public class JwtTokenProvider {
 	}
 
 	/**
+	 * Refresh Token 통합 검증
+	 */
+	public void validateRefreshToken(String token) {
+		//유효성 검증
+		if (!validateToken(token)) {
+			throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		}
+
+		//Refresh Token 타입 검증
+		if (!isRefreshToken(token)) {
+			throw new BusinessException(ErrorCode.INVALID_TOKEN);
+		}
+	}
+
+	/**
 	 * 토큰에서 Claims 파싱 (만료된 토큰도 파싱 가능)
 	 */
 	private Claims parseClaims(String token) {
