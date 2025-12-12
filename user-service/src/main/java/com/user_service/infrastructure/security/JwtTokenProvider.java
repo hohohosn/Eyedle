@@ -5,6 +5,7 @@ import com.user_service.infrastructure.exception.ErrorCode;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ import java.util.Date;
 
 @Slf4j
 @Component
+@Getter
 public class JwtTokenProvider {
 
 	private final SecretKey secretKey;
@@ -36,13 +38,12 @@ public class JwtTokenProvider {
 	/**
 	 * Access Token 생성
 	 */
-	public String generateAccessToken(Long userId, String email, String role) {
+	public String generateAccessToken(Long userId, String role) {
 		Date now = new Date();
 		Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
 		return Jwts.builder()
 			.setSubject(String.valueOf(userId))
-			.claim("email", email)
 			.claim("role", role)
 			.claim("type", "access")
 			.setIssuedAt(now)
@@ -68,19 +69,28 @@ public class JwtTokenProvider {
 	}
 
 	/**
+	 * 더미 액세스 토큰 생성 (로그아웃용)
+	 */
+	public String generateDummyAccessToken() {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() - 1000); // 이미 만료된 시간
+
+		return Jwts.builder()
+			.setSubject("0")  // 존재하지 않는 사용자 ID
+			.claim("role", "NONE")
+			.claim("type", "dummy")
+			.setIssuedAt(now)
+			.setExpiration(expiryDate)
+			.signWith(secretKey, SignatureAlgorithm.HS256)
+			.compact();
+	}
+
+	/**
 	 * 토큰에서 사용자 ID 추출
 	 */
 	public Long getUserIdFromToken(String token) {
 		Claims claims = parseClaims(token);
 		return Long.parseLong(claims.getSubject());
-	}
-
-	/**
-	 * 토큰에서 이메일 추출
-	 */
-	public String getEmailFromToken(String token) {
-		Claims claims = parseClaims(token);
-		return claims.get("email", String.class);
 	}
 
 	/**
