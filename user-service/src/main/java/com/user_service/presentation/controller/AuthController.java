@@ -1,5 +1,6 @@
 package com.user_service.presentation.controller;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.user_service.application.service.AuthService;
 import com.user_service.presentation.dto.request.LoginRequest;
-import com.user_service.presentation.dto.request.RefreshTokenRequest;
 import com.user_service.presentation.dto.request.SignupRequest;
 import com.user_service.presentation.dto.response.ApiResponse;
 import com.user_service.presentation.dto.response.AuthResponse;
+import com.user_service.presentation.dto.response.LogoutResponse;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,56 +33,84 @@ public class AuthController {
 	 * 회원가입
 	 */
 	@PostMapping("/signup")
-	public ResponseEntity<ApiResponse<AuthResponse>> signup(
+	public ResponseEntity<ApiResponse<Void>> signup(
 		@Valid @RequestBody SignupRequest request
 	) {
 		log.info("회원가입 요청: email={}", request.getEmail());
 
-		AuthResponse response = authService.signup(request);
+		AuthResponse authResponse = authService.signup(request);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+		headers.set("X-Refresh-Token", authResponse.getRefreshToken());
 
 		return ResponseEntity
 			.status(HttpStatus.CREATED)
-			.body(ApiResponse.success("회원가입이 완료되었습니다.", response));
+			.headers(headers)
+			.body(ApiResponse.success("회원가입이 완료되었습니다."));
 	}
 
 	/**
-	 * 로그인
+	 * 로그인(토큰을 Header로 반환
 	 */
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse<AuthResponse>> login(
+	public ResponseEntity<ApiResponse<Void>> login(
 		@Valid @RequestBody LoginRequest request
 	) {
 		log.info("로그인 요청: email={}", request.getEmail());
 
-		AuthResponse response = authService.login(request);
+		AuthResponse authResponse = authService.login(request);
 
-		return ResponseEntity.ok(
-			ApiResponse.success("로그인에 성공했습니다.", response)
-		);
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+		headers.set("X-Refresh-Token", authResponse.getRefreshToken());
+
+		return ResponseEntity
+			.ok()
+			.headers(headers)
+			.body(ApiResponse.success("로그인에 성공했습니다."));
 	}
 
 	/**
-	 * 토큰 갱신 (보안 강화 버전)
+	 * 토큰 갱신
 	 */
 	@PostMapping("/refresh")
-	public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(
-		@Valid @RequestBody RefreshTokenRequest request
+	public ResponseEntity<ApiResponse<Void>> refreshToken(
+		@RequestHeader("X-Refresh-Token") String refreshToken
 	) {
 		log.info("토큰 갱신 요청");
-		AuthResponse response = authService.refreshToken(request);
-		return ResponseEntity.ok(ApiResponse.success("토큰이 갱신되었습니다.", response));
+
+		AuthResponse authResponse = authService.refreshToken(refreshToken);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Bearer " + authResponse.getAccessToken());
+		headers.set("X-Refresh-Token", authResponse.getRefreshToken());
+
+		return ResponseEntity
+			.ok()
+			.headers(headers)
+			.body(ApiResponse.success("토큰이 갱신되었습니다."));
 	}
 
 	/**
-	 * 로그아웃
+	 * 로그아웃(더미 액세스 토큰으로 기존 토큰 무효화)
 	 */
 	@PostMapping("/logout")
-	public ResponseEntity<ApiResponse<String>> logout(
+	public ResponseEntity<ApiResponse<Void>> logout(
 		@AuthenticationPrincipal Long userId
 	) {
 		log.info("로그아웃 요청: userId={}", userId);
-		authService.logout(userId);
-		return ResponseEntity.ok(ApiResponse.success("로그아웃이 완료되었습니다."));
-	}
 
+		LogoutResponse logoutResponse = authService.logout(userId);
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", "Bearer " + logoutResponse.getDummyAccessToken());
+		// Refresh Token은 삭제되었으므로 빈 문자열 반환
+		headers.set("X-Refresh-Token", "");
+
+		return ResponseEntity
+			.ok()
+			.headers(headers)
+			.body(ApiResponse.success(logoutResponse.getMessage()));
+	}
 }

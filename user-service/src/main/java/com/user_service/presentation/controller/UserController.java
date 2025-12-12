@@ -58,14 +58,12 @@ public class UserController {
 	 * 회원 탈퇴
 	 */
 	@DeleteMapping("/me")
-	public ResponseEntity<ApiResponse<String>> deleteMyAccount(
+	public ResponseEntity<ApiResponse<Void>> deleteMyAccount(
 		@AuthenticationPrincipal Long userId
 	) {
 		userService.deleteMyAccount(userId);
 
-		return ResponseEntity.ok(
-			ApiResponse.success("회원 탈퇴가 완료되었습니다.")
-		);
+		return ResponseEntity.ok(ApiResponse.success("회원 탈퇴가 완료되었습니다."));
 	}
 
 	/**

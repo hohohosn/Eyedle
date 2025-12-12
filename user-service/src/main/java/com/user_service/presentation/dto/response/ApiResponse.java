@@ -35,10 +35,11 @@ public class ApiResponse<T> {
 			.build();
 	}
 
-	public static <T> ApiResponse<T> error(String message) {
-		return ApiResponse.<T>builder()
-			.success(false)
+	public static ApiResponse<Void> success(String message) {
+		return ApiResponse.<Void>builder()
+			.success(true)
 			.message(message)
+			.data(null)
 			.build();
 	}
 

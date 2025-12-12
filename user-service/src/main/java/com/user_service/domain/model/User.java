@@ -4,7 +4,9 @@ import io.hypersistence.tsid.TSID;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -14,7 +16,8 @@ import java.time.LocalDateTime;
 @Table(name = "users", indexes = {
 	@Index(name = "idx_email", columnList = "email"),
 	@Index(name = "idx_username", columnList = "username"),
-	@Index(name = "idx_status", columnList = "status")
+	@Index(name = "idx_status", columnList = "status"),
+	@Index(name = "idx_deleted_at", columnList = "deleted_at")
 })
 @EntityListeners(AuditingEntityListener.class)
 @Getter
@@ -47,15 +50,12 @@ public class User {
 	@Builder.Default
 	private UserStatus status = UserStatus.ACTIVE;
 
-	@Column(nullable = false, name = "deleted")
-	@Builder.Default
-	private boolean deleted = false;
-
 	// Auditing 필드
 	@CreatedDate
 	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
+	@CreatedBy
 	@Column(updatable = false, length = 50)
 	private String createdBy;
 
@@ -63,9 +63,11 @@ public class User {
 	@Column(nullable = false)
 	private LocalDateTime updatedAt;
 
+	@LastModifiedBy
 	@Column(length = 50)
 	private String updatedBy;
 
+	// 논리적 삭제 필드 (Nullable)
 	@Column
 	private LocalDateTime deletedAt;
 
@@ -85,8 +87,7 @@ public class User {
 	public static User createUser(
 		String email,
 		String username,
-		String encodedPassword,
-		String createdBy
+		String encodedPassword
 	) {
 		return User.builder()
 			.email(email)
@@ -94,16 +95,13 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.USER)
 			.status(UserStatus.ACTIVE)
-			.deleted(false)
-			.createdBy(createdBy)
 			.build();
 	}
 
 	public static User createAdmin(
 		String email,
 		String username,
-		String encodedPassword,
-		String createdBy
+		String encodedPassword
 	) {
 		return User.builder()
 			.email(email)
@@ -111,8 +109,6 @@ public class User {
 			.password(encodedPassword)
 			.role(UserRole.ADMIN)
 			.status(UserStatus.ACTIVE)
-			.deleted(false)
-			.createdBy(createdBy)
 			.build();
 	}
 
@@ -121,39 +117,42 @@ public class User {
 	/**
 	 * 비밀번호 변경
 	 */
-	public void updatePassword(String newPassword, String updatedBy) {
+	public void updatePassword(String newPassword) {
 		this.password = newPassword;
-		this.updatedBy = updatedBy;
 	}
 
 	/**
 	 * 프로필 수정
 	 */
-	public void updateProfile(String username, String updatedBy) {
+	public void updateProfile(String username) {
 		this.username = username;
-		this.updatedBy = updatedBy;
 	}
 
 	/**
-	 * 계정 활성화 여부 확인
+	 * 계정 활성화 여부 확인(deletedAt 필드로 판단)
 	 */
 	public boolean isActive() {
-		return this.status == UserStatus.ACTIVE && !this.deleted;  // ⭐ isDeleted() 사용
+		return this.status == UserStatus.ACTIVE && this.deletedAt == null;
+	}
+
+	/**
+	 * 삭제 여부 확인(deletedAt 필드로 판단)
+	 */
+	public boolean isDeleted() {
+		return this.deletedAt != null;
 	}
 
 	/**
 	 * 계정 상태 변경
 	 */
-	public void updateStatus(UserStatus newStatus, String updatedBy) {
+	public void updateStatus(UserStatus newStatus) {
 		this.status = newStatus;
-		this.updatedBy = updatedBy;
 	}
 
 	/**
 	 * 회원 탈퇴 (Soft Delete)
 	 */
 	public void softDelete(String deletedBy) {
-		this.deleted = true;
 		this.status = UserStatus.DELETED;
 		this.deletedAt = LocalDateTime.now();
 		this.deletedBy = deletedBy;
