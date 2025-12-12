@@ -37,3 +37,12 @@ out/
 .vscode/
 
 .DS_Store
+search-service/es-data/
+search-service/es-plugins/
+comment-service/infra-data-new/**
+comment-service/.env
+/notification-service/infra-data
+
+# Ignore Gradle build output directory
+build
+/infra-data

@@ -1,10 +1,42 @@
-spring:
-  application:
-    name: notification-service
 server:
   port: 19400
 
+spring:
+  application:
+    name: notification-service
+
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_USER:noti}:${MONGO_PASSWORD:noti}@localhost:27017/notification_db?authSource=admin
+      auto-index-creation: true
+
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+          spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+          # 헤더에 있는 타입 정보(보낸 클래스명) 무시하기
+          spring.json.use.type.headers: false
+          # 클래스 매핑 지정
+          spring.json.value.default.type: com.eyedle.notification_service.presentation.dto.request.NotificationKafkaDto
+
+instance:
+  node-id: 18
+
+# Eureka
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:19090/eureka/
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG

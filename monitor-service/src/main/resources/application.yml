@@ -4,3 +4,27 @@ server:
 spring:
   application:
     name: monitor-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/eyedle_monitor
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:19090/eureka/
+
+instance:
+  node-id: 14
