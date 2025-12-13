@@ -1,6 +1,7 @@
 package com.feed_service.presentation.controller;
 
 import com.common.response.CommonResponse;
+import com.common.response.ErrorCode;
 import com.common.response.SuccessCode;
 import com.feed_service.application.service.FeedService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
@@ -35,16 +36,18 @@ public class FeedController {
 
     @GetMapping("/{feedId}")
     public CommonResponse getFeed(@PathVariable Long feedId){
-        return CommonResponse.of(SuccessCode.OK, feedService.findFeed(feedId));
+        Long userId = 1L;
+        return CommonResponse.of(SuccessCode.OK, feedService.findFeed(feedId, userId));
     }
 
-//    @GetMapping
-//    public CommonResponse getFeeds(
-//            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-//            Pageable pageable
-//    ) {
-//        return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable));
-//    }
+    @GetMapping
+    public CommonResponse getFeeds(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        Long userId = 1L;
+        return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable, userId));
+    }
 
     @PatchMapping("/{feedId}")
     public CommonResponse  updateFeed(@PathVariable Long feedId, @RequestBody FeedUpdateRequestDto request){
@@ -53,7 +56,12 @@ public class FeedController {
 
     @DeleteMapping("/{feedId}")
     public CommonResponse deleteFeed(@PathVariable Long feedId){
-        feedService.statusDeleted(feedId);
+        boolean result = feedService.statusDeleted(feedId);
+
+        if(!result){
+            return CommonResponse.of(ErrorCode.NOT_FOUND);
+        }
+
         return CommonResponse.of(SuccessCode.DELETED);
     }
 }
