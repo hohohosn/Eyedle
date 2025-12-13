@@ -20,12 +20,6 @@ public class RedisConfig {
 	@Value("${spring.data.redis.port}")
 	private int cachePort;
 
-	@Value("${global.redis.host}")
-	private String globalHost;
-
-	@Value("${global.redis.port}")
-	private int globalPort;
-
 	@Bean
 	@Primary
 	public RedisConnectionFactory cacheConnectionFactory() {
@@ -47,25 +41,6 @@ public class RedisConfig {
 		// Hash 자료구조를 쓸 경우를 대비한 설정
 		template.setHashKeySerializer(new StringRedisSerializer());
 		template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-
-		return template;
-	}
-
-	@Bean
-	public RedisConnectionFactory globalConnectionFactory() {
-		return new LettuceConnectionFactory(globalHost, globalPort);
-	}
-
-	@Bean(name = "globalRedisTemplate") // 이름 지정 필수
-	public RedisTemplate<String, Object> globalRedisTemplate(
-		@Qualifier("globalConnectionFactory") RedisConnectionFactory connectionFactory) {
-
-		RedisTemplate<String, Object> template = new RedisTemplate<>();
-		template.setConnectionFactory(connectionFactory);
-
-		// Pub/Sub 메시지도 JSON으로 주고받기 위해 동일하게 설정
-		template.setKeySerializer(new StringRedisSerializer());
-		template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
 		return template;
 	}

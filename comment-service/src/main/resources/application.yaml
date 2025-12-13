@@ -24,11 +24,6 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-global:
-  redis:
-    host: localhost
-    port: 6379
-
 instance:
   node-id: 17
 
