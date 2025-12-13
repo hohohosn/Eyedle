@@ -24,7 +24,7 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
         List<Long> feedIds = queryFactory
                 .select(QFeed.feed.id)
                 .from(QFeed.feed)
-                .where(QFeed.feed.isDeleted.isFalse())
+                .where(QFeed.feed.deleted.isFalse())
                 .orderBy(QFeed.feed.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -49,7 +49,7 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
         Long total = queryFactory
                 .select(QFeed.feed.id.count())
                 .from(QFeed.feed)
-                .where(QFeed.feed.isDeleted.isFalse())
+                .where(QFeed.feed.deleted.isFalse())
                 .fetchOne();
 
         return new PageImpl<>(feeds, pageable, total);
