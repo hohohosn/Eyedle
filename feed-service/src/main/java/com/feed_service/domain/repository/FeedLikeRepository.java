@@ -23,5 +23,6 @@ public interface FeedLikeRepository extends JpaRepository<FeedLike, Long> {
 
     List<FeedLike> findByUserIdOrderByCreatedAtDesc(Long userId);
 
+    long countByFeed_Id(Long feedId);
 }
 
