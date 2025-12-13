@@ -2,6 +2,8 @@ package com.feed_service.domain.repository;
 
 import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.QFeed;
+import com.feed_service.domain.model.QFeedTag;
+import com.feed_service.domain.model.QTag;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,18 +20,36 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
     @Override
     public Page<Feed> findFeeds(Pageable pageable) {
 
-        List<Feed> feeds = queryFactory
-                .selectFrom(QFeed.feed)
-                .where(QFeed.feed.isDeleted.eq(false))
+        //페이징은 ID만
+        List<Long> feedIds = queryFactory
+                .select(QFeed.feed.id)
+                .from(QFeed.feed)
+                .where(QFeed.feed.isDeleted.isFalse())
                 .orderBy(QFeed.feed.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        long total = queryFactory
-                .select(QFeed.feed.count())
+        if (feedIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        //실제 데이터는 fetch join
+        List<Feed> feeds = queryFactory
+                .selectDistinct(QFeed.feed)
                 .from(QFeed.feed)
-                .where(QFeed.feed.isDeleted.eq(false))
+                .leftJoin(QFeed.feed.mediaList).fetchJoin()
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
+                .where(QFeed.feed.id.in(feedIds))
+                .orderBy(QFeed.feed.createdAt.desc())
+                .fetch();
+
+        //count
+        Long total = queryFactory
+                .select(QFeed.feed.id.count())
+                .from(QFeed.feed)
+                .where(QFeed.feed.isDeleted.isFalse())
                 .fetchOne();
 
         return new PageImpl<>(feeds, pageable, total);
