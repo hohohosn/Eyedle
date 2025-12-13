@@ -7,6 +7,8 @@ import com.feed_service.domain.model.FeedMedia;
 import com.feed_service.domain.repository.FeedBookmarkRepository;
 import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.domain.repository.FeedRepository;
+import com.feed_service.infra.user.dto.UserInfoResponseDto;
+import com.feed_service.infra.user.service.UserQueryService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedMediaUploadRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
@@ -18,8 +20,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +33,7 @@ public class FeedService {
     private final FeedRepository feedRepository;
     private final FeedMediaService feedMediaService;
     private final TagService tagService;
+    private final UserQueryService userQueryService;
 
     private final FeedLikeRepository feedLikeRepository;
     private final FeedBookmarkRepository feedBookmarkRepository;
@@ -61,32 +66,54 @@ public class FeedService {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
+        UserInfoResponseDto userInfo = userQueryService.loadUser(feed.getUserId());
+
         boolean liked = feedLikeRepository.existsByFeed_IdAndUserId(feedId, userId);
         boolean bookmarked = feedBookmarkRepository.existsByFeed_IdAndUserId(feedId, userId);
 
-        return FeedResponseDto.of(feed, liked, bookmarked);
+        return FeedResponseDto.of(feed, userInfo, liked, bookmarked);
     }
 
     public Page<FeedResponseDto> findAllFeeds(Pageable pageable, Long userId) {
 
         Page<Feed> feeds = feedRepository.findFeeds(pageable);
 
-        return feeds.map(feed -> {
-            boolean liked = feedLikeRepository.existsByFeed_IdAndUserId(feed.getId(), userId);
-            boolean bookmarked = feedBookmarkRepository.existsByFeed_IdAndUserId(feed.getId(), userId);
-            return FeedResponseDto.of(feed, liked, bookmarked);
-        });
+        UserInfoResponseDto userInfo = userQueryService.loadUser(userId);
+
+        List<Long> feedIds = feeds.getContent().stream()
+                .map(Feed::getId)
+                .toList();
+
+        Set<Long> likedFeedIds = new HashSet<>(
+                feedLikeRepository.findFeedIdsByUserIdAndFeedIdIn(userId, feedIds)
+        );
+
+        Set<Long> bookmarkedFeedIds = new HashSet<>(
+                feedBookmarkRepository.findFeedIdsByUserIdAndFeedIdIn(userId, feedIds)
+        );
+
+        return feeds.map(feed ->
+                FeedResponseDto.of(
+                        feed,
+                        userInfo,
+                        likedFeedIds.contains(feed.getId()),
+                        bookmarkedFeedIds.contains(feed.getId())
+                )
+        );
     }
 
     @Transactional
     public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request) {
+
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        UserInfoResponseDto userInfo = userQueryService.loadUser(feed.getUserId());
 
         feed.updateFeed(request.getContent(), request.getPermission());
         tagService.updateTags(feed, request.getTags());
 
-        return FeedResponseDto.of(feed, false, false);
+        return FeedResponseDto.of(feed, userInfo,false, false);
     }
 
     @Transactional
