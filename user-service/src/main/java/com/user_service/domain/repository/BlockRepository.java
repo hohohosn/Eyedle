@@ -52,7 +52,7 @@ public interface BlockRepository extends JpaRepository<Block, BlockId> {
 	/**
 	 * 사용자의 모든 차단 관계 삭제 (회원 삭제 시)
 	 */
-	void deleteByBlockerIdOrBlockedId(Long userId, Long userId2);
+	void deleteByBlockerIdOrBlockedId(Long blockerId, Long blockedId);
 
 	/**
 	 * 양방향 차단 여부 확인
