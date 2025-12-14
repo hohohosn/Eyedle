@@ -41,3 +41,12 @@ feign:
       default:
         connectTimeout: 3000
         readTimeout: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
