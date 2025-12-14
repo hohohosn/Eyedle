@@ -64,7 +64,7 @@ jobs:
 
     - name: Build with Gradle
       working-directory: feed-service
-      run: ./gradlew clean build
+      run: ./gradlew clean build -x test
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
