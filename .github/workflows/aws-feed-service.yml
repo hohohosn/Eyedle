@@ -33,7 +33,7 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: feed-service
-  ECS_SERVICE: feed-service
+  ECS_SERVICE: feed-service-service-54d5e3pa
   ECS_CLUSTER: feed-service
   ECS_TASK_DEFINITION: .github/workflows/feed-service-revision1.json
   CONTAINER_NAME: feed-service
