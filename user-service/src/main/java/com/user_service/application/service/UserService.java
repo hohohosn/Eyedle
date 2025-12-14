@@ -7,6 +7,7 @@ import com.user_service.infrastructure.exception.ErrorCode;
 import com.user_service.presentation.dto.request.UpdateUserRequest;
 import com.user_service.presentation.dto.response.UserInfoResponse;
 import com.user_service.presentation.dto.response.UserInternalResponse;
+import com.user_service.presentation.dto.response.UserRecentResponse;
 import com.user_service.presentation.dto.response.UserSearchResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -174,5 +176,22 @@ public class UserService {
 			.orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
 		return UserInternalResponse.from(user);
+	}
+
+	/**
+	 * 최근 변경된 사용자 조회 (Elastic search 동기화용)
+	 */
+	public List<UserRecentResponse> findRecentUsers(LocalDateTime since) {
+
+		// since 이후 업데이트된 사용자 조회
+		List<User> users = userRepository.findByUpdatedAtAfter(since);
+
+		// 삭제된 사용자 제외 + DTO 변환
+		List<UserRecentResponse> response = users.stream()
+			.filter(user -> user.getDeletedAt() == null)  // 삭제 안 된 사용자만
+			.map(UserRecentResponse::from)
+			.collect(Collectors.toList());
+
+		return response;
 	}
 }
