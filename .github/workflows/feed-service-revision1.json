@@ -38,7 +38,7 @@
         }
     ],
     "cpu": "1024",
-    "enableFaultInjection": false,
+    "enableFaultInjection": true,
     "executionRoleArn": "arn:aws:iam::058264087424:role/ecsTaskExecutionRole",
     "family": "feed-service",
     "memory": "3072",
