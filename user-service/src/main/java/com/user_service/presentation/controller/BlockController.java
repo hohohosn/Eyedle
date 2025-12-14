@@ -16,9 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * 사용자 차단 컨트롤러
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/blocks")
@@ -35,7 +32,6 @@ public class BlockController {
 		@AuthenticationPrincipal Long currentUserId,
 		@PathVariable Long userId
 	) {
-		log.info("사용자 차단 요청: blockerId={}, blockedId={}", currentUserId, userId);
 
 		BlockResponse response = blockService.blockUser(currentUserId, userId);
 
@@ -52,7 +48,6 @@ public class BlockController {
 		@AuthenticationPrincipal Long currentUserId,
 		@PathVariable Long userId
 	) {
-		log.info("차단 해제 요청: blockerId={}, blockedId={}", currentUserId, userId);
 
 		blockService.unblockUser(currentUserId, userId);
 
@@ -69,8 +64,6 @@ public class BlockController {
 		@AuthenticationPrincipal Long currentUserId,
 		@PathVariable Long userId
 	) {
-		log.info("차단 여부 확인: blockerId={}, blockedId={}", currentUserId, userId);
-
 		boolean isBlocked = blockService.isBlocked(currentUserId, userId);
 
 		return ResponseEntity.ok(
@@ -87,8 +80,6 @@ public class BlockController {
 		@PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
 		Pageable pageable
 	) {
-		log.info("차단한 사용자 목록 조회: userId={}", currentUserId);
-
 		Slice<UserInternalResponse> response = blockService.getBlockedUsers(
 			currentUserId, pageable
 		);

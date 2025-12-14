@@ -125,7 +125,7 @@ public class BlockService {
 	}
 
 	/**
-	 * 여러 사용자에 대한 차단 여부 일괄 조회 (Internal API용)
+	 * 여러 사용자에 대한 차단 여부 일괄 조회 (Internal)
 	 */
 	public Map<Long, Boolean> checkBlockedBatch(Long blockerId, List<Long> targetUserIds) {
 		log.info("차단 여부 일괄 조회: blockerId={}, targetCount={}", blockerId, targetUserIds.size());
