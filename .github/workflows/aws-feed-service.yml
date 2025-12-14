@@ -59,9 +59,11 @@ jobs:
         distribution: 'temurin'
 
     - name: Grant execute permission for gradlew
+      working-directory: feed-service
       run: chmod +x gradlew
 
     - name: Build with Gradle
+      working-directory: feed-service
       run: ./gradlew clean build
 
     - name: Upload Build Artifacts
@@ -107,7 +109,7 @@ jobs:
         # Build a docker container and
         # push it to ECR so that it can
         # be deployed to ECS.
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./feed-service
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
