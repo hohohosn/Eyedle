@@ -34,7 +34,7 @@ env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: feed-service
   ECS_SERVICE: feed-service
-  ECS_CLUSTER: feed-service
+  ECS_CLUSTER: feed-service-service-yxupulxs
   ECS_TASK_DEFINITION: .github/workflows/feed-service-revision1.json
   CONTAINER_NAME: feed-service
 
