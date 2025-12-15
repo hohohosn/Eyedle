@@ -8,6 +8,7 @@ import com.feed_service.domain.model.FeedBookmark;
 import com.feed_service.domain.model.FeedLike;
 import com.feed_service.presentation.response.FeedLikeResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,8 +19,8 @@ public class FeedLikeController {
     private final FeedLikeService feedLikeService;
 
     @PostMapping
-    public CommonResponse toggleLike(@PathVariable Long feedId){
-        Long userId = 1L;
+    public CommonResponse toggleLike(@PathVariable Long feedId, @AuthenticationPrincipal Long userId){
+
         FeedLikeResponseDto responseDto = feedLikeService.toggleLike(feedId, userId);
 
         return CommonResponse.of(SuccessCode.OK, responseDto);
