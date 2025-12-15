@@ -1,6 +1,8 @@
 package com.user_service.application.service;
 
 import com.user_service.domain.model.User;
+import com.user_service.domain.repository.BlockRepository;
+import com.user_service.domain.repository.FollowRepository;
 import com.user_service.domain.repository.UserRepository;
 import com.user_service.infrastructure.exception.BusinessException;
 import com.user_service.infrastructure.exception.ErrorCode;
@@ -31,6 +33,8 @@ import java.util.stream.Collectors;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final FollowRepository followRepository;
+	private final BlockRepository blockRepository;
 	private final PasswordEncoder passwordEncoder;
 
 	/**
@@ -139,6 +143,12 @@ public class UserService {
 
 		user.softDelete(String.valueOf(userId));
 		userRepository.save(user);
+
+		// 팔로우 관계 삭제
+		followRepository.deleteByFollowerIdOrFollowingId(userId, userId);
+
+		// 차단 관계 삭제
+		blockRepository.deleteByBlockerIdOrBlockedId(userId, userId);
 
 		log.info("회원 탈퇴 완료: userId={}", userId);
 	}
