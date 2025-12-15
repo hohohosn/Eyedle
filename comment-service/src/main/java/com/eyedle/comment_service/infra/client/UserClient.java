@@ -24,4 +24,7 @@ public interface UserClient {
 	@GetMapping("/follows/is-following")
 	boolean isFollowing(@RequestParam("fromUserId") Long fromUserId, @RequestParam("toUserId") Long toUserId);
 
+	@GetMapping("/blocks/check-either")
+	boolean checkEitherBlocked(@RequestParam("userId1") Long userId1, @RequestParam("userId2") Long userId2);
+
 }
