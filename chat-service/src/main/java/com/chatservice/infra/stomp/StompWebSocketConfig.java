@@ -1,4 +1,4 @@
-package com.chatservice.infra.config;
+package com.chatservice.infra.stomp;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -34,10 +34,10 @@ public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
   public void configureMessageBroker(MessageBrokerRegistry registry) {
     // /publish/1 형태로 메시지 발행해야 함을 설정
     // /publish로 시작하는 url 패턴으로 메시지가 발행되면 @Controller 객체의 @MessageMapping 메서드로 라우팅
-    registry.setApplicationDestinationPrefixes("/publish");
+    registry.setApplicationDestinationPrefixes("/pub");
 
     // /topic/1 형태로 메시지를 수신(subscribe)해야 함을 설정
-    registry.enableSimpleBroker("/topic");
+    registry.enableSimpleBroker("/sub");
   }
 
   // 웹소켓 요청(connect, subscribe, disconnect) 등의 요청 시에는 http header 등 http 메시지를 넣어올 수 있고,
