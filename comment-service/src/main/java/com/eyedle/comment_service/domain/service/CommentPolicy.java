@@ -27,11 +27,7 @@ public class CommentPolicy {
 		}
 	}
 
-	public void validateFeed(Long requestUserId, Long feedAuthorId, String permission, boolean isFollowing, boolean isFollowed) {
-
-		if (requestUserId.equals(feedAuthorId)){
-			return;
-		}
+	public void validateFeed(String permission, boolean isFollowing, boolean isFollowed) {
 
 		switch (permission) {
 			case "PUBLIC":
