@@ -17,6 +17,9 @@ public enum ErrorCode {
 	CANNOT_FOLLOW_YOURSELF(HttpStatus.BAD_REQUEST, "FOLLOW001", "자기 자신을 팔로우할 수 없습니다."),
 	ALREADY_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW002", "이미 팔로우 중입니다."),
 	NOT_FOLLOWING(HttpStatus.BAD_REQUEST, "FOLLOW003", "팔로우 관계가 존재하지 않습니다."),
+	CANNOT_BLOCK_YOURSELF(HttpStatus.BAD_REQUEST, "BLOCK001", "자기 자신을 차단할 수 없습니다."),
+	ALREADY_BLOCKED(HttpStatus.BAD_REQUEST, "BLOCK002", "이미 차단 중입니다."),
+	NOT_BLOCKED(HttpStatus.BAD_REQUEST, "BLOCK003", "차단 관계가 존재하지 않습니다."),
 
 	// 401 Unauthorized
 	INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH001", "유효하지 않은 토큰입니다."),
