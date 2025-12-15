@@ -25,6 +25,8 @@ public class ChatParticipant extends BaseTimeEntity {
   @Column(nullable = false)
   private Long userId;
 
+  private Long lastReadMessageId;
+
   private boolean isLeft;
 
   private LocalDateTime leftAt;
@@ -51,5 +53,14 @@ public class ChatParticipant extends BaseTimeEntity {
   public void join() {
     this.isLeft = false;
     this.leftAt = null;
+  }
+
+  /**
+   * 읽음 처리
+   */
+  public void markAsRead(Long messageId) {
+    if (this.lastReadMessageId == null || messageId > this.lastReadMessageId) {
+      this.lastReadMessageId = messageId;
+    }
   }
 }
