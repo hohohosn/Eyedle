@@ -18,6 +18,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
   data:
     redis:
@@ -41,3 +42,12 @@ feign:
       default:
         connectTimeout: 3000
         readTimeout: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always

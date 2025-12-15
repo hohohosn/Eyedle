@@ -33,7 +33,7 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: feed-service
-  ECS_SERVICE: feed-service
+  ECS_SERVICE: feed-service-service-xhn3umq7
   ECS_CLUSTER: feed-service
   ECS_TASK_DEFINITION: .github/workflows/feed-service-revision1.json
   CONTAINER_NAME: feed-service
@@ -89,8 +89,14 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./feed-service
+          docker build \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+          -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+          ./feed-service
+
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       # 8️ ECS Task Definition에 새 이미지 반영
