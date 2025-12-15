@@ -6,7 +6,6 @@ import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.domain.model.ChatParticipant;
 import com.chatservice.domain.model.ChatRoom;
 import com.chatservice.domain.model.ChatRoomStatus;
-import com.chatservice.domain.repository.ChatMessageReadRepository;
 import com.chatservice.domain.repository.ChatMessageRepository;
 import com.chatservice.domain.repository.ChatParticipantRepository;
 import com.chatservice.domain.repository.ChatRoomRepository;
@@ -45,7 +44,7 @@ public class ChatService {
   private final ChatRoomRepository chatRoomRepository;
   private final ChatParticipantRepository chatParticipantRepository;
   private final ChatMessageRepository chatMessageRepository;
-  private final ChatMessageReadRepository chatMessageReadRepository;
+  //private final ChatMessageReadRepository chatMessageReadRepository;
   private final RedisChatMessageRepository redisChatMessageRepository;
   private final UserClient userClient;
   private final BlockClient blockClient;
@@ -294,6 +293,40 @@ public class ChatService {
     return ChatMessageResDto.from(saveMessage);
   }
 
+  /**
+   * 읽음 확인
+   */
+  @Transactional
+  public void markMessageAsRead(Long chatRoomId, Long userId) {
+
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
+
+    // 마지막으로 읽은 메시지 id
+    Long lastReadMessageId = chatParticipant.getLastReadMessageId();
+
+    // 읽지 않은 메시지 id
+    Long newMessageId = chatMessageRepository.findNewMessageIdAfter(chatRoomId, lastReadMessageId);
+    if (newMessageId == null) {
+      return;
+    }
+
+    // 읽은 메시지 id 갱신
+    chatParticipant.markAsRead(newMessageId);
+  }
+
+  /**
+   * 읽지 않은 메시지 count
+   */
+  @Transactional(readOnly = true)
+  public long countUnreadMessages(Long chatRoomId, Long userId) {
+
+    ChatParticipant chatParticipant = getChatParticipant(chatRoomId, userId);
+
+    Long lastReadMessageId = chatParticipant.getLastReadMessageId();
+
+    return chatMessageRepository.countMessagesAfter(chatRoomId, lastReadMessageId);
+  }
+
   private ChatParticipant getChatParticipant(Long chatRoomId, Long userId) {
 
     return chatParticipantRepository.findByChatRoomIdAndUserId(chatRoomId, userId)
@@ -381,23 +414,4 @@ public class ChatService {
 
     return CreateChatRoomResDto.from(newChatRoom);
   }
-
-//  /**
-//   * 읽음 확인
-//   */
-//  @Transactional
-//  public void markAsRead(ChatMessageReadReqDto reqDto) {
-//
-//    boolean alreadyReads = chatMessageReadRepository.findByChatMessageIdAndUserId(reqDto.chatMessageId(), reqDto.userId()).isPresent();
-//
-//    // 이미 읽은 메시지는 무시
-//    if (alreadyReads) {
-//      return;
-//    }
-//
-//    chatMessageReadRepository.save(ChatMessageRead.create(reqDto));
-//  }
-
-// TODO:  읽음 확인
-
 }
