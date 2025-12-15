@@ -11,53 +11,68 @@ spring:
       discovery:
         locator:
           enabled: true
-        routes:
-          - id: user-service
-            uri: lb://user-service
-            predicates:
-              - Path=/user/**, /auth/**, /blocks/**
+      routes:
+        # 1. 로그인/회원가입(인증X)
+        - id: user-service-auth
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
 
-          - id: comment-service
-            uri: lb://comment-service
-            predicates:
-              - Path=/comments/**, /feeds/*/comments/**
-            filters:
-              - JwtAuthenticationFilter
+        # 2. 회원서비스(인증O)
+        - id: user-service-secured
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**, /blocks/**, /api/follows
+          filters:
+            - JwtAuthenticationFilter
 
-          - id: notification-service
-            uri: lb://notification-service
-            predicates:
-              - Path=/notifications/**
-            filters:
-              - JwtAuthenticationFilter
-          
-          - id: chat-service
-            uri: lb://chat-service
-            predicates:
-              - Path=/chats/**
-            filters:
-              - JwtAuthenticationFilter
+        # 3. Comment Service
+        - id: comment-service
+          uri: lb://COMMENT-SERVICE
+          predicates:
+            - Path=/comments/**, /feeds/*/comments/**
+          filters:
+            - JwtAuthenticationFilter
 
-          - id: monitor-service
-            uri: lb://monitor-service
-            predicates:
-              - Path=/monitor/**
-            filters:
-              - JwtAuthenticationFilter
+        # 4. Notification Service
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/notifications/**
+          filters:
+            - JwtAuthenticationFilter
 
-          - id: feed-service
-            uri: lb://feed-service
-            predicates:
-              - Path=/feeds/**
-            filters:
-              - JwtAuthenticationFilter
+        # 5. Chat Service
+        - id: chat-service
+          uri: lb://CHAT-SERVICE
+          predicates:
+            - Path=/chats/**
+          filters:
+            - JwtAuthenticationFilter
 
-          - id: search-service
-            uri: lb://search-service
-            predicates:
-              - Path=/search/**
-            filters:
-              - JwtAuthenticationFilter
+        # 6. Monitor Service
+        - id: monitor-service
+          uri: lb://MONITOR-SERVICE
+          predicates:
+            - Path=/monitor/**
+          filters:
+            - JwtAuthenticationFilter
+
+        # 7. Feed Service
+        - id: feed-service
+          uri: lb://FEED-SERVICE
+          predicates:
+            - Path=/feeds/**
+          filters:
+            - JwtAuthenticationFilter
+
+        # 8. Search Service
+        - id: search-service
+          uri: lb://SEARCH-SERVICE
+          predicates:
+            - Path=/search/**
+          filters:
+            - JwtAuthenticationFilter
 
 
 jwt:
