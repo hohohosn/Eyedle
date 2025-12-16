@@ -56,7 +56,7 @@ public class StompEventListener {
     // 구독한 주소가 맞는지 확인
     if (destination.startsWith("/sub/chat/")) {
 
-      Long chatRoomId = Long.parseLong(destination.replace("/sub/chat/", ""));
+      Long chatRoomId = Long.parseLong(destination.substring("/sub/chat/".length()));
 
       Principal principal = accessor.getUser();
 
