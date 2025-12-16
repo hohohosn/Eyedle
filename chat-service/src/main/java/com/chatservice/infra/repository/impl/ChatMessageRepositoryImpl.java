@@ -55,6 +55,18 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
         .orderBy(m1.chatRoomId.asc(), m1.id.desc())
         .fetch();
 
+//    DISTINCT ON 사용
+//    List<ChatMessage> lastMessages = jpaQueryFactory
+//        .select(chatMessage)
+//        .from(chatMessage)
+//        .where(chatMessage.chatRoomId.in(chatRoomIds))
+//        .orderBy(
+//            chatMessage.chatRoomId.asc(),     // DISTINCT ON 기준
+//            chatMessage.createdAt.desc()      // 최신 메세지 정렬
+//        )
+//        .distinct()
+//        .fetch();
+
     return lastMessages.stream().collect(Collectors.toMap(ChatMessage::getChatRoomId, Function.identity()));
   }
 
@@ -67,5 +79,33 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
         .orderBy(chatMessage.createdAt.desc())
         .limit(pageSize)
         .fetch();
+  }
+
+  @Override
+  public Long findNewMessageIdAfter(Long chatRoomId, Long lastReadId) {
+
+    return jpaQueryFactory
+        .select(chatMessage.id.max())
+        .from(chatMessage)
+        .where(
+            chatMessage.chatRoomId.eq(chatRoomId),
+            lastReadId != null ? chatMessage.id.gt(lastReadId) : null
+        )
+        .fetchOne();
+  }
+
+  @Override
+  public long countMessagesAfter(Long chatRoomId, Long lastReadId) {
+
+    Long count = jpaQueryFactory
+        .select(chatMessage.count())
+        .from(chatMessage)
+        .where(
+            chatMessage.chatRoomId.eq(chatRoomId),
+            lastReadId != null ? chatMessage.id.gt(lastReadId) : null
+        )
+        .fetchOne();
+
+    return count != null ? count : 0L;
   }
 }

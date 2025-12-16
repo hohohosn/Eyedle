@@ -22,69 +22,85 @@ public class ChatController {
   private final ChatService chatService;
 
   @PostMapping
-  public CommonResponse<CreateChatRoomResDto> createDirectChatRoom(@RequestBody CreateChatRoomReqDto reqDto) {
-    Long userId = 1L;
+  public CommonResponse<CreateChatRoomResDto> createDirectChatRoom(
+      @RequestHeader("X-User-Id") Long userId,
+      @RequestBody CreateChatRoomReqDto reqDto
+  ) {
     return CommonResponse.of(CREATED, chatService.createDirectChatRoom(userId, reqDto));
   }
 
   @PostMapping("/{chatRoomId}/accept")
-  public CommonResponse<Void> acceptChatRoom(@PathVariable Long chatRoomId) {
-    Long userId = 1L;
+  public CommonResponse<Void> acceptChatRoom(
+      @RequestHeader("X-User-Id") Long userId,
+      @PathVariable Long chatRoomId
+  ) {
     chatService.acceptChatRoom(chatRoomId, userId);
     return CommonResponse.of(OK);
   }
 
   @PostMapping("/{chatRoomId}/reject")
-  public CommonResponse<Void> rejectChatRoom(@PathVariable Long chatRoomId) {
-    Long userId = 1L;
+  public CommonResponse<Void> rejectChatRoom(
+      @RequestHeader("X-User-Id") Long userId,
+      @PathVariable Long chatRoomId
+  ) {
     chatService.rejectChatRoom(chatRoomId, userId);
     return CommonResponse.of(OK);
   }
 
   @GetMapping
   public CommonResponse<ChatRoomCursorResDto> getChatRoomList(
+      @RequestHeader("X-User-Id") Long userId,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @RequestParam(value = "pageSize", defaultValue = "10") int pageSize
   ) {
-    Long userId = 1L;
     return CommonResponse.of(OK, chatService.getChatRoomList(userId, cursor, pageSize));
   }
 
   @DeleteMapping("/{chatRoomId}/leave")
-  public CommonResponse<Void> leaveChatRoom(@PathVariable Long chatRoomId) {
-    Long userId = 1L;
+  public CommonResponse<Void> leaveChatRoom(
+      @RequestHeader("X-User-Id") Long userId,
+      @PathVariable Long chatRoomId
+  ) {
     chatService.leaveChatRoom(chatRoomId, userId);
     return CommonResponse.of(DELETED);
   }
 
   @DeleteMapping("/{chatRoomId}/messages/{messageId}")
-  public CommonResponse<Void> deleteMessage(@PathVariable Long chatRoomId, @PathVariable Long messageId) {
-    Long userId = 1L;
+  public CommonResponse<Void> deleteMessage(
+      @RequestHeader("X-User-Id") Long userId,
+      @PathVariable Long chatRoomId,
+      @PathVariable Long messageId
+  ) {
     chatService.deleteMessage(chatRoomId, messageId, userId);
     return CommonResponse.of(DELETED);
   }
 
   @GetMapping("/{chatRoomId}/messages")
   public CommonResponse<List<ChatMessageResDto>> getChatRoomMessages(
+      @RequestHeader("X-User-Id") Long userId,
       @PathVariable Long chatRoomId,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @RequestParam(value = "pageSize", defaultValue = "30") int pageSize
   ) {
-    Long userId = 1L;
     return CommonResponse.of(OK, chatService.getChatRoomMessages(userId, chatRoomId, cursor, pageSize));
   }
 
   @GetMapping("/{chatRoomId}/messages/more")
   public CommonResponse<List<ChatMessageResDto>> loadMoreChatMessages(
+      @RequestHeader("X-User-Id") Long userId,
       @PathVariable Long chatRoomId,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @RequestParam(value = "dayRange", defaultValue = "7") int dayRange,
       @RequestParam(value = "pageSize", defaultValue = "30") int pageSize
   ) {
-    Long userId = 1L;
     return CommonResponse.of(OK, chatService.loadMoreChatMessages(userId, chatRoomId, cursor, dayRange, pageSize));
   }
-}
 
-// TODO:
-//  - 헤더에서 사용자 정보 가져오기
+  @GetMapping("/{chatRoomId}/unread")
+  public CommonResponse<Long> countUnreadMessages(
+      @RequestHeader("X-User-Id") Long userId,
+      @PathVariable Long chatRoomId
+  ) {
+    return CommonResponse.of(OK, chatService.countUnreadMessages(chatRoomId, userId));
+  }
+}
