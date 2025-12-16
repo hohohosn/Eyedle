@@ -1,69 +1,69 @@
 {
-    "family": "feed-service",
-    "networkMode": "awsvpc",
-    "requiresCompatibilities": ["FARGATE"],
-    "cpu": "1024",
-    "memory": "3072",
-    "executionRoleArn": "arn:aws:iam::058264087424:role/ecsTaskExecutionRole",
+  "family": "feed-service",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "3072",
+  "executionRoleArn": "arn:aws:iam::058264087424:role/ecsTaskExecutionRole",
 
-    "containerDefinitions": [
+  "containerDefinitions": [
+    {
+      "name": "feed-service",
+      "image": "058264087424.dkr.ecr.ap-northeast-2.amazonaws.com/feed-service",
+      "essential": true,
+
+      "portMappings": [
         {
-            "name": "feed-service",
-            "image": "058264087424.dkr.ecr.ap-northeast-2.amazonaws.com/feed-service",
-            "essential": true,
-
-            "portMappings": [
-                {
-                    "containerPort": 19300,
-                    "hostPort": 19300,
-                    "protocol": "tcp"
-                }
-            ],
-
-            "environment": [
-                {
-                    "name": "SPRING_DATASOURCE_URL",
-                    "value": "jdbc:postgresql://172.31.38.61:5432/feed"
-                },
-                {
-                    "name": "SPRING_DATASOURCE_USERNAME",
-                    "value": "postgres"
-                },
-                {
-                    "name": "SPRING_DATASOURCE_PASSWORD",
-                    "value": "postgres1234"
-                },
-                {
-                    "name": "REDIS_HOST",
-                    "value": "172.31.38.61"
-                },
-                {
-                    "name": "REDIS_PORT",
-                    "value": "6379"
-                },
-                {
-                    "name": "EUREKA_CLIENT_ENABLED",
-                    "value": "true"
-                },
-                {
-                    "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE",
-                    "value": "http://172.31.38.61:19090/eureka/"
-                },
-                {
-                    "name": "GATEWAY_BASE_URL",
-                    "value": "http://172.31.38.61:19091"
-                }
-            ],
-
-            "logConfiguration": {
-                "logDriver": "awslogs",
-                "options": {
-                    "awslogs-group": "/ecs/feed-service",
-                    "awslogs-region": "ap-northeast-2",
-                    "awslogs-stream-prefix": "ecs",
-                    "awslogs-create-group": "true"
-                }
-            }
+          "containerPort": 19300,
+          "hostPort": 19300,
+          "protocol": "tcp"
         }
-    ]
+      ],
+
+      "environment": [
+        {
+          "name": "SPRING_DATASOURCE_URL",
+          "value": "jdbc:postgresql://172.31.38.61:5432/feed"
+        },
+        {
+          "name": "SPRING_DATASOURCE_USERNAME",
+          "value": "postgres"
+        },
+        {
+          "name": "SPRING_DATASOURCE_PASSWORD",
+          "value": "postgres1234"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "172.31.38.61"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        },
+        {
+          "name": "EUREKA_CLIENT_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE",
+          "value": "http://172.31.38.61:19090/eureka/"
+        },
+        {
+          "name": "GATEWAY_BASE_URL",
+          "value": "http://172.31.38.61:19091"
+        }
+      ],
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/feed-service",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      }
+    }
+  ]
 }
