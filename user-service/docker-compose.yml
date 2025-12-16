@@ -13,8 +13,14 @@ services:
       POSTGRES_DB: userdb
     volumes:
       - postgres-user-data:/var/lib/postgresql/data
+    networks:
+      - user-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U userdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Redis (JWT 토큰 블랙리스트)
   redis-user:
     image: redis:7-alpine
     container_name: user-redis
@@ -38,30 +44,23 @@ services:
     ports:
       - "19100:19100"
     environment:
-      # Database
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5432/userdb
       - SPRING_DATASOURCE_USERNAME=userdb
       - SPRING_DATASOURCE_PASSWORD=userdb
-
-      # Redis
       - SPRING_DATA_REDIS_HOST=redis-user
       - SPRING_DATA_REDIS_PORT=6379
-
-      # JWT
       - JWT_SECRET_KEY=eyedle-super-secret-jwt-key-2024-change-this-in-production-minimum-256-bits
-
-      # Eureka
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://3.230.51.206:19090/eureka/
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - EUREKA_INSTANCE_IP_ADDRESS=52.79.180.217
-
-      # Spring Profile
       - SPRING_PROFILES_ACTIVE=prod
     depends_on:
       postgres-user:
         condition: service_healthy
       redis-user:
         condition: service_healthy
+    networks:
+      - user-network
 
 networks:
   user-network:
