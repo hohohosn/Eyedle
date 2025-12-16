@@ -27,18 +27,6 @@ public class ChatParticipantRepositoryImpl implements ChatParticipantRepository 
   }
 
   @Override
-  public boolean isLeft(Long chatRoomId, Long userId) {
-    Integer result = jpaQueryFactory
-        .selectOne()
-        .from(chatParticipant)
-        .where(chatParticipant.chatRoomId.eq(chatRoomId)
-            .and(chatParticipant.userId.eq(userId))
-            .and(chatParticipant.isLeft.isTrue()))
-        .fetchFirst();
-    return result != null;
-  }
-
-  @Override
   public Optional<ChatParticipant> findByChatRoomIdAndUserId(Long chatRoomId, Long userId) {
     return chatParticipantJpaRepository.findByChatRoomIdAndUserId(chatRoomId, userId);
   }
@@ -53,5 +41,16 @@ public class ChatParticipantRepositoryImpl implements ChatParticipantRepository 
             .and(chatParticipant.isLeft.eq(false)))
         .fetch();
     return tuples.stream().collect(Collectors.toMap(t -> t.get(chatParticipant.chatRoomId), t -> t.get(chatParticipant.userId)));
+  }
+
+  @Override
+  public int countParticipants(Long chatRoomId) {
+    Long count = jpaQueryFactory
+        .select(chatParticipant.count())
+        .from(chatParticipant)
+        .where(chatParticipant.chatRoomId.eq(chatRoomId))
+        .fetchOne();
+
+    return count == null ? 0 : count.intValue();
   }
 }
