@@ -5,7 +5,7 @@ spring:
     name: user-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/userdb
+    url: jdbc:postgresql://localhost:5432/userdb
     username: userdb
     password: userdb
     driver-class-name: org.postgresql.Driver
@@ -20,7 +20,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
 jwt:
-  secret: ${JWT_SECRET_KEY:bc2a10aaebae00d52a2f7821724ec6b68769177ce2994d11a4f11c0302068bea}
+  secret: ${JWT_SECRET_KEY}
   access-token-expiration: 3600000 # 1 hour in milliseconds
   refresh-token-expiration: 604800000 # 7 days in milliseconds
   access-header-name: Authorization
