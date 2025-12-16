@@ -24,32 +24,22 @@ public class BlockInternalController {
 	 * 차단 여부 확인
 	 */
 	@GetMapping("/check")
-	public ResponseEntity<ApiResponse<Boolean>> checkBlock(
+	public boolean checkBlock(
 		@RequestParam Long blockerId,
 		@RequestParam Long blockedId
 	) {
-
-		boolean isBlocked = blockService.isBlocked(blockerId, blockedId);
-
-		return ResponseEntity.ok(
-			ApiResponse.success("차단 여부를 조회했습니다.", isBlocked)
-		);
+		return blockService.isBlocked(blockerId, blockedId);
 	}
 
 	/**
 	 * 양측 차단 여부 확인(한쪽이라도 차단한 경우 true 반환)
 	 */
 	@GetMapping("/check-either")
-	public ResponseEntity<ApiResponse<Boolean>> checkEitherBlocked(
+	public boolean checkEitherBlocked(
 		@RequestParam Long userId1,
 		@RequestParam Long userId2
 	) {
-
-		boolean isBlocked = blockService.isEitherBlocked(userId1, userId2);
-
-		return ResponseEntity.ok(
-			ApiResponse.success("양측 차단 여부를 조회했습니다.", isBlocked)
-		);
+		return blockService.isEitherBlocked(userId1, userId2);
 	}
 
 	/**
@@ -60,7 +50,6 @@ public class BlockInternalController {
 		@RequestParam Long userId1,
 		@RequestParam Long userId2
 	) {
-
 		// 양방향 차단 확인 후 반대값 반환 (차단 아니면 true)
 		boolean isBlocked = blockService.isEitherBlocked(userId1, userId2);
 		return !isBlocked;
@@ -70,15 +59,10 @@ public class BlockInternalController {
 	 * 차단 여부 일괄 조회
 	 */
 	@PostMapping("/check-batch")
-	public ResponseEntity<ApiResponse<Map<Long, Boolean>>> checkBlockedBatch(
+	public Map<Long, Boolean> checkBlockedBatch(
 		@RequestParam Long blockerId,
 		@RequestBody List<Long> targetUserIds
 	) {
-
-		Map<Long, Boolean> result = blockService.checkBlockedBatch(blockerId, targetUserIds);
-
-		return ResponseEntity.ok(
-			ApiResponse.success("차단 여부를 일괄 조회했습니다.", result)
-		);
+		return blockService.checkBlockedBatch(blockerId, targetUserIds);
 	}
 }
