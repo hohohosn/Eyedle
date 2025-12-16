@@ -277,21 +277,26 @@ public class CommentService {
 
 		Long feedAuthor = feedGetResultDto.getUserId();
 
-		boolean isFollowing = false;
+		if (feedAuthor.equals(userId)) {
+			return feedAuthor;
+		}
+
+		boolean isBlocked = isBlocked(userId, feedAuthor);
+
+		if (isBlocked) {
+			throw new CustomException(COMMENT_FORBIDDEN);
+		}
+
+		boolean isFollowing = isFollowing(userId, feedAuthor);
 		boolean isFollowed = false;
 
-		if (!feedGetResultDto.getUserId().equals(userId)) {
-			isFollowing = userClient.isFollowing(userId, feedAuthor);
-		}
-
 		if (isFollowing) {
-			isFollowed = userClient.isFollowing(feedAuthor, userId);
+			isFollowed = isFollowing(feedAuthor, userId);
 		}
 
-		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
-		commentPolicy.validateFeed(userId, feedAuthor, feedGetResultDto.getPermission(), isFollowing, isFollowed);
+		commentPolicy.validateFeed(feedGetResultDto.getPermission(), isFollowing, isFollowed);
 
-		return feedGetResultDto.getUserId();
+		return feedAuthor;
 
 	}
 
@@ -302,7 +307,6 @@ public class CommentService {
 	 */
 	private void validateReply(Comment parentComment, Long feedId) {
 
-		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
 		commentPolicy.validateReply(parentComment, feedId);
 
 	}
@@ -314,8 +318,24 @@ public class CommentService {
 	 */
 	private void validateReplyById(Long parentId, Long feedId) {
 		Comment parentComment = getComment(parentId);
-		// todo: 권한 검증(친한친구/팔로워/전체/비공개)
 		commentPolicy.validateReply(parentComment, feedId);
+	}
+
+	/**
+	 * 작성자와 차단여부 조회
+	 * @param userId
+	 * @param feedAuthor
+	 * @return
+	 */
+	private boolean isBlocked(Long userId, Long feedAuthor){
+		return userClient.checkEitherBlocked(userId, feedAuthor);
+	}
+
+	/**
+	 * 팔로우 여부 조회
+	 */
+	private boolean isFollowing(Long userId, Long userId2){
+		return userClient.isFollowing(userId, userId2);
 	}
 
 	/**

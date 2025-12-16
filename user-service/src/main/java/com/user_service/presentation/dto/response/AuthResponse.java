@@ -25,7 +25,7 @@ public class AuthResponse {
 
 	public static AuthResponse of(User user, String accessToken, String refreshToken) {
 		return AuthResponse.builder()
-			.accessToken("Bearer " + accessToken)
+			.accessToken(accessToken)
 			.refreshToken(refreshToken)
 			.userId(user.getId())
 			.email(user.getEmail())

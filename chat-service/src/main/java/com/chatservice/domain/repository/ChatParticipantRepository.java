@@ -11,9 +11,9 @@ public interface ChatParticipantRepository {
 
   void save(ChatParticipant chatParticipant);
 
-  boolean isLeft(Long chatRoomId, Long userId);
-
   Optional<ChatParticipant> findByChatRoomIdAndUserId(Long chatRoomId, Long userId);
 
   Map<Long, Long> findOtherUserIds(List<Long> chatRoomIds, Long currentUserId);
+
+  int countParticipants(Long chatRoomId);
 }

@@ -1,4 +1,4 @@
-package com.chatservice.infra.config;
+package com.chatservice.infra.stomp;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
