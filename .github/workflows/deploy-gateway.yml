@@ -1,4 +1,4 @@
-name: Deploy Gateway Service
+name: Deploy Gateway
 
 on:
   push:
@@ -36,8 +36,8 @@ jobs:
       - name: Build and Push Docker Image
         working-directory: gateway
         run: |
-          docker build -t ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway-service:latest .
-          docker push ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway-service:latest
+          docker build -t ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway:latest .
+          docker push ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway:latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -47,17 +47,17 @@ jobs:
           key: ${{ secrets.INFRA_EC2_SSH_KEY }}
           port: 22
           script: |
-            sudo docker stop gateway-service || true
-            sudo docker rm gateway-service || true
+            sudo docker stop gateway || true
+            sudo docker rm gateway || true
             
             pkill -f gateway.jar || true
 
-            sudo docker pull ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway-service:latest
+            sudo docker pull ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway:latest
 
-            sudo docker run -d --name gateway-service \
+            sudo docker run -d --name gateway \
               --network host \
               -e "JAVA_TOOL_OPTIONS=-Xms192m -Xmx256m" \
               -e "JWT_SECRET_KEY=${{ secrets.INFRA_JWT_SECRET_KEY }}" \
-              ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway-service:latest
+              ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway:latest
             
             sudo docker image prune -f
