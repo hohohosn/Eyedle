@@ -79,9 +79,9 @@ public class GlobalExceptionHandler {
 	 * 기타 예외
 	 */
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ErrorResponse> handleException(Exception ex, WebRequest request) {
+	public ResponseEntity<ErrorResponse> handleException(Exception ex, WebRequest request) throws Exception {
 		if (request.getDescription(false).contains("/actuator")) {
-			return null;
+			throw ex;
 		}
 
 		ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
