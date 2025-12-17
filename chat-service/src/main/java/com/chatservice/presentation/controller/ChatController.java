@@ -8,6 +8,7 @@ import com.chatservice.presentation.response.CreateChatRoomResDto;
 import com.common.response.CommonResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import static com.common.response.SuccessCode.CREATED;
@@ -23,7 +24,7 @@ public class ChatController {
 
   @PostMapping
   public CommonResponse<CreateChatRoomResDto> createDirectChatRoom(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @RequestBody CreateChatRoomReqDto reqDto
   ) {
     return CommonResponse.of(CREATED, chatService.createDirectChatRoom(userId, reqDto));
@@ -31,7 +32,7 @@ public class ChatController {
 
   @PostMapping("/{chatRoomId}/accept")
   public CommonResponse<Void> acceptChatRoom(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long chatRoomId
   ) {
     chatService.acceptChatRoom(chatRoomId, userId);
@@ -40,7 +41,7 @@ public class ChatController {
 
   @PostMapping("/{chatRoomId}/reject")
   public CommonResponse<Void> rejectChatRoom(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long chatRoomId
   ) {
     chatService.rejectChatRoom(chatRoomId, userId);
@@ -49,7 +50,7 @@ public class ChatController {
 
   @GetMapping
   public CommonResponse<ChatRoomCursorResDto> getChatRoomList(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @RequestParam(value = "pageSize", defaultValue = "10") int pageSize
   ) {
@@ -58,7 +59,7 @@ public class ChatController {
 
   @DeleteMapping("/{chatRoomId}/leave")
   public CommonResponse<Void> leaveChatRoom(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long chatRoomId
   ) {
     chatService.leaveChatRoom(chatRoomId, userId);
@@ -67,7 +68,7 @@ public class ChatController {
 
   @DeleteMapping("/{chatRoomId}/messages/{messageId}")
   public CommonResponse<Void> deleteMessage(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long chatRoomId,
       @PathVariable Long messageId
   ) {
@@ -77,7 +78,7 @@ public class ChatController {
 
   @GetMapping("/{chatRoomId}/messages")
   public CommonResponse<List<ChatMessageResDto>> getChatRoomMessages(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long chatRoomId,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @RequestParam(value = "pageSize", defaultValue = "30") int pageSize
@@ -87,7 +88,7 @@ public class ChatController {
 
   @GetMapping("/{chatRoomId}/messages/more")
   public CommonResponse<List<ChatMessageResDto>> loadMoreChatMessages(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long chatRoomId,
       @RequestParam(value = "cursor", required = false) Long cursor,
       @RequestParam(value = "dayRange", defaultValue = "7") int dayRange,
@@ -98,7 +99,7 @@ public class ChatController {
 
   @GetMapping("/{chatRoomId}/unread")
   public CommonResponse<Long> countUnreadMessages(
-      @RequestHeader("X-User-Id") Long userId,
+      @AuthenticationPrincipal Long userId,
       @PathVariable Long chatRoomId
   ) {
     return CommonResponse.of(OK, chatService.countUnreadMessages(chatRoomId, userId));
