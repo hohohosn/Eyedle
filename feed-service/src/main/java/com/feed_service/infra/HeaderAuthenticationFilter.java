@@ -6,8 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -31,26 +30,31 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
         String uri = request.getRequestURI();
 
-        // internal API 처리
+        // internal API만 처리
         if (uri.startsWith("/internal")) {
-            String internalHeader = request.getHeader(INTERNAL_HEADER);
+            String userIdHeader = request.getHeader("X-User-Id");
 
-            if (!"true".equals(internalHeader)) {
-                log.warn("Internal API 호출 거부 - 헤더 없음");
+            if (!StringUtils.hasText(userIdHeader)) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
 
-            // 내부 서비스 인증 처리
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            "INTERNAL_SERVICE",
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_INTERNAL"))
-                    );
+            try {
+                Long userId = Long.parseLong(userIdHeader);
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Internal 서비스 인증 성공");
+                Authentication auth =
+                        new UsernamePasswordAuthenticationToken(
+                                userId,
+                                null,
+                                List.of()
+                        );
+
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
         }
 
         filterChain.doFilter(request, response);
