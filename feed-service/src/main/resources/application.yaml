@@ -34,7 +34,7 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://3.230.51.206:19090/
+      defaultZone: http://3.230.51.206:19090/eureka/
 
 feign:
   client:
