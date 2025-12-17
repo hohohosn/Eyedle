@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleException(Exception ex, WebRequest request) throws Exception {
-		System.out.println("check point 1111");
+		System.out.println("check point 1111!!!");
 		if (request.getDescription(false).contains("/actuator")) {
 			throw ex;
 		}
