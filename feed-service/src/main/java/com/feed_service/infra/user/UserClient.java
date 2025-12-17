@@ -13,8 +13,7 @@ public interface UserClient {
 
 	@GetMapping("/internal/users/{userId}")
 	ApiResponseDto<UserInfoResponseDto> getUserInfo(
-			@PathVariable Long userId,
-			@RequestHeader("X-Internal-Call") String internalCall
+			@PathVariable("userId") Long userId
 	);
 }
 
