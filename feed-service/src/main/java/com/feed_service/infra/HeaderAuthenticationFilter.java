@@ -30,23 +30,27 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
         String roleHeader = request.getHeader("X-User-Role");
 
         if (StringUtils.hasText(userIdHeader)) {
-            Long userId = Long.valueOf(userIdHeader);
+            try {
+                Long userId = Long.valueOf(userIdHeader);
 
-            List<GrantedAuthority> authorities =
-                    StringUtils.hasText(roleHeader)
-                            ? List.of(new SimpleGrantedAuthority(roleHeader))
-                            : List.of();
+                List<GrantedAuthority> authorities =
+                        StringUtils.hasText(roleHeader)
+                                ? List.of(new SimpleGrantedAuthority(roleHeader))
+                                : List.of();
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userId,
-                            null,
-                            authorities
-                    );
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userId,
+                                null,
+                                authorities
+                        );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            log.debug("Header 인증 성공: userId={}, role={}", userId, roleHeader);
+                log.debug("Header 인증 성공: userId={}, role={}", userId, roleHeader);
+            } catch (NumberFormatException e) {
+                log.warn("Invalid X-User-Id header value: {}", userIdHeader, e);
+            }
         }
 
         filterChain.doFilter(request, response);
