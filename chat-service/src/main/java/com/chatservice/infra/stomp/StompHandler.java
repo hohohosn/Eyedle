@@ -1,45 +1,85 @@
 package com.chatservice.infra.stomp;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
-import java.nio.charset.StandardCharsets;
-import javax.crypto.SecretKey;
+import com.chatservice.infra.security.JwtProvider;
+import com.common.exception.CustomException;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
+import static com.chatservice.common.ChatErrorCode.AUTHORIZATION_HEADER_MISSING;
+import static com.chatservice.common.ChatErrorCode.CANNOT_EXTRACT_USER_ID_FROM_TOKEN;
+import static com.chatservice.common.ChatErrorCode.INVALID_JWT_TOKEN;
+import static com.chatservice.common.ChatErrorCode.INVALID_USER_ID_HEADER;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class StompHandler implements ChannelInterceptor {
 
-  @Value("${jwt.secret.key}")
-  private String key;
+  private final JwtProvider jwtProvider;
 
   @Override
   public Message<?> preSend(Message<?> message, MessageChannel channel) {
-    final StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-    if (StompCommand.CONNECT == accessor.getCommand()) {
-      log.info("connect 요청 시 토큰 유효성 검증");
+    StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-      String bearerToken = accessor.getFirstNativeHeader("Authorization");
+    if (accessor == null) {
+      return message;
+    }
 
-      String token = null;
-      if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-        token = bearerToken.substring(7);
+    // connect 요청일 때만 인증
+    if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+
+      long userId;
+
+      String userIdHeader = accessor.getFirstNativeHeader("X-User-Id");
+
+      if (StringUtils.hasText(userIdHeader)) {    // Gateway 경유
+
+        try {
+          userId = Long.parseLong(userIdHeader);
+          log.info("WebSocket 연결 - Gateway 경유. 사용자 ID: {}", userId);
+
+        } catch (NumberFormatException e) {
+          throw new CustomException(INVALID_USER_ID_HEADER);
+        }
+
+      } else {    // Gateway 미경유
+
+        String authorization = accessor.getFirstNativeHeader("Authorization");
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+          throw new CustomException(AUTHORIZATION_HEADER_MISSING);
+        }
+
+        String token = authorization.substring(7);
+
+        if (!jwtProvider.validateToken(token)) {
+          throw new CustomException(INVALID_JWT_TOKEN);
+
+        }
+
+        userId = jwtProvider.extractUserId(token).orElseThrow(() -> new CustomException(CANNOT_EXTRACT_USER_ID_FROM_TOKEN));
+
+        log.info("WebSocket 연결 - Gateway 미경유, JWT 직접 인증. 사용자 ID: {}", userId);
       }
-      SecretKey secretKey = Keys.hmacShaKeyFor(key.getBytes(StandardCharsets.UTF_8));
 
-      Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
-      log.info("토큰 검증 완료");
+      // 인증 객체 생성
+      Authentication authentication = new UsernamePasswordAuthenticationToken(userId, null, List.of());
+
+      // websocket 세션에 인증 정보 저장
+      accessor.setUser(authentication);
     }
     return message;
   }
-
-
 }

@@ -17,5 +17,6 @@ instance:
   node-id: 13
 
 jwt:
-  secret:
-    key: ${SECRET_KEY}
+  key: ${SECRET_KEY}
+  access-token-expiration: 3600000
+  refresh-token-expiration: 604800000
