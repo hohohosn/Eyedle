@@ -1,6 +1,5 @@
 package com.feed_service.infra;
 
-import io.netty.util.internal.StringUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
