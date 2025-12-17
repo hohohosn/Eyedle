@@ -27,12 +27,15 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/internal/**").permitAll()
+                        .requestMatchers("/internal/**").authenticated()
                         .anyRequest().authenticated()
+                )
+                .addFilterBefore(
+                        headerAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 );
-                http.addFilterBefore(headerAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
+
