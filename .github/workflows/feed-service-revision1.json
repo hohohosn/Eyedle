@@ -47,11 +47,11 @@
         },
         {
           "name": "EUREKA_CLIENT_SERVICEURL_DEFAULTZONE",
-          "value": "http://172.31.38.61:19090/eureka/"
+          "value": "http://3.230.51.206:19090/eureka/"
         },
         {
           "name": "GATEWAY_BASE_URL",
-          "value": "http://172.31.38.61:19091"
+          "value": "http://3.230.51.206:19091"
         }
       ],
 
