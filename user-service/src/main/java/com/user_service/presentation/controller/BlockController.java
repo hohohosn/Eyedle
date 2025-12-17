@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/blocks")
+@RequestMapping("/blocks")
 @RequiredArgsConstructor
 public class BlockController {
 

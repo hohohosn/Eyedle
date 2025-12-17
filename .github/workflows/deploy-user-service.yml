@@ -1,12 +1,10 @@
-name: Deploy Notification Service to EC2
+name: Deploy User Service to EC2
 
 on:
   push:
     branches: [ "main", "develop" ]
     paths:
-      - 'notification-service/**'
-
-  workflow_dispatch:
+      - 'user-service/**'  # user-service 변경 시에만 배포
 
 jobs:
   build-and-deploy:
@@ -24,43 +22,46 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 3. Gradle 실행 권한 부여 (notification 폴더 내부)
+      # 3. Gradle 실행 권한 부여
       - name: Grant execute permission for gradlew
-        working-directory: notification-service
+        working-directory: user-service
         run: chmod +x gradlew
 
       # 4. Spring Boot 빌드 (테스트 제외)
       - name: Build with Gradle
-        working-directory: notification-service
+        working-directory: user-service
         run: ./gradlew clean build -x test
 
-      # 5. Docker Hub 로그인 (공통 Secret 사용)
+      # 5. Docker Hub 로그인
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.NOTI_DOCKER_USERNAME }}
-          password: ${{ secrets.NOTI_DOCKER_PASSWORD }}
+          username: ${{ secrets.USER_DOCKER_USERNAME }}
+          password: ${{ secrets.USER_DOCKER_PASSWORD }}
 
       # 6. Docker 이미지 빌드 & 푸시
       - name: Build and Push Docker Image
-        working-directory: notification-service
+        working-directory: user-service
         run: |
-          docker build -t ${{ secrets.NOTI_DOCKER_USERNAME }}/notification-service:latest .
-          docker push ${{ secrets.NOTI_DOCKER_USERNAME }}/notification-service:latest
+          docker build -t ${{ secrets.USER_DOCKER_USERNAME }}/user-service:latest .
+          docker push ${{ secrets.USER_DOCKER_USERNAME }}/user-service:latest
 
       # 7. EC2에 배포 (SSH 접속)
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.NOTI_EC2_HOST }}
+          host: ${{ secrets.USER_EC2_HOST }}
           username: ubuntu
-          key: ${{ secrets.NOTI_EC2_SSH_KEY }}
+          key: ${{ secrets.USER_EC2_SSH_KEY }}
           port: 22
           script: |
             cd ~/deploy
             
-            sudo docker compose pull notification-service
+            # User Service 이미지 Pull
+            sudo docker compose pull user-service
             
-            sudo docker compose up -d notification-service
+            # User Service만 재시작 (다른 서비스 영향 없음)
+            sudo docker compose up -d user-service
             
+            # 사용하지 않는 이미지 정리
             sudo docker image prune -f
