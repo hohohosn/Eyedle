@@ -39,7 +39,7 @@ public class SecurityConfig {
 			// 권한 설정
 			.authorizeHttpRequests(auth -> auth
 				// 인증 불필요
-				.requestMatchers("/api/auth/**").permitAll()
+				.requestMatchers("/auth/**").permitAll()
 				.requestMatchers("/actuator/**").permitAll()
 				.requestMatchers("/health").permitAll()
 
@@ -47,8 +47,8 @@ public class SecurityConfig {
 				.requestMatchers("/internal/**").permitAll()
 
 				// 관리자 전용
-				.requestMatchers("/api/users/search").hasRole("ADMIN")
-				.requestMatchers("/api/users/{userId}").hasRole("ADMIN")
+				.requestMatchers("/users/search").hasRole("ADMIN")
+				.requestMatchers("/users/{userId}").hasRole("ADMIN")
 
 				// 나머지는 인증 필요
 				.anyRequest().authenticated()

@@ -1,9 +1,13 @@
 package com.user_service.presentation.controller;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.user_service.application.service.UserService;
 import com.user_service.presentation.dto.request.UpdateUserRequest;
 import com.user_service.presentation.dto.response.ApiResponse;
 import com.user_service.presentation.dto.response.UserInfoResponse;
+import com.user_service.presentation.dto.response.UserRecentResponse;
 import com.user_service.presentation.dto.response.UserSearchResponse;
 
 import jakarta.validation.Valid;
@@ -13,13 +17,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -110,5 +115,17 @@ public class UserController {
 		return ResponseEntity.ok(
 			ApiResponse.success("사용자 검색이 완료되었습니다.", response)
 		);
+	}
+
+	/**
+	 * 최근 변경된 사용자 조회 (Elastic search 동기화용)
+	 */
+	@GetMapping("/recent")
+	public ResponseEntity<List<UserRecentResponse>> getRecentUsers(
+		@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since
+	) {
+		List<UserRecentResponse> users = userService.findRecentUsers(since);
+
+		return ResponseEntity.ok(users);
 	}
 }

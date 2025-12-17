@@ -23,7 +23,7 @@ public class StompController {
     Long userId = 1L;
     log.info("Sending message: {}", reqDto.messageContent());
     ChatMessageResDto resDto = chatService.saveChatMessage(chatRoomId, userId, reqDto);
-    messageTemplate.convertAndSend("/topic/chats/" + chatRoomId, resDto);
+    messageTemplate.convertAndSend("/sub/chats/" + chatRoomId, resDto);
   }
 
 }

@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -15,9 +16,10 @@ import java.util.List;
 @Entity
 @Table(name = "p_feed")
 @Getter
-@Where(clause = "is_deleted = false")
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
+@SQLDelete(sql = "UPDATE p_feed SET deleted = true, deleted_at = now() WHERE id = ?")
+@SQLRestriction("deleted = false")
 public class Feed extends BaseTimeEntity {
 
     @Column(nullable = false)
@@ -31,14 +33,14 @@ public class Feed extends BaseTimeEntity {
     private FeedPermission permission;
 
     @Column(nullable = false)
-    private boolean isDeleted;
+    private boolean deleted;
 
     private LocalDateTime deletedAt;
 
-    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FeedMedia> mediaList =  new ArrayList<>();
 
-    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FeedTag> feedTags = new ArrayList<>();
 
     @Builder
@@ -46,6 +48,7 @@ public class Feed extends BaseTimeEntity {
         this.userId = userId;
         this.content = content;
         this.permission = permission;
+        this.deleted = false;
     }
 
     public void updateFeed(String content, FeedPermission permission) {
@@ -54,7 +57,7 @@ public class Feed extends BaseTimeEntity {
     }
 
     public void statusDeleted() {
-        this.isDeleted = true;
+        this.deleted = true;
         this.deletedAt = LocalDateTime.now();
     }
 }
