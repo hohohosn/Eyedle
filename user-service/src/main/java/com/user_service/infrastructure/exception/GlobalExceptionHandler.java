@@ -8,6 +8,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,8 +79,11 @@ public class GlobalExceptionHandler {
 	 * 기타 예외
 	 */
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ErrorResponse> handleException(Exception ex) {
-		log.error("서버 오류 발생: ", ex);
+	public ResponseEntity<ErrorResponse> handleException(Exception ex, WebRequest request) throws Exception {
+		System.out.println("check point 1111!!");
+		if (request.getDescription(false).contains("/actuator")) {
+			throw ex;
+		}
 
 		ErrorResponse response = ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR);
 
