@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/internal/blocks")
+@RequestMapping("/internal/blocks")
 @RequiredArgsConstructor
 public class BlockInternalController {
 
