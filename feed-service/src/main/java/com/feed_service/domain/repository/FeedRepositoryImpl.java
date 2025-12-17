@@ -78,11 +78,7 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
                 .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
                 .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
                 .leftJoin(QFeed.feed.mediaList).fetchJoin()
-                .where(
-                        keywordCondition == null
-                                ? baseCondition
-                                : baseCondition.and(keywordCondition)
-                )
+                .where(baseCondition, keywordCondition)
                 .orderBy(QFeed.feed.updatedAt.desc())
                 .fetch();
     }
