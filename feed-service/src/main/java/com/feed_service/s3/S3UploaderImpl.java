@@ -11,6 +11,7 @@
 //@RequiredArgsConstructor
 //public class S3UploaderImpl implements S3Uploader {
 //
+//    private final S3Client s3Client;
 //    private final S3Properties props;
 //
 //    @Override
@@ -32,7 +33,7 @@
 //            return props.getBaseUrl() + "/" + fileName;
 //
 //        } catch (IOException e) {
-//            throw new RuntimeException("S3 Upload failed", e);
+//            throw new RuntimeException("S3 upload failed", e);
 //        }
 //    }
 //

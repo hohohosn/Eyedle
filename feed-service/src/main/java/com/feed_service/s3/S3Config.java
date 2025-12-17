@@ -14,14 +14,6 @@
 //    public S3Client s3Client(S3Properties props) {
 //        return S3Client.builder()
 //                .region(Region.of(props.getRegion()))
-//                .credentialsProvider(
-//                        StaticCredentialsProvider.create(
-//                                AwsBasicCredentials.create(
-//                                        props.getAccessKey(),
-//                                        props.getSecretKey()
-//                                )
-//                        )
-//                )
 //                .build();
 //    }
 //}
