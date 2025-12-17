@@ -48,8 +48,6 @@ jobs:
             sudo docker stop search-service || true
             sudo docker rm search-service || true
             
-            pkill -f search.jar || true
-
             sudo docker pull ${{ secrets.INFRA_DOCKER_USERNAME }}/search-service:latest
 
             sudo docker run -d --name search-service \

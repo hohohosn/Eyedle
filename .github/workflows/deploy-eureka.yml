@@ -50,8 +50,6 @@ jobs:
             sudo docker stop eureka-server || true
             sudo docker rm eureka-server || true
             
-            pkill -f eureka.jar || true
-
             sudo docker pull ${{ secrets.INFRA_DOCKER_USERNAME }}/eureka-server:latest
 
             sudo docker run -d --name eureka-server \
