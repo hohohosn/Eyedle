@@ -20,6 +20,8 @@ import java.util.List;
 @Component
 public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String INTERNAL_HEADER = "X-Internal-Call";
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -27,31 +29,28 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String userIdHeader = request.getHeader("X-User-Id");
-        String roleHeader = request.getHeader("X-User-Role");
+        String uri = request.getRequestURI();
 
-        if (StringUtils.hasText(userIdHeader)) {
-            try {
-                Long userId = Long.valueOf(userIdHeader);
+        // internal API 처리
+        if (uri.startsWith("/internal")) {
+            String internalHeader = request.getHeader(INTERNAL_HEADER);
 
-                List<GrantedAuthority> authorities =
-                        StringUtils.hasText(roleHeader)
-                                ? List.of(new SimpleGrantedAuthority(roleHeader))
-                                : List.of();
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userId,
-                                null,
-                                authorities
-                        );
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                log.debug("Header 인증 성공: userId={}, role={}", userId, roleHeader);
-            } catch (NumberFormatException e) {
-                log.warn("Invalid X-User-Id header value: {}", userIdHeader, e);
+            if (!"true".equals(internalHeader)) {
+                log.warn("Internal API 호출 거부 - 헤더 없음");
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
             }
+
+            // 내부 서비스 인증 처리
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            "INTERNAL_SERVICE",
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_INTERNAL"))
+                    );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("Internal 서비스 인증 성공");
         }
 
         filterChain.doFilter(request, response);
