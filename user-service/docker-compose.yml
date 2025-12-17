@@ -62,12 +62,12 @@ services:
         condition: service_healthy
     networks:
       - user-network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:19100/actuator/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:19100/actuator/health" ]
+#      interval: 30s
+#      timeout: 10s
+#      retries: 3
+#      start_period: 40s
 
 networks:
   user-network:
