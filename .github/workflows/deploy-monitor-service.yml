@@ -5,6 +5,7 @@ on:
     branches: [ "main", "develop" ]
     paths:
       - 'monitor-service/**'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
