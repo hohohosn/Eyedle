@@ -49,8 +49,6 @@ jobs:
             sudo docker stop monitor-service || true
             sudo docker rm monitor-service || true
             
-            pkill -f monitor.jar || true
-
             sudo docker pull ${{ secrets.INFRA_DOCKER_USERNAME }}/monitor-service:latest
 
             sudo docker run -d --name monitor-service \

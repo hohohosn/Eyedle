@@ -50,8 +50,6 @@ jobs:
             sudo docker stop gateway || true
             sudo docker rm gateway || true
             
-            pkill -f gateway.jar || true
-
             sudo docker pull ${{ secrets.INFRA_DOCKER_USERNAME }}/gateway:latest
 
             sudo docker run -d --name gateway \
