@@ -5,6 +5,7 @@ import com.common.response.SuccessCode;
 import com.feed_service.application.service.FeedBookmarkService;
 import com.feed_service.presentation.response.FeedBookmarkResponseDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,8 +16,7 @@ public class FeedBookmarkController {
     private final FeedBookmarkService feedBookmarkService;
 
     @PostMapping
-    public CommonResponse toggleBookmark(@PathVariable Long feedId) {
-        Long userId = 1L;
+    public CommonResponse toggleBookmark(@PathVariable Long feedId, @AuthenticationPrincipal Long userId) {
         FeedBookmarkResponseDto responseDto = feedBookmarkService.toggleBookmark(feedId, userId);
 
         return CommonResponse.of(SuccessCode.OK, responseDto);

@@ -4,12 +4,14 @@ import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.QFeed;
 import com.feed_service.domain.model.QFeedTag;
 import com.feed_service.domain.model.QTag;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -54,4 +56,31 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
 
         return new PageImpl<>(feeds, pageable, total);
     }
+
+    @Override
+    public List<Feed> findRecentFeeds(LocalDateTime since, String keyword) {
+
+        BooleanExpression baseCondition =
+                QFeed.feed.deleted.isFalse()
+                        .and(QFeed.feed.updatedAt.goe(since));
+
+        BooleanExpression keywordCondition = null;
+
+        if (keyword != null && !keyword.isBlank()) {
+            keywordCondition =
+                    QFeed.feed.content.containsIgnoreCase(keyword)
+                            .or(QTag.tag.name.containsIgnoreCase(keyword));
+        }
+
+        return queryFactory
+                .selectDistinct(QFeed.feed)
+                .from(QFeed.feed)
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
+                .leftJoin(QFeed.feed.mediaList).fetchJoin()
+                .where(baseCondition, keywordCondition)
+                .orderBy(QFeed.feed.updatedAt.desc())
+                .fetch();
+    }
+
 }

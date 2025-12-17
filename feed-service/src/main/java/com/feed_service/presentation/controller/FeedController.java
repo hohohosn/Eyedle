@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,27 +26,28 @@ public class FeedController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public CommonResponse createFeed(
-            @RequestPart("request") FeedCreateRequestDto request,               // JSON part
-            @RequestPart(value = "files", required = false) List<MultipartFile> files
+            @RequestPart("request") FeedCreateRequestDto request,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @AuthenticationPrincipal Long userId
     ){
 
-        Long userId = 1L;
         Long id = feedService.createFeed(request, files, userId);
         return CommonResponse.of(SuccessCode.OK, id);
     }
 
     @GetMapping("/{feedId}")
-    public CommonResponse getFeed(@PathVariable Long feedId){
-        Long userId = 1L;
+    public CommonResponse getFeed(@PathVariable Long feedId, @AuthenticationPrincipal Long userId){
+
         return CommonResponse.of(SuccessCode.OK, feedService.findFeed(feedId, userId));
     }
 
     @GetMapping
     public CommonResponse getFeeds(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
-            Pageable pageable
+            Pageable pageable,
+            @AuthenticationPrincipal Long userId
     ) {
-        Long userId = 1L;
+
         return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable, userId));
     }
 
