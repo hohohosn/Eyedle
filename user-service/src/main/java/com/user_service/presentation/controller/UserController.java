@@ -120,7 +120,7 @@ public class UserController {
 	/**
 	 * 최근 변경된 사용자 조회 (Elastic search 동기화용)
 	 */
-	@GetMapping("/users/recent")
+	@GetMapping("/recent")
 	public ResponseEntity<List<UserRecentResponse>> getRecentUsers(
 		@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since
 	) {
