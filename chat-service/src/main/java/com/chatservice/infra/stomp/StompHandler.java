@@ -14,10 +14,12 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import static com.chatservice.common.ChatErrorCode.AUTHORIZATION_HEADER_MISSING;
 import static com.chatservice.common.ChatErrorCode.CANNOT_EXTRACT_USER_ID_FROM_TOKEN;
 import static com.chatservice.common.ChatErrorCode.INVALID_JWT_TOKEN;
+import static com.chatservice.common.ChatErrorCode.INVALID_USER_ID_HEADER;
 
 @Slf4j
 @Component
@@ -38,27 +40,45 @@ public class StompHandler implements ChannelInterceptor {
     // connect 요청일 때만 인증
     if (StompCommand.CONNECT.equals(accessor.getCommand())) {
 
-      String authorization = accessor.getFirstNativeHeader("Authorization");
+      long userId;
 
-      if (authorization == null || !authorization.startsWith("Bearer ")) {
-        throw new CustomException(AUTHORIZATION_HEADER_MISSING);
+      String userIdHeader = accessor.getFirstNativeHeader("X-User-Id");
+
+      if (StringUtils.hasText(userIdHeader)) {    // Gateway 경유
+
+        try {
+          userId = Long.parseLong(userIdHeader);
+          log.info("WebSocket 연결 - Gateway 경유. 사용자 ID: {}", userId);
+
+        } catch (NumberFormatException e) {
+          throw new CustomException(INVALID_USER_ID_HEADER);
+        }
+
+      } else {    // Gateway 미경유
+
+        String authorization = accessor.getFirstNativeHeader("Authorization");
+
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+          throw new CustomException(AUTHORIZATION_HEADER_MISSING);
+        }
+
+        String token = authorization.substring(7);
+
+        if (!jwtProvider.validateToken(token)) {
+          throw new CustomException(INVALID_JWT_TOKEN);
+
+        }
+
+        userId = jwtProvider.extractUserId(token).orElseThrow(() -> new CustomException(CANNOT_EXTRACT_USER_ID_FROM_TOKEN));
+
+        log.info("WebSocket 연결 - Gateway 미경유, JWT 직접 인증. 사용자 ID: {}", userId);
       }
-
-      String token = authorization.substring(7);
-
-      if (!jwtProvider.validateToken(token)) {
-        throw new CustomException(INVALID_JWT_TOKEN);
-      }
-
-      Long userId = jwtProvider.extractUserId(token).orElseThrow(() -> new CustomException(CANNOT_EXTRACT_USER_ID_FROM_TOKEN));
 
       // 인증 객체 생성
       Authentication authentication = new UsernamePasswordAuthenticationToken(userId, null, List.of());
 
       // websocket 세션에 인증 정보 저장
       accessor.setUser(authentication);
-      log.info("WebSocket 연결 인증 완료. 사용자 ID: {}", userId);
-
     }
     return message;
   }
