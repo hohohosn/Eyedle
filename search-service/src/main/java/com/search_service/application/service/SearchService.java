@@ -1,5 +1,6 @@
 package com.search_service.application.service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,7 +50,7 @@ public class SearchService {
 
 	private LocalDateTime lastSyncTime = LocalDateTime.now().minusMinutes(10);
 
-	//private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+	private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
 	public SearchResponse search(String keyword) {
 		if (keyword == null || keyword.trim().isEmpty()) {
@@ -173,9 +174,41 @@ public class SearchService {
 		log.info("Sync complete. Users: {}, Feeds: {}", userDocs.size(), feedDocs.size());
 	}
 
-	// public SseEmitter subscribe() {
-	//
-	// }
+	public SseEmitter subscribe() {
+		SseEmitter emitter = new SseEmitter(300000L);
+		emitters.add(emitter);
+		log.info("SSE 연결. 접속자수: {}", emitters.size());
+
+		try{
+			emitter.send(SseEmitter.event().name("connect").data("connected!"));
+		}catch (IOException e) {
+			log.error("SSE 연결 초기 데이터 전송 실패", e);
+		}
+
+		emitter.onCompletion(() -> emitters.remove(emitter));
+		emitter.onTimeout(() -> emitters.remove(emitter));
+		emitter.onError((e) -> emitters.remove(emitter));
+
+		return emitter;
+	}
+
+	@Scheduled(fixedRate = 5000)
+	public void broadcastTopKeywords() {
+		if(emitters.isEmpty()) return;
+
+		// 기존 레디스에서 가져오기
+		SearchRankResponse topKeywords = getTopKeywords(10);
+
+		for (SseEmitter emitter : emitters) {
+			try {
+				emitter.send(SseEmitter.event()
+					.name("ranking-update")
+					.data(topKeywords));
+			} catch (IOException e) {
+				emitters.remove(emitter);
+			}
+		}
+	}
 
 	private List<UserDocument> getLiveUsers(String keyword, LocalDateTime since) {
 		try {
