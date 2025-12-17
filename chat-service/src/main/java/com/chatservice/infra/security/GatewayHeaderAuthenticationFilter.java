@@ -1,5 +1,6 @@
 package com.chatservice.infra.security;
 
+import com.common.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import static com.chatservice.common.ChatErrorCode.INVALID_USER_ID_FORMAT;
+import static com.chatservice.common.ChatErrorCode.INVALID_USER_ID_HEADER;
+
 @Component
 public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
 
@@ -24,8 +28,7 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
     String userIdHeader = request.getHeader("X-User-Id");
 
     if (!StringUtils.hasText(userIdHeader)) {
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      return;
+      throw new CustomException(INVALID_USER_ID_HEADER);
     }
 
     long userId;
@@ -33,8 +36,7 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
       userId = Long.parseLong(userIdHeader);
 
     } catch (NumberFormatException e) {
-      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-      return;
+      throw new CustomException(INVALID_USER_ID_FORMAT);
     }
 
     Authentication authentication = new UsernamePasswordAuthenticationToken(userId, null, List.of());

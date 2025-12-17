@@ -34,7 +34,8 @@ public enum ChatErrorCode implements BaseErrorCode {
   AUTHORIZATION_HEADER_MISSING("CHAT9000", "Authorization 헤더가 누락되었습니다.", 401),
   INVALID_JWT_TOKEN("CHAT9001", "유효하지 않은 JWT 토큰입니다.", 401),
   CANNOT_EXTRACT_USER_ID_FROM_TOKEN("CHAT9002", "토큰에서 사용자 ID를 추출할 수 없습니다.", 401),
-  INVALID_USER_ID_HEADER("CHAT9003", "헤더에 X-User-Id가 없습니다.", 400),
+  INVALID_USER_ID_HEADER("CHAT9003", "X-User-Id 헤더가 존재하지 않습니다.", 401),
+  INVALID_USER_ID_FORMAT("CHAT9004", "X-User-Id 헤더가 숫자가 아닙니다.", 401),
   ;
 
   private final String code;
