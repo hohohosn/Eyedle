@@ -60,10 +60,8 @@ public class BlockInternalController {
 		@RequestParam Long userId1,
 		@RequestParam Long userId2
 	) {
-
 		// 양방향 차단 확인 후 반대값 반환 (차단 아니면 true)
-		boolean isBlocked = blockService.isEitherBlocked(userId1, userId2);
-		return !isBlocked;
+		return !blockService.isEitherBlocked(userId1, userId2);
 	}
 
 	/**
