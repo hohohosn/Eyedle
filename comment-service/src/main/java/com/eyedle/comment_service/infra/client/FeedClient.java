@@ -6,8 +6,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.common.response.CommonResponse;
 import com.eyedle.comment_service.infra.client.dto.FeedGetResultDto;
+import com.eyedle.comment_service.infra.config.FeignConfig;
 
-@FeignClient(name = "feed-service")
+@FeignClient(name = "feed-service", configuration = FeignConfig.class)
 public interface FeedClient {
 
 	@GetMapping("/feeds/{feedId}")
