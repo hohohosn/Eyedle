@@ -16,13 +16,13 @@ spring:
         - id: user-service-auth
           uri: lb://user-service
           predicates:
-            - Path=/api/auth/**
+            - Path=/auth/**
 
         # 2. 회원서비스(인증O)
         - id: user-service-secured
           uri: lb://user-service
           predicates:
-            - Path=/api/users/**, /blocks/**, /api/follows
+            - Path=/users/**, /blocks/**, /follows
           filters:
             - JwtAuthenticationFilter
 
