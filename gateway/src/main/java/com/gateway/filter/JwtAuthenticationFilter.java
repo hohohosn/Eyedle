@@ -60,15 +60,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
 				// 사용자 정보 추출
 				String userId = claims.getSubject();
-				String email = claims.get("email", String.class);
 				String role = claims.get("role", String.class);
 
-				log.info("JWT 인증 성공: userId={}, email={}, role={}", userId, email, role);
+				log.info("JWT 인증 성공: userId={}, role={}", userId, role);
 
 				// 요청 헤더에 사용자 정보 추가
 				ServerHttpRequest mutatedRequest = request.mutate()
 					.header("X-User-Id", userId)
-					.header("X-User-Email", email)
 					.header("X-User-Role", role)
 					.build();
 
