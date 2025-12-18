@@ -2,7 +2,6 @@ package com.feed_service.application.service;
 
 import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
-import com.common.response.SuccessCode;
 import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.FeedLike;
 import com.feed_service.domain.repository.FeedLikeRepository;

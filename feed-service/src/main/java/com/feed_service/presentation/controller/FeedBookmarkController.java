@@ -16,7 +16,7 @@ public class FeedBookmarkController {
     private final FeedBookmarkService feedBookmarkService;
 
     @PostMapping
-    public CommonResponse toggleBookmark(@PathVariable Long feedId, @AuthenticationPrincipal Long userId) {
+    public CommonResponse toggleBookmark(@PathVariable Long feedId, @RequestHeader("X-User-Id") Long userId) {
         FeedBookmarkResponseDto responseDto = feedBookmarkService.toggleBookmark(feedId, userId);
 
         return CommonResponse.of(SuccessCode.OK, responseDto);

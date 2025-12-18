@@ -13,20 +13,25 @@ public class FeignConfig {
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
-            ServletRequestAttributes attrs =
+            ServletRequestAttributes attributes =
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
 
-            if (attrs != null) {
-                HttpServletRequest req = attrs.getRequest();
-                String userId = req.getHeader("X-User-Id");
-                String userRole = req.getHeader("X-User-Role");
+            if (attributes == null) return;
 
-                if (userId != null) {
-                    requestTemplate.header("X-User-Id", userId);
-                    if (userRole != null) {
-                        requestTemplate.header("X-User-Role", userRole);
-                    }
-                }
+            HttpServletRequest request = attributes.getRequest();
+
+            String authorizationHeader = request.getHeader("Authorization");
+            String userId = request.getHeader("X-User-Id");
+            String role = request.getHeader("X-User-Role");
+
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                requestTemplate.header("Authorization", authorizationHeader);
+            }
+            if (userId != null) {
+                requestTemplate.header("X-User-Id", userId);
+            }
+            if (role != null) {
+                requestTemplate.header("X-User-Role", role);
             }
         };
     }

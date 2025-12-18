@@ -1,12 +1,7 @@
 package com.chatservice.domain.model;
 
 import com.common.database.BaseTimeEntity;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,8 +23,6 @@ public class ChatRoom extends BaseTimeEntity {
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private ChatRoomStatus chatRoomStatus;
-
-//  private LocalDateTime lastMessageAt;
 
   /**
    * 일대일 채팅방 생성을 위한 정적 팩토리 메서드

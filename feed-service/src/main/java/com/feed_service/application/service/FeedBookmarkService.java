@@ -2,7 +2,6 @@ package com.feed_service.application.service;
 
 import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
-import com.common.response.SuccessCode;
 import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.FeedBookmark;
 import com.feed_service.domain.repository.FeedBookmarkRepository;
@@ -11,8 +10,6 @@ import com.feed_service.presentation.response.FeedBookmarkResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

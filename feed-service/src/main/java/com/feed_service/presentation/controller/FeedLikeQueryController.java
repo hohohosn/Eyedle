@@ -7,6 +7,7 @@ import com.feed_service.presentation.response.FeedSummaryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,7 +21,7 @@ public class FeedLikeQueryController {
     private final FeedLikeQueryService feedLikeQueryService;
 
     @GetMapping
-    public CommonResponse<List<FeedSummaryDto>> getMyLikedFeeds(@AuthenticationPrincipal Long userId) {
+    public CommonResponse<List<FeedSummaryDto>> getMyLikedFeeds(@RequestHeader("X-User-Id") Long userId) {
 
         return CommonResponse.of(SuccessCode.OK, feedLikeQueryService.getUserLikedFeeds(userId));
     }
