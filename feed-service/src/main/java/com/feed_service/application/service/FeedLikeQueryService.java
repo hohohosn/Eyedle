@@ -5,6 +5,7 @@ import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.presentation.response.FeedSummaryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
 
