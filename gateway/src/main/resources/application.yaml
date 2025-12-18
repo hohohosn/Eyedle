@@ -60,11 +60,11 @@ spring:
 
         # 7. Feed Service
         - id: feed-service
-          uri: http://feed-service-790073708.ap-northeast-2.elb.amazonaws.com
+          uri: lb://FEED-SERVICE
           predicates:
             - Path=/feeds/**
-#          filters:
-#            - JwtAuthenticationFilter
+          filters:
+            - JwtAuthenticationFilter
 
         # 8. Search Service
         - id: search-service
