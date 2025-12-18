@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Slf4j
 @Component
@@ -52,6 +53,9 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 				// 검증 및 파싱
 				System.out.println("check point 1");
 				SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+
+				String keyForPrint = Base64.getEncoder().encodeToString(key.getEncoded());
+				log.info("[TOKEN GENERATE] key (Base64)={}", keyForPrint);
 
 				System.out.println("check point 2");
 				Claims claims = Jwts.parserBuilder()
