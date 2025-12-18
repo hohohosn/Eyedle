@@ -30,3 +30,5 @@ eureka:
 
   instance:
     prefer-ip-address: true
+    ip-address: 3.39.22.236
+    instance-id: chat-service:3.39.22.236:19200
