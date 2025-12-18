@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 @Slf4j
 @Component
@@ -46,12 +47,17 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 			}
 
 			// 토큰 추출
-			String token = authorizationHeader.substring(7);
+			String token = authorizationHeader.substring(7).trim();
 
 			try {
 				// 검증 및 파싱
+				System.out.println("check point 1");
 				SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
+				String keyForPrint = Base64.getEncoder().encodeToString(key.getEncoded());
+				log.info("[TOKEN GENERATE] key (Base64)={}", keyForPrint);
+
+				System.out.println("check point 2");
 				Claims claims = Jwts.parserBuilder()
 					.setSigningKey(key)
 					.build()
@@ -59,16 +65,15 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 					.getBody();
 
 				// 사용자 정보 추출
+				System.out.println("check point 3");
 				String userId = claims.getSubject();
-				String email = claims.get("email", String.class);
 				String role = claims.get("role", String.class);
 
-				log.info("JWT 인증 성공: userId={}, email={}, role={}", userId, email, role);
+				log.info("JWT 인증 성공: userId={}, role={}", userId, role);
 
 				// 요청 헤더에 사용자 정보 추가
 				ServerHttpRequest mutatedRequest = request.mutate()
 					.header("X-User-Id", userId)
-					.header("X-User-Email", email)
 					.header("X-User-Role", role)
 					.build();
 
