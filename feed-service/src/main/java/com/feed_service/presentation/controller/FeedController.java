@@ -27,11 +27,11 @@ public class FeedController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public CommonResponse createFeed(
             @RequestPart("request") FeedCreateRequestDto request,
-//            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @RequestHeader("X-User-Id") Long userId
     ){
 
-        Long id = feedService.createFeed(request, null, userId);
+        Long id = feedService.createFeed(request, files, userId);
         return CommonResponse.of(SuccessCode.OK, id);
     }
 
