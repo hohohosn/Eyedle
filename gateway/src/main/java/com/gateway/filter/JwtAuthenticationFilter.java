@@ -50,8 +50,10 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
 			try {
 				// 검증 및 파싱
+				System.out.println("check point 1");
 				SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
+				System.out.println("check point 2");
 				Claims claims = Jwts.parserBuilder()
 					.setSigningKey(key)
 					.build()
@@ -59,6 +61,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 					.getBody();
 
 				// 사용자 정보 추출
+				System.out.println("check point 3");
 				String userId = claims.getSubject();
 				String role = claims.get("role", String.class);
 
