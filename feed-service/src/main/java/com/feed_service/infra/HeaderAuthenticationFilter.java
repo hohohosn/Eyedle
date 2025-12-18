@@ -42,18 +42,17 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
                                 ? List.of(new SimpleGrantedAuthority(roleHeader))
                                 : List.of();
 
-                Authentication auth =
+                Authentication authentication =
                         new UsernamePasswordAuthenticationToken(
                                 userId,
                                 null,
                                 authorities
                         );
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
             } catch (NumberFormatException e) {
-                log.warn("Invalid user ID format in X-User-Id header: {}", userIdHeader);
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                return;
+                log.warn("Invalid X-User-Id header: {}", userIdHeader);
             }
         }
         filterChain.doFilter(request, response);

@@ -39,7 +39,7 @@ public class FeedService {
     private final FeedBookmarkRepository feedBookmarkRepository;
 
     @Transactional
-    public Long createFeed(FeedCreateRequestDto request, List<MultipartFile> files, Long userId) {
+    public Long createFeed(FeedCreateRequestDto request, Long userId) {
 
         Feed feed = Feed.builder()
                 .userId(userId)
@@ -49,13 +49,13 @@ public class FeedService {
 
         feedRepository.save(feed);
 
-        if(request.getMedias() != null){
-            for(FeedMediaUploadRequestDto m : request.getMedias()){
-                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
-                feed.getMediaList().add(media);
-            }
-        }
-        feedMediaService.uploadMedias(feed, files);
+//        if(request.getMedias() != null){
+//            for(FeedMediaUploadRequestDto m : request.getMedias()){
+//                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
+//                feed.getMediaList().add(media);
+//            }
+//        }
+//        feedMediaService.uploadMedias(feed, files);
 
         tagService.applyTags(feed, request.getTags());
 
