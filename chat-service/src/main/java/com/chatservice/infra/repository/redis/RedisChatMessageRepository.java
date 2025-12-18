@@ -54,8 +54,6 @@ public class RedisChatMessageRepository {
           return objectMapper.convertValue(raw, ChatMessageResDto.class);
         })
         .filter(Objects::nonNull)
-        .map(obj -> objectMapper.convertValue(obj, ChatMessageResDto.class))
-        .map(this::convertIfDeleted)
         .toList();
   }
 
@@ -71,13 +69,16 @@ public class RedisChatMessageRepository {
     ChatMessageResDto messageResDto = objectMapper.convertValue(rawMessage, ChatMessageResDto.class);
 
     // 이미 삭제된 메세지면 deletedAt 유지
+    LocalDateTime alreadyDeleted = messageResDto.deletedAt() != null ? messageResDto.deletedAt() : deletedAt;
+
+    // 명시적 dto 생성
     ChatMessageResDto deletedMessage = new ChatMessageResDto(
         messageResDto.messageId(),
         messageResDto.senderId(),
         DELETED,
         null,
         messageResDto.createdAt(),
-        messageResDto.deletedAt() != null ? messageResDto.deletedAt() : deletedAt
+        alreadyDeleted
     );
 
     // TTL 설정 -> 없으면 3일, 있으면 기존 TTL 유지
@@ -98,20 +99,5 @@ public class RedisChatMessageRepository {
     // 메시지 본문 dto
     redisTemplate.opsForValue()
         .set(chatMessageKey(chatMessage.getChatRoomId(), chatMessageResDto.messageId()), chatMessageResDto, Duration.ofDays(3));
-  }
-
-  private ChatMessageResDto convertIfDeleted(ChatMessageResDto resDto) {
-    if (resDto.deletedAt() == null) {
-      return resDto;
-    }
-
-    return new ChatMessageResDto(
-        resDto.messageId(),
-        resDto.senderId(),
-        DELETED,
-        null,
-        resDto.createdAt(),
-        resDto.deletedAt()
-    );
   }
 }
