@@ -14,7 +14,7 @@ public class FeedLikeQueryService {
 
     private final FeedLikeRepository feedLikeRepository;
 
-    public List<FeedSummaryDto> getUserLikedFeeds(Long userId) {
+    public List<FeedSummaryDto> getUserLikedFeeds(@RequestHeader("X-User-Id") Long userId) {
 
         List<FeedLike> likes = feedLikeRepository.findByUserIdOrderByCreatedAtDesc(userId);
 

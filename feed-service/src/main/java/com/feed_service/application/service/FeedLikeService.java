@@ -11,6 +11,7 @@ import com.feed_service.presentation.response.FeedLikeResponseDto;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +21,7 @@ public class FeedLikeService {
     private final FeedRepository feedRepository;
     private final FeedLikeRepository feedLikeRepository;
 
-    public FeedLikeResponseDto toggleLike(Long feedId, Long userId) {
+    public FeedLikeResponseDto toggleLike(Long feedId, @RequestHeader("X-User-Id") Long userId) {
 
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));

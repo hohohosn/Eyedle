@@ -6,6 +6,7 @@ import com.feed_service.application.service.FeedBookmarkQueryService;
 import com.feed_service.presentation.response.FeedSummaryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,8 +20,8 @@ public class FeedBookmarkQueryController {
     private final FeedBookmarkQueryService feedBookmarkQueryService;
 
     @GetMapping
-    public CommonResponse<List<FeedSummaryDto>> getMyBookmarkedFeeds(){
-        Long userId = 1L;
+    public CommonResponse<List<FeedSummaryDto>> getMyBookmarkedFeeds(@RequestHeader("X-User-Id") Long userId){
+
         return CommonResponse.of(SuccessCode.OK, feedBookmarkQueryService.getUserBookmarkedFeeds(userId));
     }
 }

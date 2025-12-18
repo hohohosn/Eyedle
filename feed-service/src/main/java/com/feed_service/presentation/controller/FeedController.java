@@ -28,7 +28,7 @@ public class FeedController {
     public CommonResponse createFeed(
             @RequestPart("request") FeedCreateRequestDto request,
             @RequestPart(value = "files", required = false) List<MultipartFile> files,
-            @AuthenticationPrincipal Long userId
+            @RequestHeader("X-User-Id") Long userId
     ){
 
         Long id = feedService.createFeed(request, files, userId);
@@ -36,7 +36,7 @@ public class FeedController {
     }
 
     @GetMapping("/{feedId}")
-    public CommonResponse getFeed(@PathVariable Long feedId, @AuthenticationPrincipal Long userId){
+    public CommonResponse getFeed(@PathVariable Long feedId, @RequestHeader("X-User-Id") Long userId){
 
         return CommonResponse.of(SuccessCode.OK, feedService.findFeed(feedId, userId));
     }
@@ -45,7 +45,7 @@ public class FeedController {
     public CommonResponse getFeeds(
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable,
-            @AuthenticationPrincipal Long userId
+            @RequestHeader("X-User-Id") Long userId
     ) {
 
         return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable, userId));

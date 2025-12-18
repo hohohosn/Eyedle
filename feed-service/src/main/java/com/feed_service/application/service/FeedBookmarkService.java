@@ -11,6 +11,7 @@ import com.feed_service.presentation.response.FeedBookmarkResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ public class FeedBookmarkService {
     private final FeedRepository feedRepository;
     private final FeedBookmarkRepository feedBookmarkRepository;
 
-    public FeedBookmarkResponseDto toggleBookmark(Long feedId, Long userId) {
+    public FeedBookmarkResponseDto toggleBookmark(Long feedId, @RequestHeader("X-User-Id") Long userId) {
 
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
