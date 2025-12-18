@@ -14,11 +14,28 @@ public record ChatMessageResDto(
 ) {
 
   public static ChatMessageResDto from(ChatMessage message) {
+
+    if (message.getDeletedAt() != null) {
+      return deleted(message);
+    }
+
     return new ChatMessageResDto(
         message.getId(),
         message.getUserId(),
         message.getContentType(),
         message.getMessageContent(),
+        message.getCreatedAt(),
+        message.getDeletedAt()
+    );
+  }
+
+  private static ChatMessageResDto deleted(ChatMessage message) {
+
+    return new ChatMessageResDto(
+        message.getId(),
+        message.getUserId(),
+        ContentType.DELETED,
+        null,
         message.getCreatedAt(),
         message.getDeletedAt()
     );

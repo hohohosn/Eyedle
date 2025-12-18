@@ -6,7 +6,7 @@ on:
       - 'chat-service/**'
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       # 1. 코드 가져오기
@@ -44,24 +44,40 @@ jobs:
           docker build -t ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest .
           docker push ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
 
+      # 7. Deploy (self-hosted runner에서 직접 실행)
+      - name: Deploy Chat Service
+        run: |
+          docker pull ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
+          
+          docker stop chat-service || true
+          docker rm chat-service || true
+          
+          docker run -d \
+            --name chat-service \
+            -p 19200:19200 \
+            --env-file ~/chat-service.env \
+            ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
+
+          docker image prune -f
+
       # 7. EC2 배포 (docker run)
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.CHAT_EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.CHAT_EC2_SSH_KEY }}
-          port: 22
-          script: |
-            docker pull ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
-            
-            docker stop chat-service || true
-            docker rm chat-service || true
-            
-            docker run -d \
-              --name chat-service \
-              -p 19200:19200 \
-              --env-file ~/chat-service.env \
-              ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
-            
-            docker image prune -f
+#      - name: Deploy to EC2
+#        uses: appleboy/ssh-action@master
+#        with:
+#          host: ${{ secrets.CHAT_EC2_HOST }}
+#          username: ubuntu
+#          key: ${{ secrets.CHAT_EC2_SSH_KEY }}
+#          port: 22
+#          script: |
+#            docker pull ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
+#
+#            docker stop chat-service || true
+#            docker rm chat-service || true
+#
+#            docker run -d \
+#              --name chat-service \
+#              -p 19200:19200 \
+#              --env-file ~/chat-service.env \
+#              ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
+#
+#            docker image prune -f
