@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import static com.chatservice.domain.model.ContentType.DELETED;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -72,8 +74,8 @@ public class RedisChatMessageRepository {
     ChatMessageResDto deletedMessage = new ChatMessageResDto(
         messageResDto.messageId(),
         messageResDto.senderId(),
+        DELETED,
         null,
-        "삭제된 메시지입니다.",
         messageResDto.createdAt(),
         messageResDto.deletedAt() != null ? messageResDto.deletedAt() : deletedAt
     );
@@ -106,8 +108,8 @@ public class RedisChatMessageRepository {
     return new ChatMessageResDto(
         resDto.messageId(),
         resDto.senderId(),
+        DELETED,
         null,
-        "삭제된 메시지입니다.",
         resDto.createdAt(),
         resDto.deletedAt()
     );
