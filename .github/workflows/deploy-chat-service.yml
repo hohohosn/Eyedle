@@ -58,8 +58,6 @@ jobs:
             --env-file ~/chat-service.env \
             ${{ secrets.CHAT_DOCKER_USERNAME }}/chat-service:latest
 
-          docker image prune -f
-
       # 7. EC2 배포 (docker run)
 #      - name: Deploy to EC2
 #        uses: appleboy/ssh-action@master
