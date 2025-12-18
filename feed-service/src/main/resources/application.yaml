@@ -29,12 +29,12 @@ logging:
   level:
     org.hibernate.SQL: debug
 
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:19090/eureka/
+#eureka:
+#  client:
+#    register-with-eureka: true
+#    fetch-registry: true
+#    service-url:
+#      defaultZone: http://localhost:19090/eureka/
 
 feign:
   client:
