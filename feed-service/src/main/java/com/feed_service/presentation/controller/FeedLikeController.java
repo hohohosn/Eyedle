@@ -19,7 +19,7 @@ public class FeedLikeController {
     private final FeedLikeService feedLikeService;
 
     @PostMapping
-    public CommonResponse toggleLike(@PathVariable Long feedId, @AuthenticationPrincipal Long userId){
+    public CommonResponse toggleLike(@PathVariable Long feedId, @RequestHeader("X-User-Id") Long userId){
 
         FeedLikeResponseDto responseDto = feedLikeService.toggleLike(feedId, userId);
 
