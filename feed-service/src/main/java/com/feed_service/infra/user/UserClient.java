@@ -6,11 +6,14 @@ import com.feed_service.infra.user.dto.UserInfoResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "user-service", path = "/users")
+@FeignClient(name = "user-service")
 public interface UserClient {
 
-	@GetMapping("/{userId}")
-	ApiResponseDto<UserInfoResponseDto> getUserInfo(@PathVariable Long userId);
+	@GetMapping("/internal/users/{userId}")
+	ApiResponseDto<UserInfoResponseDto> getUserInfo(
+			@PathVariable("userId") Long userId
+	);
 }
 
