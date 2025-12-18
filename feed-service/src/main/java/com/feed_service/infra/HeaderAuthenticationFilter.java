@@ -24,6 +24,12 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
     private static final String HEADER_USER_ROLE = "X-User-Role";
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/actuator");
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
@@ -42,19 +48,21 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
                                 ? List.of(new SimpleGrantedAuthority(roleHeader))
                                 : List.of();
 
-                Authentication authentication =
+                Authentication auth =
                         new UsernamePasswordAuthenticationToken(
                                 userId,
                                 null,
                                 authorities
                         );
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
+                SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (NumberFormatException e) {
-                log.warn("Invalid X-User-Id header: {}", userIdHeader);
+                log.warn("Invalid user ID format in X-User-Id header: {}", userIdHeader);
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }
