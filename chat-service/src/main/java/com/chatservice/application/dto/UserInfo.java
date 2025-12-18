@@ -5,4 +5,10 @@ public record UserInfo(
     String receiverUserName
 ) {
 
+  public static UserInfo of(UserInfoResDto userInfoResDto) {
+    return new UserInfo(
+        userInfoResDto.id(),
+        userInfoResDto.username()
+    );
+  }
 }
