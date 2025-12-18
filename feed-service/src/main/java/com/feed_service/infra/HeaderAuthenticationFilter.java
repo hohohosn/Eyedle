@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -19,7 +20,8 @@ import java.util.List;
 @Component
 public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String INTERNAL_HEADER = "X-Internal-Call";
+    private static final String HEADER_USER_ID = "X-User-Id";
+    private static final String HEADER_USER_ROLE = "X-User-Role";
 
     @Override
     protected void doFilterInternal(
@@ -28,35 +30,32 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String uri = request.getRequestURI();
+        String userIdHeader = request.getHeader(HEADER_USER_ID);
+        String roleHeader = request.getHeader(HEADER_USER_ROLE);
 
-        // internal API만 처리
-        if (uri.startsWith("/internal")) {
-            String userIdHeader = request.getHeader("X-User-Id");
-
-            if (!StringUtils.hasText(userIdHeader)) {
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                return;
-            }
-
+        if (StringUtils.hasText(userIdHeader)) {
             try {
                 Long userId = Long.parseLong(userIdHeader);
+
+                List<SimpleGrantedAuthority> authorities =
+                        StringUtils.hasText(roleHeader)
+                                ? List.of(new SimpleGrantedAuthority(roleHeader))
+                                : List.of();
 
                 Authentication auth =
                         new UsernamePasswordAuthenticationToken(
                                 userId,
                                 null,
-                                List.of()
+                                authorities
                         );
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
-
             } catch (NumberFormatException e) {
+                log.warn("Invalid user ID format in X-User-Id header: {}", userIdHeader);
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }

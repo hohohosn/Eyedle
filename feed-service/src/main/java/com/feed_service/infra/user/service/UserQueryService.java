@@ -15,12 +15,12 @@ public class UserQueryService {
     private final UserClient userClient;
 
     public UserInfoResponseDto loadUser(Long userId) {
-        ApiResponseDto<UserInfoResponseDto> responseDto = userClient.getUserInfo(userId);
+        UserInfoResponseDto userInfo = userClient.getUserInfo(userId);
 
-        if(!responseDto.isSuccess() || responseDto.getData() == null){
+        if (userInfo == null) {
             throw new CustomException(ErrorCode.NOT_FOUND);
         }
 
-        return responseDto.getData();
+        return userInfo;
     }
 }

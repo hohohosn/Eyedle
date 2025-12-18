@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 public interface UserClient {
 
 	@GetMapping("/internal/users/{userId}")
-	ApiResponseDto<UserInfoResponseDto> getUserInfo(
-			@PathVariable("userId") Long userId
+	UserInfoResponseDto getUserInfo(
+			@PathVariable Long userId
 	);
 }
 
