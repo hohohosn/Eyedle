@@ -12,7 +12,7 @@ public class FeedUpdateRequestDto {
 
     private FeedPermission permission;
 
-    private List<FeedMediaUploadRequestDto> medias;
+//    private List<FeedMediaUploadRequestDto> medias;
 
     private List<String> tags;
 
