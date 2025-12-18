@@ -5,7 +5,6 @@ import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.presentation.response.FeedSummaryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ public class FeedLikeQueryService {
 
     private final FeedLikeRepository feedLikeRepository;
 
-    public List<FeedSummaryDto> getUserLikedFeeds(@RequestHeader("X-User-Id") Long userId) {
+    public List<FeedSummaryDto> getUserLikedFeeds(Long userId) {
 
         List<FeedLike> likes = feedLikeRepository.findByUserIdOrderByCreatedAtDesc(userId);
 

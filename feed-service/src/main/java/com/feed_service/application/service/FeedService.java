@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashSet;
@@ -40,7 +39,7 @@ public class FeedService {
     private final FeedBookmarkRepository feedBookmarkRepository;
 
     @Transactional
-    public Long createFeed(FeedCreateRequestDto request, List<MultipartFile> files, @RequestHeader("X-User-Id") Long userId) {
+    public Long createFeed(FeedCreateRequestDto request, List<MultipartFile> files, Long userId) {
 
         Feed feed = Feed.builder()
                 .userId(userId)
@@ -63,7 +62,7 @@ public class FeedService {
         return feed.getId();
     }
 
-    public FeedResponseDto findFeed(Long feedId, @RequestHeader("X-User-Id") Long userId) {
+    public FeedResponseDto findFeed(Long feedId, Long userId) {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
@@ -75,7 +74,7 @@ public class FeedService {
         return FeedResponseDto.of(feed, userInfo, liked, bookmarked);
     }
 
-    public Page<FeedResponseDto> findAllFeeds(Pageable pageable, @RequestHeader("X-User-Id") Long userId) {
+    public Page<FeedResponseDto> findAllFeeds(Pageable pageable, Long userId) {
 
         Page<Feed> feeds = feedRepository.findFeeds(pageable);
 
