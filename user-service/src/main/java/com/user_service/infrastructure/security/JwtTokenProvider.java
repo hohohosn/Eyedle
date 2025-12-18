@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Date;
 
 @Slf4j
@@ -39,6 +40,9 @@ public class JwtTokenProvider {
 	 * Access Token 생성
 	 */
 	public String generateAccessToken(Long userId, String role) {
+		String keyForPrint = Base64.getEncoder().encodeToString(secretKey.getEncoded());
+		log.info("[TOKEN GENERATE] key (Base64)={}", keyForPrint);
+
 		Date now = new Date();
 		Date expiryDate = new Date(now.getTime() + accessTokenExpiration);
 
