@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 			}
 
 			// 토큰 추출
-			String token = authorizationHeader.substring(7);
+			String token = authorizationHeader.substring(7).trim();
 
 			try {
 				// 검증 및 파싱
