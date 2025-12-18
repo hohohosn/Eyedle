@@ -18,7 +18,7 @@ public class FeedCreateRequestDto {
     @NotBlank
     private String content;
 
-//    private List<FeedMediaUploadRequestDto> medias;
+    private List<FeedMediaUploadRequestDto> medias;
 
     private List<String> tags;
 

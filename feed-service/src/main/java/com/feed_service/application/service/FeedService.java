@@ -49,13 +49,13 @@ public class FeedService {
 
         feedRepository.save(feed);
 
-//        if(request.getMedias() != null){
-//            for(FeedMediaUploadRequestDto m : request.getMedias()){
-//                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
-//                feed.getMediaList().add(media);
-//            }
-//        }
-//        feedMediaService.uploadMedias(feed, files);
+        if(request.getMedias() != null){
+            for(FeedMediaUploadRequestDto m : request.getMedias()){
+                FeedMedia media = new FeedMedia(feed, m.getMediaUrl(), m.getMediaType());
+                feed.getMediaList().add(media);
+            }
+        }
+        feedMediaService.uploadMedias(feed, files);
 
         tagService.applyTags(feed, request.getTags());
 
