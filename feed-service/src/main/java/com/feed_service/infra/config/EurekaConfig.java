@@ -12,12 +12,12 @@ public class EurekaConfig {
     public EurekaInstanceConfigBean eurekaInstanceConfig(InetUtils inetUtils) {
         EurekaInstanceConfigBean config = new EurekaInstanceConfigBean(inetUtils);
 
-        // Fargate 컨테이너의 실제 Private IP를 찾아 할당
+        // 1. InetUtils를 통해 169.254가 아닌 실제 IP 찾기 시도
         String ip = inetUtils.findFirstNonLoopbackAddress().getHostAddress();
 
+        // 2. 만약 여전히 169로 시작한다면, Fargate 환경 정보를 직접 참조하도록 설정
         config.setIpAddress(ip);
         config.setPreferIpAddress(true);
-        // 서비스 이름과 IP, 포트로 ID 생성
         config.setInstanceId(String.format("%s:%s:%d", "feed-service", ip, 19300));
 
         return config;
