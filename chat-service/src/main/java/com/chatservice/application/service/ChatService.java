@@ -2,6 +2,7 @@ package com.chatservice.application.service;
 
 import com.chatservice.application.dto.ChatRoomInfo;
 import com.chatservice.application.dto.UserInfo;
+import com.chatservice.application.dto.UserInfoResDto;
 import com.chatservice.domain.model.ChatMessage;
 import com.chatservice.domain.model.ChatParticipant;
 import com.chatservice.domain.model.ChatRoom;
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -136,7 +138,11 @@ public class ChatService {
 
     // 채팅 상대 정보 조회
     List<Long> otherUserIds = new ArrayList<>(chatRoomToOtherUserId.values());
-    Map<Long, UserInfo> userInfoMap = userClient.getUserInfos(otherUserIds);
+    Map<Long, UserInfoResDto> userInfoResMap = userClient.getUserInfos(otherUserIds);
+
+    // UserInfoResDto -> UserInfo로 변환
+    Map<Long, UserInfo> userInfoMap = userInfoResMap.entrySet().stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, entry -> UserInfo.of(entry.getValue())));
 
     // 마지막 메시지 조회
     Map<Long, ChatMessage> lastMessageMap = chatMessageRepository.findLastMessageByChatRoomIds(chatRoomIds);

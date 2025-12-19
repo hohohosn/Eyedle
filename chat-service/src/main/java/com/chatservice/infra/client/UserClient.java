@@ -1,6 +1,6 @@
 package com.chatservice.infra.client;
 
-import com.chatservice.application.dto.UserInfo;
+import com.chatservice.application.dto.UserInfoResDto;
 import java.util.List;
 import java.util.Map;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface UserClient {
 
   @GetMapping("/internal/users/{userId}")
-  UserInfo getUserInfo(@PathVariable Long userId);
+  UserInfoResDto getUserInfo(@PathVariable Long userId);
 
   @PostMapping("/internal/users")
-  Map<Long, UserInfo> getUserInfos(@RequestBody List<Long> userIds);
+  Map<Long, UserInfoResDto> getUserInfos(@RequestBody List<Long> userIds);
 }
