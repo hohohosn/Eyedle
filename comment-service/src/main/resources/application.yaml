@@ -16,8 +16,8 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST}
-      port: ${SPRING_DATA_REDIS_PORT}
+      host: master.comment-redis.yfsdfu.apn2.cache.amazonaws.com
+      port: 6379
       ssl:
         enabled: true
   kafka:
