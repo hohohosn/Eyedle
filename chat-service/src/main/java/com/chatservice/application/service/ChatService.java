@@ -225,7 +225,7 @@ public class ChatService {
     // redis에는 최근 3일치만 캐싱
     long threeDaysAgo = now - ofDays(3).toMillis();
 
-    long targetCursor = (cursor != null) ? cursor : MAX_VALUE;
+    long targetCursor = (cursor != null) ? cursor : now;
 
     // redis에서 가져오기
     List<ChatMessageResDto> redisMessages = redisChatMessageRepository.findRecentMessage(chatRoomId, targetCursor, pageSize);
@@ -234,8 +234,13 @@ public class ChatService {
     // redis에 캐싱되어있던 메시지가 적을 경우 DB조회(3일 이전의 채팅은 redis에 있으므로 그 이후의 채팅 메시지 조회)
     int remaining = pageSize - redisMessages.size();
     if (remaining > 0) {
-      LocalDateTime from = Instant.ofEpochMilli(threeDaysAgo).atZone(ZoneOffset.UTC).toLocalDateTime();
-      LocalDateTime to = Instant.ofEpochMilli(targetCursor).atZone(ZoneOffset.UTC).toLocalDateTime();
+
+      long dbToTimeStamp = redisMessages.isEmpty() ?
+          targetCursor : redisMessages.get(redisMessages.size() - 1).createdAt().toInstant(ZoneOffset.UTC).toEpochMilli();
+
+      // from(시작점)은 제한 없이 과거부터 조회
+      LocalDateTime from = LocalDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC);
+      LocalDateTime to = LocalDateTime.ofInstant(Instant.ofEpochMilli(dbToTimeStamp), ZoneOffset.UTC);
 
       List<ChatMessage> dbMessages = chatMessageRepository.findChatMessagesBetween(chatRoomId, from, to, remaining);
       List<ChatMessageResDto> dbMessageDtos = dbMessages.stream().map(ChatMessageResDto::from).toList();

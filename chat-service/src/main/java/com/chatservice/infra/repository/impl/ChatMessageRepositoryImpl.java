@@ -75,7 +75,7 @@ public class ChatMessageRepositoryImpl implements ChatMessageRepository {
 
     return jpaQueryFactory
         .selectFrom(chatMessage)
-        .where(chatMessage.chatRoomId.eq(chatRoomId).and(chatMessage.createdAt.between(from, to)))
+        .where(chatMessage.chatRoomId.eq(chatRoomId), chatMessage.createdAt.goe(from), chatMessage.createdAt.lt(to))
         .orderBy(chatMessage.createdAt.desc())
         .limit(pageSize)
         .fetch();
