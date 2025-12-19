@@ -9,5 +9,5 @@ public interface FollowClient {
 
   // 한쪽이라도 팔로우 되어있는 경우 true, 양쪽 다 팔로우 아닐 때만 false
   @GetMapping("/internal/follows/is-following")
-  boolean isFollowing(@RequestParam("userId1") Long userId1, @RequestParam("userId2") Long userId2);
+  boolean isFollowing(@RequestParam("fromUserId") Long fromUserId, @RequestParam("toUserId") Long toUserId);
 }

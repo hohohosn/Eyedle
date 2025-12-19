@@ -46,7 +46,7 @@ spring:
         - id: chat-service
           uri: lb://CHAT-SERVICE
           predicates:
-            - Path=/chats/**
+            - Path=/chats/**, /chat/**
           filters:
             - JwtAuthenticationFilter
 
