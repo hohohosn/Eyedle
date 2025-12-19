@@ -22,7 +22,7 @@ spring:
         - id: user-service-secured
           uri: lb://user-service
           predicates:
-            - Path=/users/**, /blocks/**, /follows
+            - Path=/users/**, /blocks/**, /follows/**
           filters:
             - JwtAuthenticationFilter
 
