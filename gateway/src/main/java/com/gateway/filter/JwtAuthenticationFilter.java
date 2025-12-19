@@ -51,7 +51,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
 			try {
 				// 검증 및 파싱
-				System.out.println("check point 1");
+				System.out.println("check point 111");
 				SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
 
 				String keyForPrint = Base64.getEncoder().encodeToString(key.getEncoded());
