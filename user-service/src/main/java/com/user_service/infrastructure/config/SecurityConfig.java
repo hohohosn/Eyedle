@@ -42,6 +42,7 @@ public class SecurityConfig {
 				.requestMatchers("/auth/**").permitAll()
 				.requestMatchers("/actuator/**").permitAll()
 				.requestMatchers("/health").permitAll()
+				.requestMatchers("/chat", "/chat/**").permitAll()  // websocket 요청을 허용
 
 				// Internal API
 				.requestMatchers("/internal/**").permitAll()
