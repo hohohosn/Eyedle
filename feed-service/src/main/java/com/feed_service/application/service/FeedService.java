@@ -3,14 +3,17 @@ package com.feed_service.application.service;
 import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
 import com.feed_service.domain.model.Feed;
+import com.feed_service.domain.model.FeedTimeline;
 import com.feed_service.domain.repository.FeedBookmarkRepository;
 import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.domain.repository.FeedRepository;
+import com.feed_service.domain.repository.FeedTimelineRepository;
 import com.feed_service.infra.user.dto.UserInfoResponseDto;
 import com.feed_service.infra.user.service.UserQueryService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.presentation.response.FeedResponseDto;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +23,9 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +37,9 @@ public class FeedService {
     private final UserQueryService userQueryService;
     private final FeedLikeRepository feedLikeRepository;
     private final FeedBookmarkRepository feedBookmarkRepository;
+    private final FeedTimeline feedTimeline;
+    private final FollowQueryService followQueryService;
+    private final FeedTimelineRepository feedTimelineRepository;
 
     @Transactional
     public Long createFeed(FeedCreateRequestDto request, Long userId) {
@@ -44,6 +52,8 @@ public class FeedService {
 
         feedRepository.save(feed);
         tagService.applyTags(feed, request.getTags());
+
+        pushToTimeline(feed);
 
         return feed.getId();
     }
@@ -64,11 +74,21 @@ public class FeedService {
 
     public Page<FeedResponseDto> findAllFeeds(Pageable pageable, Long userId) {
 
-        Page<Feed> feeds = feedRepository.findFeeds(pageable);
+        Page<FeedTimeline> timelines = feedTimelineRepository.
+                findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
-        List<Long> feedIds = feeds.getContent().stream()
-                .map(Feed::getId)
+        List<Long> feedIds = timelines.getContent().stream()
+                .map(FeedTimeline::getFeedId)
                 .toList();
+
+        if(feedIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        List<Feed> feeds = feedRepository.findByIdsWithRelations((feedIds));
+
+        Map<Long, Feed> feedMap = feeds.stream()
+                .collect(Collectors.toMap(Feed::getId, feed -> feed));
 
         Set<Long> likedFeedIds = new HashSet<>(
                 feedLikeRepository.findFeedIdsByUserIdAndFeedIdIn(userId, feedIds)
@@ -78,17 +98,22 @@ public class FeedService {
                 feedBookmarkRepository.findFeedIdsByUserIdAndFeedIdIn(userId, feedIds)
         );
 
-        return feeds.map(feed -> {
-            UserInfoResponseDto userInfo =
-                    userQueryService.loadUser(feed.getUserId());
+        List<FeedResponseDto> content = timelines.getContent().stream()
+                .map(tl -> {
+                    Feed feed = feedMap.get(tl.getFeedId());
+                    UserInfoResponseDto userInfo =
+                            userQueryService.loadUser(feed.getUserId());
 
-            return FeedResponseDto.of(
-                    feed,
-                    userInfo,
-                    likedFeedIds.contains(feed.getId()),
-                    bookmarkedFeedIds.contains(feed.getId())
-            );
-        });
+                    return FeedResponseDto.of(
+                            feed,
+                            userInfo,
+                            likedFeedIds.contains(feed.getId()),
+                            bookmarkedFeedIds.contains(feed.getId())
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(content, pageable, timelines.getTotalElements());
     }
 
     @Transactional
@@ -131,5 +156,16 @@ public class FeedService {
         if (!feed.getUserId().equals(userId)) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
+    }
+
+    private void pushToTimeline(Feed feed) {
+        //팔로워 조회
+        List<Long> followerIds = followQueryService.getFollowerIds(feed.getUserId());
+        //각 팔로워 타임라인에 insert
+        List<FeedTimeline> timelines = followerIds.stream()
+                .map(followerId -> new FeedTimeline(followerId, feed.getId))
+                .toList();
+
+        feedTimelineRepository.saveAll(timelines);
     }
 }
