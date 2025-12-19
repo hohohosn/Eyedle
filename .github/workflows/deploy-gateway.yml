@@ -2,7 +2,7 @@ name: Deploy Gateway
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "develop", "feat/#4-createFeed" ]
     paths:
       - 'gateway/**'
   workflow_dispatch:
