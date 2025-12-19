@@ -18,6 +18,8 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST}
       port: ${SPRING_DATA_REDIS_PORT}
+      ssl:
+        enabled: true
   kafka:
     bootstrap-servers: localhost:9092
     producer:
