@@ -24,6 +24,9 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+  cloud:
+    inetutils:
+      preferred-networks: 172.31
 
 logging:
   level:

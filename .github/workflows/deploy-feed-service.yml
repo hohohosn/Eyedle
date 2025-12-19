@@ -35,8 +35,6 @@ env:
   ECR_REPOSITORY: feed-service
   ECS_SERVICE: feed-service-service-xhn3umq7
   ECS_CLUSTER: feed-service
-  ECS_TASK_DEFINITION: .github/workflows/feed-service-revision1.json
-  CONTAINER_NAME: feed-service
 
 permissions:
   contents: read
@@ -101,18 +99,8 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      # 8️ ECS Task Definition에 새 이미지 반영
-      - name: Render ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
-
-      # 9️ ECS 서비스 배포
+      # 8 ECS 서비스 배포
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
