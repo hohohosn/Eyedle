@@ -34,16 +34,16 @@ logging:
 
 eureka:
   client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://3.230.51.206:19090/eureka/
-  instance:
-    # Fargate에서 추출한 IP를 사용하도록 설정
-    prefer-ip-address: false
-    # 유레카 대시보드에 표시될 고유 ID 형식 지정
-    instance-id: feed-service
-    hostname: ${FEED_SERVICE_ALB_DNS}
+    register-with-eureka: false
+    fetch-registry: false
+#    service-url:
+#      defaultZone: http://3.230.51.206:19090/eureka/
+#  instance:
+#    # Fargate에서 추출한 IP를 사용하도록 설정
+#    prefer-ip-address: false
+#    # 유레카 대시보드에 표시될 고유 ID 형식 지정
+#    instance-id: feed-service
+#    hostname: ${FEED_SERVICE_ALB_DNS}
 
 feign:
   client:
