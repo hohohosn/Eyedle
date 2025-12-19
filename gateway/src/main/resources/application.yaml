@@ -42,13 +42,19 @@ spring:
           filters:
             - JwtAuthenticationFilter
 
-        # 5. Chat Service
+        # 5 - 1. Chat Service(HTTP)
         - id: chat-service
           uri: lb://CHAT-SERVICE
           predicates:
-            - Path=/chats/**, /chat/**
+            - Path=/chats/**
           filters:
             - JwtAuthenticationFilter
+
+        # 5 - 2. Chat Service(WS)
+        - id: chat-service-ws
+          uri: lb://CHAT-SERVICE
+          predicates:
+            - Path=/chat/**, /chat
 
         # 6. Monitor Service
         - id: monitor-service
