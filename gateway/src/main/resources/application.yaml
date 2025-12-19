@@ -60,7 +60,7 @@ spring:
 
         # 7. Feed Service
         - id: feed-service
-          uri: http://52.78.66.96:80
+          uri: http://feed-service-790073708.ap-northeast-2.elb.amazonaws.com
           predicates:
             - Path=/feeds/**
 #          filters:
