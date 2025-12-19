@@ -63,8 +63,8 @@ spring:
           uri: lb://FEED-SERVICE
           predicates:
             - Path=/feeds/**
-          filters:
-            - JwtAuthenticationFilter
+#          filters:
+#            - JwtAuthenticationFilter
 
         # 8. Search Service
         - id: search-service
