@@ -8,7 +8,7 @@ import com.common.response.CommonResponse;
 import com.eyedle.comment_service.infra.client.dto.FeedGetResultDto;
 import com.eyedle.comment_service.infra.config.FeignConfig;
 
-@FeignClient(name = "feed-service", configuration = FeignConfig.class)
+@FeignClient(name = "feed-service", url = "http://feed-service-790073708.ap-northeast-2.elb.amazonaws.com", configuration = FeignConfig.class)
 public interface FeedClient {
 
 	@GetMapping("/feeds/{feedId}")
