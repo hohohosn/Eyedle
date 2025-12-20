@@ -6,6 +6,7 @@ import com.feed_service.application.service.FeedService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.presentation.response.FeedResponseDto;
+import com.feed_service.presentation.response.TimelineResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.time.LocalDateTime;
 
 
 @RestController
@@ -48,6 +49,17 @@ public class FeedController {
             @RequestHeader("X-User-Id") Long userId
     ) {
         return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable, userId));
+    }
+
+    @GetMapping("/timeline")
+    public CommonResponse<TimelineResponseDto> getTimeline(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(required = false) LocalDateTime cursorCreatedAt,
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        return CommonResponse.of(SuccessCode.OK, feedService.getTimeline(userId, cursorCreatedAt, cursorId, size));
     }
 
     @PatchMapping("/{feedId}")
