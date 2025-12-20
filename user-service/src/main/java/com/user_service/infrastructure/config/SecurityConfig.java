@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -49,7 +50,9 @@ public class SecurityConfig {
 
 				// 관리자 전용
 				.requestMatchers("/users/search").hasRole("ADMIN")
-				.requestMatchers("/users/{userId}").hasRole("ADMIN")
+
+				//인증 필요
+				.requestMatchers(HttpMethod.GET, "/users/{userId}").authenticated()
 
 				// 나머지는 인증 필요
 				.anyRequest().authenticated()
