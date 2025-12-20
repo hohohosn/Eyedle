@@ -8,11 +8,14 @@ import com.feed_service.domain.repository.FeedBookmarkRepository;
 import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.domain.repository.FeedRepository;
 import com.feed_service.domain.repository.FeedTimelineRepository;
+import com.feed_service.infra.kafka.producer.FeedEventProducer;
 import com.feed_service.infra.user.dto.UserInfoResponseDto;
 import com.feed_service.infra.user.service.UserQueryService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
 import com.feed_service.presentation.request.FeedUpdateRequestDto;
+import com.feed_service.infra.kafka.event.FeedCreatedEvent;
 import com.feed_service.presentation.response.FeedResponseDto;
+import com.feed_service.presentation.response.TimelineResponseDto;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 
@@ -37,9 +41,9 @@ public class FeedService {
     private final UserQueryService userQueryService;
     private final FeedLikeRepository feedLikeRepository;
     private final FeedBookmarkRepository feedBookmarkRepository;
-    private final FeedTimeline feedTimeline;
     private final FollowQueryService followQueryService;
     private final FeedTimelineRepository feedTimelineRepository;
+    private final FeedEventProducer feedEventProducer;
 
     @Transactional
     public Long createFeed(FeedCreateRequestDto request, Long userId) {
@@ -53,7 +57,13 @@ public class FeedService {
         feedRepository.save(feed);
         tagService.applyTags(feed, request.getTags());
 
-        pushToTimeline(feed);
+        feedEventProducer.publishFeedEvent(new FeedCreatedEvent(feed
+                .getId(),
+                userId,
+                feed.getCreatedAt()
+        ));
+
+
 
         return feed.getId();
     }
@@ -88,8 +98,17 @@ public class FeedService {
 
         List<Feed> feeds = feedRepository.findByIdsWithRelations((feedIds));
 
-        Map<Long, Feed> feedMap = feeds.stream()
+        Map<Long, Feed> feedMap = feeds
+                .stream()
                 .collect(Collectors.toMap(Feed::getId, feed -> feed));
+
+        Set<Long> authorIds = feeds
+                .stream()
+                .map(Feed::getUserId)
+                .collect(Collectors.toSet());
+
+        Map<Long, UserInfoResponseDto> userMap =
+                userQueryService.loadUsers(authorIds);
 
         Set<Long> likedFeedIds = new HashSet<>(
                 feedLikeRepository.findFeedIdsByUserIdAndFeedIdIn(userId, feedIds)
@@ -103,7 +122,7 @@ public class FeedService {
                 .map(tl -> {
                     Feed feed = feedMap.get(tl.getFeedId());
                     UserInfoResponseDto userInfo =
-                            userQueryService.loadUser(feed.getUserId());
+                            userMap.get(feed.getUserId());
 
                     return FeedResponseDto.of(
                             feed,
@@ -115,6 +134,50 @@ public class FeedService {
                 .toList();
 
         return new PageImpl<>(content, pageable, timelines.getTotalElements());
+    }
+
+    public TimelineResponseDto getTimeline(Long userId, LocalDateTime cursorCreatedAt, Long cursorId, int size) {
+
+        List<FeedTimeline> timelines = feedTimelineRepository.findTimeline(userId, cursorCreatedAt, cursorId, size + 1);
+
+        boolean hasNext = timelines.size() > size;
+
+        if(hasNext) timelines.remove(size);
+
+        List<Long> feedIds = timelines
+                .stream()
+                .map(FeedTimeline::getFeedId)
+                .toList();
+
+        List<Feed> feeds = feedRepository.findByIdsWithRelations((feedIds));
+
+        Map<Long, Feed> feedMap = feeds
+                .stream()
+                .collect(Collectors.toMap(Feed::getId, f -> f));
+
+        Set<Long> authorIds = feeds
+                .stream()
+                .map(Feed::getUserId)
+                .collect(Collectors.toSet());
+
+        Map<Long, UserInfoResponseDto> userMap =
+                userQueryService.loadUsers(authorIds);
+
+        List<FeedResponseDto> feedDtos = timelines.stream()
+                .map(tl -> {
+                    Feed feed = feedMap.get(tl.getFeedId());
+                    return FeedResponseDto.of(
+                            feed,
+                            userMap.get(feed.getUserId()),
+                            false,
+                            false
+                    );
+                })
+                .toList();
+
+        FeedTimeline last = timelines.get(timelines.size() - 1);
+
+        return new TimelineResponseDto(feedDtos, hasNext, last.getCreatedAt(), last.getId());
     }
 
     @Transactional
