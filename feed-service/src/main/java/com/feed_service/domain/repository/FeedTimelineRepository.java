@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FeedTimelineRepository extends JpaRepository<FeedTimeline, Long> {
 
-    Page<FeedTimeline> findByUserIdOrderByCreatedAtDesc(
-            Long userId,
-            Pageable pageable
-    );
+    Page<FeedTimeline> findByUserId(Long userId, Pageable pageable);
+
 }
