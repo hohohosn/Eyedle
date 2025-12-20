@@ -1,7 +1,7 @@
 package com.feed_service.application.service;
 
-import com.feed_service.infra.user.FollowClient;
-import com.feed_service.infra.user.dto.UserInternalResponseDto;
+import com.feed_service.infra.user.client.UserServiceFeignClient;
+import com.user_service.presentation.dto.response.UserInternalResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,13 +11,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FollowQueryService {
 
-    private final FollowClient followClient;
+    private final UserServiceFeignClient userServiceFeignClient;
 
     public List<Long> getFollowers(Long userId){
 
-        return followClient.getFollowers(userId)
+        return userServiceFeignClient.getFollowers(userId)
                 .stream()
-                .map(UserInternalResponseDto::getUserId)
+                .map(UserInternalResponse::getId)
                 .toList();
     }
 }
