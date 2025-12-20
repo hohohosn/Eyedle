@@ -1,7 +1,7 @@
 package com.feed_service.application.service;
 
 import com.feed_service.infra.user.client.UserServiceFeignClient;
-import com.user_service.presentation.dto.response.UserInternalResponse;
+import com.feed_service.infra.user.dto.UserInternalResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ public class FollowQueryService {
 
         return userServiceFeignClient.getFollowers(userId)
                 .stream()
-                .map(UserInternalResponse::getId)
+                .map(UserInternalResponseDto::getUserId)
                 .toList();
     }
 }

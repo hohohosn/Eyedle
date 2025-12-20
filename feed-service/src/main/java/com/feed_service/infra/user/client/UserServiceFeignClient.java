@@ -2,7 +2,7 @@ package com.feed_service.infra.user.client;
 
 import com.feed_service.infra.config.FeignConfig;
 import com.feed_service.infra.user.dto.UserInfoResponseDto;
-import com.user_service.presentation.dto.response.UserInternalResponse;
+import com.feed_service.infra.user.dto.UserInternalResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,5 +26,5 @@ public interface UserServiceFeignClient {
 
     //팔로워 조회 (fan-out용)
     @GetMapping("/follows/{userId}/followers")
-    List<UserInternalResponse> getFollowers(@PathVariable Long userId);
+    List<UserInternalResponseDto> getFollowers(@PathVariable Long userId);
 }
