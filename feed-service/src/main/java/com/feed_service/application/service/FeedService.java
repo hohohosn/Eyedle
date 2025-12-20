@@ -75,9 +75,10 @@ public class FeedService {
     public Page<FeedResponseDto> findAllFeeds(Pageable pageable, Long userId) {
 
         Page<FeedTimeline> timelines = feedTimelineRepository.
-                findByUserIdOrderByCreatedAtDesc(userId, pageable);
+                findByUserId(userId, pageable);
 
-        List<Long> feedIds = timelines.getContent().stream()
+        List<Long> feedIds = timelines.getContent()
+                .stream()
                 .map(FeedTimeline::getFeedId)
                 .toList();
 
@@ -117,11 +118,7 @@ public class FeedService {
     }
 
     @Transactional
-    public FeedResponseDto updateFeed(
-            Long feedId,
-            FeedUpdateRequestDto request,
-            Long userId
-    ) {
+    public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request, Long userId) {
 
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
@@ -159,11 +156,18 @@ public class FeedService {
     }
 
     private void pushToTimeline(Feed feed) {
-        //팔로워 조회
-        List<Long> followerIds = followQueryService.getFollowerIds(feed.getUserId());
-        //각 팔로워 타임라인에 insert
+
+        // 1. 내 타임라인
+        feedTimelineRepository.save(
+                new FeedTimeline(feed.getUserId(), feed.getId())
+        );
+
+        // 2. 팔로워 타임라인
+        List<Long> followerIds =
+                followQueryService.getFollowers(feed.getUserId());
+
         List<FeedTimeline> timelines = followerIds.stream()
-                .map(followerId -> new FeedTimeline(followerId, feed.getId))
+                .map(followerId -> new FeedTimeline(followerId, feed.getId()))
                 .toList();
 
         feedTimelineRepository.saveAll(timelines);
