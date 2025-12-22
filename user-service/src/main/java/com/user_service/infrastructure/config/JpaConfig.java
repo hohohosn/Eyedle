@@ -15,6 +15,9 @@ public class JpaConfig {
 
 	@Bean
 	public AuditorAware<String> auditorProvider() {
+		System.out.println("============================================");
+		System.out.println("cheke point 1111");
+		System.out.println("============================================");
 		return () -> {
 			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
