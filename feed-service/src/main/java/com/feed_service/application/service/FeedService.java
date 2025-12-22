@@ -44,6 +44,7 @@ public class FeedService {
     private final FeedEventProducer feedEventProducer;
     private final FeedMediaService feedMediaService;
     private final FeedMediaRepository feedMediaRepository;
+    private final FeedPermissionValidator permissionValidator;
 
     @Transactional
     public Long createFeed(FeedCreateRequestDto request, Long userId) {
@@ -74,6 +75,8 @@ public class FeedService {
 
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
+
+        permissionValidator.validateView(userId, feed);
 
         UserInfoResponseDto userInfo = userQueryService.loadUser(feed.getUserId());
 
@@ -204,7 +207,7 @@ public class FeedService {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
-        validateOwner(feed, userId);
+        permissionValidator.validateModify(userId, feed);
 
         feed.updateFeed(request.getContent(), request.getPermission());
         tagService.updateTags(feed, request.getTags());
@@ -227,19 +230,13 @@ public class FeedService {
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
 
-        validateOwner(feed, userId);
+        permissionValidator.validateModify(userId, feed);
 
         if (feed.isDeleted()) {
             throw new CustomException(ErrorCode.NOT_FOUND);
         }
 
         feed.statusDeleted();
-    }
-
-    private void validateOwner(Feed feed, Long userId) {
-        if (!feed.getUserId().equals(userId)) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
     }
 
     private void pushToTimeline(Feed feed) {

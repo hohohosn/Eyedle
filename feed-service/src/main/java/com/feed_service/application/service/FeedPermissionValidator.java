@@ -13,7 +13,7 @@ public class FeedPermissionValidator {
 
         private final FollowQueryService followQueryService;
 
-        public void validationView(Long viewrId, Feed feed) {
+        public void validateView(Long viewrId, Feed feed) {
 
                 //작성자는 항상 조회 가능
                 if(feed.getUserId().equals(viewrId)) {
@@ -44,7 +44,7 @@ public class FeedPermissionValidator {
                 }
         }
 
-        public void ValidateModify(Long userId, Feed feed) {
+        public void validateModify(Long userId, Feed feed) {
                 if(!feed.getUserId().equals(userId)) {
                         throw new CustomException(ErrorCode.FORBIDDEN);
                 }
