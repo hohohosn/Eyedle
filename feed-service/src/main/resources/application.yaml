@@ -28,7 +28,7 @@ spring:
     aws:
       region: ap-northeast-2
       bucket: feed-service-bucket
-      base-url: https://feed-service-bucket.s3.ap-northeast-2.amazonaws.com
+      base-url: https://dfh1fkah13fq2.cloudfront.net
 #    inetutils:
 #      preferred-networks: 172.31
 
