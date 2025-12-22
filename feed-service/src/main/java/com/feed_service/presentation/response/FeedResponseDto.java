@@ -16,7 +16,7 @@ public class FeedResponseDto {
     private final FeedUserDto user;
     private final String content;
     private final FeedPermission permission;
-    private final List<FeedMediaRequestDto> medias;
+    private final List<FeedMediaResponseDto> medias;
     private final List<String> tags;
 
     private final boolean liked;
@@ -28,7 +28,7 @@ public class FeedResponseDto {
             FeedUserDto user,
             String content,
             FeedPermission permission,
-            List<FeedMediaRequestDto> medias,
+            List<FeedMediaResponseDto> medias,
             List<String> tags,
             boolean liked,
             boolean bookmarked
@@ -43,26 +43,28 @@ public class FeedResponseDto {
         this.bookmarked = bookmarked;
     }
 
-    public static FeedResponseDto of(Feed feed,
-                                     UserInfoResponseDto userInfo,
-                                     boolean liked,
-                                     boolean bookmarked) {
+    public static FeedResponseDto of(
+            Feed feed,
+            UserInfoResponseDto userInfo,
+            List<FeedMediaResponseDto> medias,
+            boolean liked,
+            boolean bookmarked
+    ) {
         FeedUserDto userDto = new FeedUserDto(
                 userInfo.getId(),
                 userInfo.getUsername(),
                 userInfo.getEmail()
         );
 
-
         return FeedResponseDto.builder()
                 .id(feed.getId())
                 .user(userDto)
                 .content(feed.getContent())
                 .permission(feed.getPermission())
-                .medias(feed.getMediaList().stream()
-                        .map(FeedMediaRequestDto::new).toList())
+                .medias(medias)
                 .tags(feed.getFeedTags().stream()
-                        .map(ft -> ft.getTag().getName()).toList())
+                        .map(ft -> ft.getTag().getName())
+                        .toList())
                 .liked(liked)
                 .bookmarked(bookmarked)
                 .build();
