@@ -2,4 +2,4 @@
     com.common.database.BaseRootEntity.class,
     com.common.database.BaseTimeEntity.class
 })
-package com.chatservice.infra.config;
+package com.chatservice.infra.querydsl;

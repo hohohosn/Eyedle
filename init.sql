@@ -1,0 +1,2 @@
+CREATE DATABASE chat_db;
+CREATE DATABASE monitor_db;

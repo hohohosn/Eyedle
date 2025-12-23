@@ -23,7 +23,8 @@ public class SecurityConfig {
     http.csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/chat/**").permitAll()
+            .requestMatchers("/chat/**").permitAll()    // ws handshake 열기
+            .requestMatchers("/chats/**").authenticated()
             .anyRequest().authenticated())
         .addFilterBefore(gatewayHeaderAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
