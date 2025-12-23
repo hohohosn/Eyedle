@@ -1,13 +1,12 @@
 package com.presenceservice.presentation.controller;
 
-import com.common.response.CommonResponse;
 import com.presenceservice.application.service.PresenceService;
 import com.presenceservice.domain.model.OnlineStatus;
 import com.presenceservice.presentation.dto.OnlineStatusResDto;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import static com.common.response.SuccessCode.OK;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,13 +16,17 @@ public class PresenceController {
   private final PresenceService presenceService;
 
   @PostMapping("/{userId}")
-  public CommonResponse<Void> updateStatus(@PathVariable Long userId, @RequestParam OnlineStatus onlineStatus) {
+  public void updateStatus(@PathVariable(value = "userId") Long userId, @RequestParam(name = "onlineStatus") OnlineStatus onlineStatus) {
     presenceService.updateStatus(userId, onlineStatus);
-    return CommonResponse.of(OK);
   }
 
   @GetMapping("/{userId}")
-  public CommonResponse<OnlineStatusResDto> getStatus(@PathVariable Long userId) {
-    return CommonResponse.of(OK, presenceService.getStatus(userId));
+  public OnlineStatusResDto getStatus(@PathVariable Long userId) {
+    return presenceService.getStatus(userId);
+  }
+
+  @PostMapping("/users")
+  public Map<Long, OnlineStatusResDto> getOnlineStatus(@RequestBody List<Long> userIds) {
+    return presenceService.getStatusByUserIds(userIds);
   }
 }
