@@ -11,7 +11,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "p_feed")
@@ -38,10 +40,10 @@ public class Feed extends BaseTimeEntity {
     private LocalDateTime deletedAt;
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<FeedMedia> mediaList =  new ArrayList<>();
+    private Set<FeedMedia> mediaList = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<FeedTag> feedTags = new ArrayList<>();
+    private Set<FeedTag> feedTags = new LinkedHashSet<>();
 
     @Builder
     public Feed(Long userId, String content, FeedPermission permission) {
