@@ -19,8 +19,6 @@ public class FeedCreateRequestDto {
     @NotBlank
     private String content;
 
-    private List<MultipartFile> medias;
-
     private List<String> tags;
 
 }
