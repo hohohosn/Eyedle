@@ -1,6 +1,5 @@
-package com.chatservice.infra.config;
+package com.chatservice.infra.redis;
 
-import com.chatservice.infra.stomp.RedisSubscriber;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

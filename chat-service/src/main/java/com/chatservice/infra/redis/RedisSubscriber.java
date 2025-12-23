@@ -1,4 +1,4 @@
-package com.chatservice.infra.stomp;
+package com.chatservice.infra.redis;
 
 import com.chatservice.presentation.response.PresenceUpdateResDto;
 import lombok.RequiredArgsConstructor;
