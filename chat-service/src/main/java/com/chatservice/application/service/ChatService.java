@@ -1,17 +1,16 @@
 package com.chatservice.application.service;
 
 import com.chatservice.application.dto.ChatRoomInfo;
+import com.chatservice.application.dto.OnlineStatusResDto;
 import com.chatservice.application.dto.UserInfo;
 import com.chatservice.application.dto.UserInfoResDto;
-import com.chatservice.domain.model.ChatMessage;
-import com.chatservice.domain.model.ChatParticipant;
-import com.chatservice.domain.model.ChatRoom;
-import com.chatservice.domain.model.ChatRoomStatus;
+import com.chatservice.domain.model.*;
 import com.chatservice.domain.repository.ChatMessageRepository;
 import com.chatservice.domain.repository.ChatParticipantRepository;
 import com.chatservice.domain.repository.ChatRoomRepository;
 import com.chatservice.infra.client.BlockClient;
 import com.chatservice.infra.client.FollowClient;
+import com.chatservice.infra.client.PresenceClient;
 import com.chatservice.infra.client.UserClient;
 import com.chatservice.infra.repository.redis.RedisChatMessageRepository;
 import com.chatservice.presentation.request.ChatMessageReqDto;
@@ -35,8 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.chatservice.common.ChatErrorCode.*;
 import static com.chatservice.domain.model.ChatRoomStatus.OPEN;
 import static com.chatservice.domain.model.ChatRoomStatus.REQUESTED;
+import static com.chatservice.domain.model.OnlineStatus.OFFLINE;
 import static java.lang.Long.MAX_VALUE;
-import static java.time.Duration.ofDays;
 
 @Slf4j
 @Service
@@ -51,6 +50,7 @@ public class ChatService {
   private final UserClient userClient;
   private final BlockClient blockClient;
   private final FollowClient followClient;
+  private final PresenceClient presenceClient;
 
   /**
    * 새 채팅 생성
@@ -147,13 +147,24 @@ public class ChatService {
     // 마지막 메시지 조회
     Map<Long, ChatMessage> lastMessageMap = chatMessageRepository.findLastMessageByChatRoomIds(chatRoomIds);
 
+    // 상대의 접속 상태 조회
+    Map<Long, OnlineStatusResDto> statusMap = presenceClient.getStatuses(otherUserIds);
+
     // ChatRoomInfo 매핑
     List<ChatRoomInfo> chatRoomInfos = chatRooms.stream()
+        .filter(r -> {
+          Long receiverId = chatRoomToOtherUserId.get(r.getId());
+          return receiverId != null && userInfoMap.containsKey(receiverId);
+        })
         .map(r -> {
           Long receiverId = chatRoomToOtherUserId.get(r.getId());
           UserInfo receiverInfo = userInfoMap.get(receiverId);
           ChatMessage lastMessage = lastMessageMap.get(r.getId());
-          return ChatRoomInfo.of(r.getId(), receiverInfo, lastMessage);
+          OnlineStatus onlineStatus = OFFLINE;
+          if (statusMap != null && statusMap.containsKey(receiverId)) {
+            onlineStatus = statusMap.get(receiverId).onlineStatus();
+          }
+          return ChatRoomInfo.of(r.getId(), receiverInfo, lastMessage, onlineStatus);
         }).toList();
 
     // 다음 커서
@@ -221,9 +232,6 @@ public class ChatService {
     }
 
     long now = System.currentTimeMillis();
-
-    // redis에는 최근 3일치만 캐싱
-    long threeDaysAgo = now - ofDays(3).toMillis();
 
     long targetCursor = (cursor != null) ? cursor : now;
 
