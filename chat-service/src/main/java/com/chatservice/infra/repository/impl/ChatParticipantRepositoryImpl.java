@@ -41,8 +41,9 @@ public class ChatParticipantRepositoryImpl implements ChatParticipantRepository 
         .select(chatParticipant.chatRoomId, chatParticipant.userId)
         .from(chatParticipant)
         .where(chatParticipant.chatRoomId.in(chatRoomIds)
-            .and(chatParticipant.userId.ne(currentUserId))
-            .and(chatParticipant.isLeft.eq(false)))
+                .and(chatParticipant.userId.ne(currentUserId))
+            //.and(chatParticipant.isLeft.eq(false))
+        )
         .fetch();
 
     return tuples.stream().collect(Collectors.toMap(

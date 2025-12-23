@@ -55,7 +55,11 @@ public class ChatRoomRepositoryImpl implements ChatRoomRepository {
         .from(chatRoom)
         .join(chatParticipant)
         .on(chatParticipant.chatRoomId.eq(chatRoom.id))
-        .where(chatParticipant.userId.eq(userId).and(chatRoom.id.lt(cursor)))
+        .where(
+            chatParticipant.userId.eq(userId),
+            chatParticipant.isLeft.eq(false),
+            chatRoom.id.lt(cursor)
+        )
         .orderBy(chatRoom.id.desc())
         .offset(pageable.getOffset())
         .limit(pageable.getPageSize())

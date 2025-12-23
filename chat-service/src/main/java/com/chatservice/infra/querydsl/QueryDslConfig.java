@@ -1,4 +1,4 @@
-package com.chatservice.infra.config;
+package com.chatservice.infra.querydsl;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
