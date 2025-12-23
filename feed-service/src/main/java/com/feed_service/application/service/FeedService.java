@@ -45,26 +45,22 @@ public class FeedService {
 
     @Transactional
     public Long createFeed(FeedCreateRequestDto request, Long userId, List<MultipartFile> medias) {
-
         Feed feed = Feed.builder()
                 .userId(userId)
                 .content(request.getContent())
                 .permission(request.getPermission())
                 .build();
 
-
         feedRepository.save(feed);
         tagService.applyTags(feed, request.getTags());
-
         feedMediaService.uploadMedias(feed, medias);
 
-        //Kafka 이벤트 (비동기 fan-out)
-        feedEventProducer.publishFeedEvent(new FeedCreatedEvent(
-                feed.getId(),
-                userId,
-                feed.getCreatedAt()
-        ));
-        pushToTimeline(feed);
+
+        feedEventProducer.publishFeedEvent(new FeedCreatedEvent(feed.getId(), userId, feed.getCreatedAt()));
+
+
+        feedTimelineRepository.save(new FeedTimeline(userId, feed.getId()));
+
         return feed.getId();
     }
 
@@ -115,6 +111,7 @@ public class FeedService {
                         .collect(Collectors.toSet())
                 );
 
+
         Map<Long, List<FeedMediaResponseDto>> mediaMap =
                 feedMediaRepository.findByFeedIdIn(feedIds)
                         .stream()
@@ -153,69 +150,45 @@ public class FeedService {
     }
 
     public TimelineResponseDto getTimeline(Long userId, LocalDateTime cursorCreatedAt, Long cursorId, int size) {
-
-        //타임라인 조회
         List<FeedTimeline> timelines = feedTimelineRepository.findTimeline(userId, cursorCreatedAt, cursorId, size + 1);
 
-        //결과가 없으면 빈 객체 반환
-        if (timelines.isEmpty()) {
-            return new TimelineResponseDto(List.of(), false, null, null);
-        }
+        if (timelines.isEmpty()) return new TimelineResponseDto(List.of(), false, null, null);
 
         boolean hasNext = timelines.size() > size;
         if (hasNext) timelines.remove(size);
 
         List<Long> feedIds = timelines.stream().map(FeedTimeline::getFeedId).toList();
-
         List<Feed> feeds = feedRepository.findByIdsWithRelations(feedIds);
 
-        Map<Long, Feed> feedMap =
-                feeds.stream().collect(Collectors.toMap(Feed::getId, f -> f));
+        Map<Long, Feed> feedMap = feeds.stream()
+                .collect(Collectors.toMap(Feed::getId, f -> f, (e, r) -> e));
 
-        Map<Long, UserInfoResponseDto> userMap =
-                userQueryService.loadUsers(
-                        feeds.stream().map(Feed::getUserId).collect(Collectors.toSet())
-                );
 
-        Map<Long, List<FeedMediaResponseDto>> mediaMap = feedMediaRepository.findByFeedIdIn(feedIds)
-                        .stream()
-                        .collect(Collectors.groupingBy(
-                                fm -> fm.getFeed().getId(),
-                                Collectors.mapping(FeedMediaResponseDto::from, Collectors.toList())
-                        ));
+        Map<Long, UserInfoResponseDto> userMap = Collections.emptyMap();
+        try {
+            userMap = userQueryService.loadUsers(feeds.stream().map(Feed::getUserId).collect(Collectors.toSet()));
+        } catch (Exception e) {
 
-        //피드 매핑 시에도 NPE 방어 로직 추가
+        }
+
+        Map<Long, List<FeedMediaResponseDto>> mediaMap = feedMediaRepository.findByFeedIdIn(feedIds).stream()
+                .collect(Collectors.groupingBy(fm -> fm.getFeed().getId(),
+                        Collectors.mapping(FeedMediaResponseDto::from, Collectors.toList())));
+
+        final Map<Long, UserInfoResponseDto> finalUserMap = userMap;
         List<FeedResponseDto> feedDtos = timelines.stream()
                 .map(tl -> {
                     Feed feed = feedMap.get(tl.getFeedId());
-                    if (feed == null) return null; // 방어 로직
-                    return FeedResponseDto.of(
-                            feed,
-                            userMap.get(feed.getUserId()),
-                            mediaMap.getOrDefault(feed.getId(), List.of()),
-                            false,
-                            false
-                    );
+                    if (feed == null) return null;
+
+                    UserInfoResponseDto userInfo = finalUserMap.getOrDefault(feed.getUserId(),
+                            new UserInfoResponseDto(feed.getUserId(), "Unknown", null));
+                    return FeedResponseDto.of(feed, userInfo, mediaMap.getOrDefault(feed.getId(), List.of()), false, false);
                 })
-                .filter(Objects::nonNull)
-                .toList();
+                .filter(Objects::nonNull).toList();
 
-        //필터링 후 feedDtos가 비어버릴 수도 있으므로 다시 체크
-        if (feedDtos.isEmpty()) {
-            return new TimelineResponseDto(List.of(), hasNext,
-                    timelines.get(timelines.size()-1).getCreatedAt(),
-                    timelines.get(timelines.size()-1).getId());
-        }
-
-        //마지막 타임라인 기준 커서 생성
         FeedTimeline last = timelines.get(timelines.size() - 1);
-
-        return new TimelineResponseDto(
-                feedDtos,
-                hasNext,
-                last.getCreatedAt(),
-                last.getId()
-        );
+        return new TimelineResponseDto(feedDtos, hasNext, last.getCreatedAt(), last.getId());
     }
 
     @Transactional
