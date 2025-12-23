@@ -44,7 +44,7 @@ public class FeedService {
     private final FeedPermissionValidator permissionValidator;
 
     @Transactional
-    public Long createFeed(FeedCreateRequestDto request, Long userId) {
+    public Long createFeed(FeedCreateRequestDto request, Long userId, List<MultipartFile> medias) {
 
         Feed feed = Feed.builder()
                 .userId(userId)
@@ -56,7 +56,7 @@ public class FeedService {
         feedRepository.save(feed);
         tagService.applyTags(feed, request.getTags());
 
-        feedMediaService.uploadMedias(feed, request.getMedias());
+        feedMediaService.uploadMedias(feed, medias);
 
         //Kafka 이벤트 (비동기 fan-out)
         feedEventProducer.publishFeedEvent(new FeedCreatedEvent(
