@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -80,6 +81,23 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
                 .leftJoin(QFeed.feed.mediaList).fetchJoin()
                 .where(baseCondition, keywordCondition)
                 .orderBy(QFeed.feed.updatedAt.desc())
+                .fetch();
+    }
+
+    @Override
+    public List<Feed> findByIdsWithRelations(List<Long> feedIds) {
+        if (feedIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return queryFactory
+                .selectDistinct(QFeed.feed)
+                .from(QFeed.feed)
+                .leftJoin(QFeed.feed.mediaList).fetchJoin() // 미디어 패치조인
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin() // 태그 패치조인
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
+                .where(QFeed.feed.id.in(feedIds)
+                        .and(QFeed.feed.deleted.isFalse())) // 삭제된 피드 제외 필수
                 .fetch();
     }
 
