@@ -9,6 +9,7 @@ import com.feed_service.presentation.response.FeedRecentResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,15 +22,19 @@ public class FeedRecentService {
     private final FeedRepository feedRepository;
     private final FeedLikeRepository feedLikeRepository;
     private final UserQueryService userQueryService;
+    private final FeedPermissionValidator permissionValidator;
 
     public List<FeedRecentResponseDto> findRecentFeeds(
+            @RequestHeader("X-User-Id") Long userId,
             LocalDateTime since,
             String keyword
     ) {
 
         List<Feed> feeds = feedRepository.findRecentFeeds(since, keyword);
 
-        return feeds.stream()
+        return feeds
+                .stream()
+                .filter(feed -> permissionValidator.canView(userId, feed))
                 .map(feed -> {
                     UserInfoResponseDto user = userQueryService.loadUser(feed.getUserId());
 
