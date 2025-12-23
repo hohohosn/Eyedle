@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
@@ -29,8 +29,8 @@ public class StompEventListener {
   private final PresenceClient presenceClient;
 
   @EventListener
-  public void connectHandle(SessionConnectedEvent event) {
-
+  public void connectHandle(SessionConnectEvent event) {
+    log.info("+++++++ SessionConnectedEvent 발생 +++++++");
     StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
     sessions.add(accessor.getSessionId());
 
