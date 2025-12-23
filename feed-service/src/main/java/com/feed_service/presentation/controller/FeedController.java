@@ -35,7 +35,7 @@ public class FeedController {
         Long id = feedService.createFeed(request, userId, medias);
         return CommonResponse.of(SuccessCode.OK, id);
     }
-    @GetMapping("/timeline")
+    @GetMapping("/main/timeline")
     public CommonResponse<TimelineResponseDto> getTimeline(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam(required = false) LocalDateTime cursorCreatedAt,
