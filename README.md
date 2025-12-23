@@ -67,12 +67,12 @@ ES_URI=http://elasticsearch:9200
 EUREKA_URI=http://eureka-server:19090/eureka/
 
 # JWT
-JWT_SECRET_KEY=VlwEyVlxSnXZ0bKKw_MZudDFYChWwdkBh9LZw6XBKpI=
+JWT_SECRET_KEY=#Please generate and fill in a secure key
 ```
 
 2. 빌드
 ```powershell
-od +x build_all.sh
+chmod +x build_all.sh
 ./build_all.sh
 ```
 
@@ -116,35 +116,35 @@ docker-compose up --build -d
 | **이현주** | 팀원  | Chat Service (실시간 채팅, STOMP), Presence Service (접속 상태 확인)           |
 
 ## 서비스
-| 서비스 (Service) | 포트 (Port) | 용도 (Purpose) | 비고 |
-|----------------|------------|----------------|------|
-| Eureka Server | 19090 | Service Discovery | 모든 마이크로서비스 등록 및 관리 |
-| API Gateway | 19091 | Gateway / Load Balancing | 외부 요청의 단일 진입점, 라우팅 |
-| Monitor Service | 19092 | Monitoring | Prometheus/Grafana 연동 모니터링 |
-| User Service | 19100 | User Management | 회원가입, 로그인, 프로필 관리 |
-| Chat Service | 19200 | Real-time Chat | 채팅방 관리, 메시지 전송 (WebSocket) |
-| Feed Service | 19300 | Feed Management | 피드 작성, 조회, 좋아요, 북마크 |
-| Notification Service | 19400 | Notification | 실시간 알림 (SSE), Kafka 이벤트 수신 |
-| Comment Service | 19500 | Comment Management | 댓글 작성, 수정, 삭제 |
-| Search Service | 19600 | Integrated Search | 통합 검색, 인기 검색어 (Elasticsearch) |
+| 서비스 (Service) | 포트 (Port) 
+|----------------|-----------
+| Eureka Server | 19090 |
+| API Gateway | 19091 | 
+| Monitor Service | 19092 | 
+| User Service | 19100 | 
+| Chat Service | 19200 | 
+| Feed Service | 19300 | 
+| Notification Service | 19400 
+| Comment Service | 19500 
+| Search Service | 19600 
 
 ## 주요 API 명세
-| 서비스 (Service) | 기능 (Feature) | HTTP Method | URI | 설명 |
-|----------------|--------------|-------------|-----|------|
-| Auth (인증) | 회원가입 | POST | /auth/signup | 이메일, 비밀번호, 닉네임으로 새로운 사용자를 등록합니다. |
-| Auth (인증) | 로그인 | POST | /auth/login | 이메일과 비밀번호로 인증하고 Access/Refresh Token을 발급받습니다. |
-| User (회원) | 프로필 조회 | GET | /users/{userId} | 특정 사용자의 프로필 정보(닉네임, 팔로워 수 등)를 조회합니다. |
-| User (회원) | 프로필 수정 | PATCH | /users/{userId} | 사용자의 닉네임, 프로필 사진 등을 수정합니다. |
-| User (회원) | 팔로우 | POST | /users/{userId}/follow | 특정 사용자를 팔로우합니다. |
-| Feed (피드) | 피드 생성 | POST | /feeds | 텍스트 내용과 미디어 파일(이미지/영상)을 포함한 새 피드를 작성합니다. |
-| Feed (피드) | 피드 목록 조회 | GET | /feeds | 최신순 또는 인기순으로 피드 목록을 페이징하여 조회합니다. |
-| Feed (피드) | 피드 상세 조회 | GET | /feeds/{feedId} | 특정 피드의 상세 내용과 댓글 등을 조회합니다. |
-| Feed (피드) | 피드 좋아요 | POST | /feeds/{feedId}/like | 특정 피드에 좋아요를 누르거나 취소합니다. |
-| Comment (댓글) | 댓글 작성 | POST | /comments | 특정 피드에 댓글을 작성합니다. |
-| Comment (댓글) | 대댓글 작성 | POST | /comments/{commentId}/reply | 특정 댓글에 답글(대댓글)을 작성합니다. |
-| Chat (채팅) | 채팅방 생성 | POST | /chats/room | 1:1 또는 그룹 채팅방을 생성합니다. |
-| Chat (채팅) | 메시지 전송 | WS | /pub/chat/message | STOMP 프로토콜을 통해 실시간 메시지를 전송합니다. |
-| Noti (알림) | 알림 구독 | GET | /notifications/subscribe | 실시간 알림을 받기 위해 SSE(Server-Sent Events) 연결을 맺습니다. |
+| 서비스 (Service)    | 기능 (Feature) | HTTP Method | URI | 설명 |
+|------------------|--------------|-------------|-----|------|
+| Auth(인증)         | 회원가입 | POST | /auth/signup | 이메일, 비밀번호, 닉네임으로 새로운 사용자를 등록합니다. |
+| Auth(인증)         | 로그인 | POST | /auth/login | 이메일과 비밀번호로 인증하고 Access/Refresh Token을 발급받습니다. |
+| User(회원)         | 프로필 조회 | GET | /users/{userId} | 특정 사용자의 프로필 정보(닉네임, 팔로워 수 등)를 조회합니다. |
+| User(회원)         | 프로필 수정 | PATCH | /users/{userId} | 사용자의 닉네임, 프로필 사진 등을 수정합니다. |
+| User(회원)         | 팔로우 | POST | /users/{userId}/follow | 특정 사용자를 팔로우합니다. |
+| Feed(피드)         | 피드 생성 | POST | /feeds | 텍스트 내용과 미디어 파일(이미지/영상)을 포함한 새 피드를 작성합니다. |
+| Feed(피드)         | 피드 목록 조회 | GET | /feeds | 최신순 또는 인기순으로 피드 목록을 페이징하여 조회합니다. |
+| Feed(피드)         | 피드 상세 조회 | GET | /feeds/{feedId} | 특정 피드의 상세 내용과 댓글 등을 조회합니다. |
+| Feed(피드)         | 피드 좋아요 | POST | /feeds/{feedId}/like | 특정 피드에 좋아요를 누르거나 취소합니다. |
+| Comment(댓글)      | 댓글 작성 | POST | /feeds/{feedId}/comments | 특정 피드에 댓글을 작성합니다. |
+| Comment(댓글)      | 대댓글 작성 | POST | /feeds/{feedId}/comments/{commentId}/reply | 특정 댓글에 답글(대댓글)을 작성합니다. |
+| Chat(채팅)         | 채팅방 생성 | POST | /chats/room | 1:1 또는 그룹 채팅방을 생성합니다. |
+| Chat(채팅)         | 메시지 전송 | WS | /pub/chat/message | STOMP 프로토콜을 통해 실시간 메시지를 전송합니다. |
+| Notification(알림) | 알림 구독 | GET | /notifications/subscribe | 실시간 알림을 받기 위해 SSE(Server-Sent Events) 연결을 맺습니다. |
 
 ## 기능 상세
 ### User
