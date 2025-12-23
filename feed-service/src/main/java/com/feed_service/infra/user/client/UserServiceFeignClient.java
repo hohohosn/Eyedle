@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 import java.util.Set;
 
-@FeignClient(name = "user-service", path = "/internal", configuration = FeignConfig.class
-)
+@FeignClient(name = "user-service", path = "/internal", configuration = FeignConfig.class)
 public interface UserServiceFeignClient {
 
     //유저 단건 조회
