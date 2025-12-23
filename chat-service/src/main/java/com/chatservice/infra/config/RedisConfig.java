@@ -1,5 +1,6 @@
 package com.chatservice.infra.config;
 
+import com.chatservice.infra.stomp.RedisSubscriber;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -15,6 +16,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -77,5 +81,21 @@ public class RedisConfig {
     return RedisCacheManager.builder(redisConnectionFactory())
         .cacheDefaults(redisCacheConfiguration)
         .build();
+  }
+
+  @Bean
+  public RedisMessageListenerContainer redisMessageListenerContainer(
+      RedisConnectionFactory redisConnectionFactory,
+      MessageListenerAdapter listenerAdapter
+  ) {
+    RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+    container.setConnectionFactory(redisConnectionFactory);
+    container.addMessageListener(listenerAdapter, new ChannelTopic("presence-status-channel"));
+    return container;
+  }
+
+  @Bean
+  public MessageListenerAdapter listenerAdapter(RedisSubscriber redisSubscriber) {
+    return new MessageListenerAdapter(redisSubscriber, "onMessage");
   }
 }
