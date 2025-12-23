@@ -23,7 +23,7 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
     @Override
     public Page<Feed> findFeeds(Pageable pageable) {
 
-        //페이징은 ID만
+        // 1. 페이징 처리를 위해 ID 목록만 먼저 조회
         List<Long> feedIds = queryFactory
                 .select(QFeed.feed.id)
                 .from(QFeed.feed)
@@ -37,25 +37,25 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
             return Page.empty(pageable);
         }
 
-        //실제 데이터는 fetch join
-        List<Feed> feeds = queryFactory
+        // 2. 실제 데이터 조회 (fetchJoin 제거 - BatchSize 설정으로 대체)
+        List<Feed> content = queryFactory
                 .selectDistinct(QFeed.feed)
                 .from(QFeed.feed)
-                .leftJoin(QFeed.feed.mediaList).fetchJoin()
-                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
-                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
+                .leftJoin(QFeed.feed.mediaList)
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag)
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag)
                 .where(QFeed.feed.id.in(feedIds))
                 .orderBy(QFeed.feed.createdAt.desc())
                 .fetch();
 
-        //count
+        // 3. 전체 카운트 조회
         Long total = queryFactory
                 .select(QFeed.feed.id.count())
                 .from(QFeed.feed)
                 .where(QFeed.feed.deleted.isFalse())
                 .fetchOne();
 
-        return new PageImpl<>(feeds, pageable, total);
+        return new PageImpl<>(content, pageable, total != null ? total : 0L);
     }
 
     @Override
