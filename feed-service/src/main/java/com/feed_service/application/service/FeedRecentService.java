@@ -1,6 +1,7 @@
 package com.feed_service.application.service;
 
 import com.feed_service.domain.model.Feed;
+import com.feed_service.domain.model.FeedMedia;
 import com.feed_service.domain.repository.FeedLikeRepository;
 import com.feed_service.domain.repository.FeedRepository;
 import com.feed_service.infra.user.dto.UserInfoResponseDto;
@@ -48,9 +49,10 @@ public class FeedRecentService {
                             .username(user.getUsername())
                             .profileUrl(null) // 아직 없으면 null
                             .mainImageUrl(
-                                    feed.getMediaList().isEmpty()
-                                            ? null
-                                            : feed.getMediaList().get(0).getMediaUrl()
+                                    feed.getMediaList().stream()
+                                            .findFirst()
+                                            .map(FeedMedia::getMediaUrl)
+                                            .orElse(null)
                             )
                             .likeCount(
                                     feedLikeRepository.countByFeed_Id(feed.getId())
