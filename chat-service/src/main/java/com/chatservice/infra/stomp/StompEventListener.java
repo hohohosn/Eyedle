@@ -30,7 +30,6 @@ public class StompEventListener {
 
   @EventListener
   public void connectHandle(SessionConnectEvent event) {
-    log.info("+++++++ SessionConnectedEvent 발생 +++++++");
     StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
     sessions.add(accessor.getSessionId());
 
@@ -40,7 +39,7 @@ public class StompEventListener {
         presenceClient.updateStatus(userId, ONLINE);
         log.info("{} 유저가 온라인 상태입니다. 세션: {}", userId, accessor.getSessionId());
       } catch (Exception e) {
-        log.error("Presence 서버 온라인 상태 업데이트 실패: {}", sessions.size());
+        log.error("Presence 서버 온라인 상태 업데이트 실패: userId ={}", userId, e);
       }
     }
   }
@@ -57,7 +56,7 @@ public class StompEventListener {
         presenceClient.updateStatus(userId, OFFLINE);
         log.info("{} 유저가 오프라인 상태입니다. 세션: {}", userId, accessor.getSessionId());
       } catch (Exception e) {
-        log.error("Presence 서버 오프라인 상태 업데이트 실패: {}", sessions.size());
+        log.error("Presence 서버 오프라인 상태 업데이트 실패: userId ={}", userId, e);
       }
     }
   }
