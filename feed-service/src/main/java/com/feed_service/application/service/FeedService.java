@@ -182,7 +182,18 @@ public class FeedService {
                     if (feed == null) return null;
 
                     UserInfoResponseDto userInfo = finalUserMap.getOrDefault(feed.getUserId(),
-                            new UserInfoResponseDto(feed.getUserId(), "Unknown", null));
+                            new UserInfoResponseDto(
+                                    feed.getUserId(),
+                                    "unknown@email.com",
+                                    "Unknown",
+                                    null,
+                                    "USER",
+                                    "ACTIVE",
+                                    false,
+                                    LocalDateTime.now(),
+                                    LocalDateTime.now()
+                            )
+                    );
                     return FeedResponseDto.of(feed, userInfo, mediaMap.getOrDefault(feed.getId(), List.of()), false, false);
                 })
                 .filter(Objects::nonNull).toList();
