@@ -48,8 +48,7 @@ public class ChatParticipantRepositoryImpl implements ChatParticipantRepository 
 
     return tuples.stream().collect(Collectors.toMap(
         t -> Objects.requireNonNull(t.get(chatParticipant.chatRoomId)),
-        t -> Objects.requireNonNull(t.get(chatParticipant.userId)),
-        (existing, replacement) -> existing
+        t -> Objects.requireNonNull(t.get(chatParticipant.userId))
     ));
   }
 
