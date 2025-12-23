@@ -35,6 +35,16 @@ public class FeedController {
         Long id = feedService.createFeed(request, userId, medias);
         return CommonResponse.of(SuccessCode.OK, id);
     }
+    @GetMapping("/timeline")
+    public CommonResponse<TimelineResponseDto> getTimeline(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestParam(required = false) LocalDateTime cursorCreatedAt,
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+
+        return CommonResponse.of(SuccessCode.OK, feedService.getTimeline(userId, cursorCreatedAt, cursorId, size));
+    }
 
     @GetMapping("/{feedId}")
     public CommonResponse<FeedResponseDto> getFeed(
@@ -51,17 +61,6 @@ public class FeedController {
             @RequestHeader("X-User-Id") Long userId
     ) {
         return CommonResponse.of(SuccessCode.OK, feedService.findAllFeeds(pageable, userId));
-    }
-
-    @GetMapping("/timeline")
-    public CommonResponse<TimelineResponseDto> getTimeline(
-            @RequestHeader("X-User-Id") Long userId,
-            @RequestParam(required = false) LocalDateTime cursorCreatedAt,
-            @RequestParam(required = false) Long cursorId,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-
-        return CommonResponse.of(SuccessCode.OK, feedService.getTimeline(userId, cursorCreatedAt, cursorId, size));
     }
 
     @PatchMapping("/{feedId}")

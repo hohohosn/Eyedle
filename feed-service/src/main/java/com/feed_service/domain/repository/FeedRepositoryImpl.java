@@ -93,11 +93,12 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
         return queryFactory
                 .selectDistinct(QFeed.feed)
                 .from(QFeed.feed)
-                .leftJoin(QFeed.feed.mediaList).fetchJoin() // 미디어 패치조인
-                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin() // 태그 패치조인
-                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
+                .leftJoin(QFeed.feed.mediaList)
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag)
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag)
                 .where(QFeed.feed.id.in(feedIds)
-                        .and(QFeed.feed.deleted.isFalse())) // 삭제된 피드 제외 필수
+                        .and(QFeed.feed.deleted.isFalse()))
+                .orderBy(QFeed.feed.createdAt.desc())
                 .fetch();
     }
 
