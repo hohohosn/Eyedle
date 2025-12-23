@@ -1,0 +1,334 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Infrastructure Services
+  # ==========================================
+
+  # 1. PostgreSQL - User, Chat, Monitor Service 공용 (Port 5432)
+  postgres-user:
+    image: postgres:15-alpine
+    container_name: postgres-user
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB_USER:-user_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-user-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # DB 자동 생성 스크립트 마운트
+    networks:
+      - eyedle-net
+
+  # 2. PostgreSQL - Feed Service (Port 5433)
+  postgres-feed:
+    image: postgres:15-alpine
+    container_name: postgres-feed
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB_FEED:-feed_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-feed-data:/var/lib/postgresql/data
+    networks:
+      - eyedle-net
+
+  # 3. PostgreSQL - Comment Service (Port 5434)
+  postgres-comment:
+    image: postgres:15-alpine
+    container_name: postgres-comment
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB_COMMENT:-comment_db}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-comment-data:/var/lib/postgresql/data
+      # comment_db는 POSTGRES_DB 환경변수로 생성됨
+    networks:
+      - eyedle-net
+
+  # 4. MongoDB - Notification Service (Chat은 제외됨)
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-noti}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-noti}
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - eyedle-net
+
+  # 5. Redis
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - eyedle-net
+
+  # 6. Kafka & Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - eyedle-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - eyedle-net
+
+  # 7. Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    command: >
+      sh -c "if [ ! -d plugins/analysis-nori ]; then bin/elasticsearch-plugin install analysis-nori; fi && 
+             /usr/local/bin/docker-entrypoint.sh"
+    networks:
+      - eyedle-net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # 8. Monitoring
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+    networks:
+      - eyedle-net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - eyedle-net
+
+  # ==========================================
+  # Microservices
+  # ==========================================
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "19090:19090"
+    networks:
+      - eyedle-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19090/actuator/health"]
+      interval: 30s
+      retries: 3
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "19091:19091"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - eyedle-net
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/${POSTGRES_DB_USER:-user_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      SPRING_DATA_REDIS_HOST: redis
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    depends_on:
+      - postgres-user
+      - redis
+      - eureka-server
+    networks:
+      - eyedle-net
+
+  feed-service:
+    build: ./feed-service
+    container_name: feed-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-feed:5432/${POSTGRES_DB_FEED:-feed_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      REDIS_PORT: 6379
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+    depends_on:
+      - postgres-feed
+      - kafka
+      - redis
+      - eureka-server
+    networks:
+      - eyedle-net
+
+  comment-service:
+    build: ./comment-service
+    container_name: comment-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-comment:5432/${POSTGRES_DB_COMMENT:-comment_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_SSL_ENABLED: "false"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+    depends_on:
+      - postgres-comment
+      - redis
+      - kafka
+      - eureka-server
+    networks:
+      - eyedle-net
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER:-noti}:${MONGO_PASSWORD:-noti}@mongodb:27017/${MONGO_DB_NOTI:-notification_db}?authSource=admin
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+    depends_on:
+      - mongodb
+      - kafka
+      - redis
+      - eureka-server
+    networks:
+      - eyedle-net
+
+  chat-service:
+    build: ./chat-service
+    container_name: chat-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/${POSTGRES_DB_CHAT:-chat_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+
+      # Redis 연결
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+
+      # Kafka 연결
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+
+      # Eureka 연결
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+
+      # JWT
+      SECRET_KEY: ${JWT_SECRET_KEY}
+    depends_on:
+      - postgres-user # postgres-user에 의존하도록 수정
+      - redis
+      - kafka
+      - eureka-server
+    networks:
+      - eyedle-net
+
+  search-service:
+    build: ./search-service
+    container_name: search-service
+    environment:
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+      SPRING_DATA_REDIS_HOST: redis
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      eureka-server:
+        condition: service_started
+    networks:
+      - eyedle-net
+
+  monitor-service:
+    build: ./monitor-service
+    container_name: monitor-service
+    ports:
+      - "19099:19099"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:19090/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/${POSTGRES_DB_MONITOR:-monitor_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    depends_on:
+      - eureka-server
+      - postgres-user
+    networks:
+      - eyedle-net
+
+volumes:
+  postgres-user-data:
+  postgres-feed-data:
+  postgres-comment-data:
+  mongo-data:
+  redis-data:
+  es-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  eyedle-net:
+    driver: bridge
