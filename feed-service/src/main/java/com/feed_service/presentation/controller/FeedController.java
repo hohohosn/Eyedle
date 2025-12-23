@@ -4,7 +4,6 @@ import com.common.response.CommonResponse;
 import com.common.response.SuccessCode;
 import com.feed_service.application.service.FeedService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
-import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.presentation.response.FeedResponseDto;
 import com.feed_service.presentation.response.TimelineResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +13,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @RestController
@@ -65,12 +66,13 @@ public class FeedController {
     @PatchMapping("/{feedId}")
     public CommonResponse<FeedResponseDto> updateFeed(
             @PathVariable Long feedId,
-            @RequestBody FeedUpdateRequestDto request,
-            @RequestHeader("X-User-Id") Long userId
+            @RequestPart("request") FeedCreateRequestDto request,
+            @RequestHeader("X-User-Id") Long userId,
+            List<MultipartFile> images
     ) {
         return CommonResponse.of(
                 SuccessCode.OK,
-                feedService.updateFeed(feedId, request, userId)
+                feedService.updateFeed(feedId, request, userId, images)
         );
     }
 
