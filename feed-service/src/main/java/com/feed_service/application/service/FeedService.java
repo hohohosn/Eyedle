@@ -131,30 +131,38 @@ public class FeedService {
         Set<Long> bookmarkedFeedIds = new HashSet<>
                 (feedBookmarkRepository.findFeedIdsByUserIdAndFeedIdIn(userId, feedIds));
 
-        List<FeedResponseDto> content =
-                timelines.getContent()
-                        .stream()
-                        .map(tl -> {
-                            Feed feed = feedMap.get(tl.getFeedId());
-                            return FeedResponseDto.of(
-                                    feed,
-                                    userMap.get(feed.getUserId()),
-                                    mediaMap.getOrDefault(feed.getId(), List.of()),
-                                    likedFeedIds.contains(feed.getId()),
-                                    bookmarkedFeedIds.contains(feed.getId())
-                            );
-                        })
-                        .toList();
+        List<FeedResponseDto> content = timelines.getContent()
+                .stream()
+                .map(tl -> {
+                    Feed feed = feedMap.get(tl.getFeedId());
+                    if (feed == null) {
+                        return null;
+                    }
+                    return FeedResponseDto.of(
+                            feed,
+                            userMap.get(feed.getUserId()), // userMap도 null check 권장
+                            mediaMap.getOrDefault(feed.getId(), List.of()),
+                            likedFeedIds.contains(feed.getId()),
+                            bookmarkedFeedIds.contains(feed.getId())
+                    );
+                })
+                .filter(Objects::nonNull)
+                .toList();
 
         return new PageImpl<>(content, pageable, timelines.getTotalElements());
     }
 
     public TimelineResponseDto getTimeline(Long userId, LocalDateTime cursorCreatedAt, Long cursorId, int size) {
 
+        //타임라인 조회
         List<FeedTimeline> timelines = feedTimelineRepository.findTimeline(userId, cursorCreatedAt, cursorId, size + 1);
 
-        boolean hasNext = timelines.size() > size;
+        //결과가 없으면 빈 객체 반환
+        if (timelines.isEmpty()) {
+            return new TimelineResponseDto(List.of(), false, null, null);
+        }
 
+        boolean hasNext = timelines.size() > size;
         if (hasNext) timelines.remove(size);
 
         List<Long> feedIds = timelines.stream().map(FeedTimeline::getFeedId).toList();
@@ -176,10 +184,11 @@ public class FeedService {
                                 Collectors.mapping(FeedMediaResponseDto::from, Collectors.toList())
                         ));
 
-        List<FeedResponseDto> feedDtos = timelines
-                .stream()
+        //피드 매핑 시에도 NPE 방어 로직 추가
+        List<FeedResponseDto> feedDtos = timelines.stream()
                 .map(tl -> {
                     Feed feed = feedMap.get(tl.getFeedId());
+                    if (feed == null) return null; // 방어 로직
                     return FeedResponseDto.of(
                             feed,
                             userMap.get(feed.getUserId()),
@@ -188,8 +197,17 @@ public class FeedService {
                             false
                     );
                 })
+                .filter(Objects::nonNull)
                 .toList();
 
+        //필터링 후 feedDtos가 비어버릴 수도 있으므로 다시 체크
+        if (feedDtos.isEmpty()) {
+            return new TimelineResponseDto(List.of(), hasNext,
+                    timelines.get(timelines.size()-1).getCreatedAt(),
+                    timelines.get(timelines.size()-1).getId());
+        }
+
+        //마지막 타임라인 기준 커서 생성
         FeedTimeline last = timelines.get(timelines.size() - 1);
 
         return new TimelineResponseDto(
