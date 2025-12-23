@@ -64,7 +64,7 @@ public class FeedService {
                 userId,
                 feed.getCreatedAt()
         ));
-
+        pushToTimeline(feed);
         return feed.getId();
     }
 

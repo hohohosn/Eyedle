@@ -29,6 +29,9 @@ spring:
       region: ap-northeast-2
       bucket: feed-service-bucket
       base-url: https://dfh1fkah13fq2.cloudfront.net
+#      credentials:
+#        access-key: ${AWS_ACCESS_KEY_ID}
+#        secret-key: ${AWS_SECRET_ACCESS_KEY}
 #    inetutils:
 #      preferred-networks: 172.31
 
