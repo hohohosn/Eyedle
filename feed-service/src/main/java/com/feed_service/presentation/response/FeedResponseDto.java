@@ -3,7 +3,6 @@ import com.feed_service.domain.model.Feed;
 import com.feed_service.domain.model.FeedPermission;
 import com.feed_service.infra.user.dto.FeedUserDto;
 import com.feed_service.infra.user.dto.UserInfoResponseDto;
-import com.feed_service.presentation.request.FeedMediaRequestDto;
 import lombok.Builder;
 import lombok.Getter;
 
