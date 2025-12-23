@@ -3,15 +3,12 @@ package com.feed_service.application.service;
 import com.common.exception.CustomException;
 import com.common.response.ErrorCode;
 import com.feed_service.domain.model.Feed;
-import com.feed_service.domain.model.FeedMedia;
 import com.feed_service.domain.model.FeedTimeline;
 import com.feed_service.domain.repository.*;
 import com.feed_service.infra.kafka.producer.FeedEventProducer;
 import com.feed_service.infra.user.dto.UserInfoResponseDto;
 import com.feed_service.infra.user.service.UserQueryService;
 import com.feed_service.presentation.request.FeedCreateRequestDto;
-import com.feed_service.presentation.request.FeedMediaRequestDto;
-import com.feed_service.presentation.request.FeedUpdateRequestDto;
 import com.feed_service.infra.kafka.event.FeedCreatedEvent;
 import com.feed_service.presentation.response.FeedMediaResponseDto;
 import com.feed_service.presentation.response.FeedResponseDto;
@@ -108,6 +105,7 @@ public class FeedService {
 
         Map<Long, Feed> feedMap = feeds
                 .stream()
+                .filter(feed -> permissionValidator.canView(userId, feed))
                 .collect(Collectors.toMap(Feed::getId, f -> f));
 
         Map<Long, UserInfoResponseDto> userMap =
@@ -134,7 +132,8 @@ public class FeedService {
                 (feedBookmarkRepository.findFeedIdsByUserIdAndFeedIdIn(userId, feedIds));
 
         List<FeedResponseDto> content =
-                timelines.getContent().stream()
+                timelines.getContent()
+                        .stream()
                         .map(tl -> {
                             Feed feed = feedMap.get(tl.getFeedId());
                             return FeedResponseDto.of(
@@ -202,7 +201,7 @@ public class FeedService {
     }
 
     @Transactional
-    public FeedResponseDto updateFeed(Long feedId, FeedUpdateRequestDto request, Long userId, List<MultipartFile> images) {
+    public FeedResponseDto updateFeed(Long feedId, FeedCreateRequestDto request, Long userId, List<MultipartFile> images) {
 
         Feed feed = feedRepository.findById(feedId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND));
