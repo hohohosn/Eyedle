@@ -14,6 +14,13 @@ import java.util.List;
 public interface FeedTagRepository extends JpaRepository<FeedTag, Long> {
     List<FeedTag> findByFeed(Feed feed);
 
+    @Query("""
+        select ft
+        from FeedTag ft
+        where ft.feed.id in :feedIds
+    """)
+    List<FeedTag> findAllByFeedIdIn(@Param("feedIds") List<Long> feedIds);
+
     @Modifying
     @Query("DELETE FROM FeedTag ft WHERE ft.feed = :feed")
     void deleteAllByFeed(@Param("feed") Feed feed);
