@@ -78,7 +78,12 @@ public class FeedService {
                 .map(FeedMediaResponseDto::from)
                 .toList();
 
-        return FeedResponseDto.of(feed, userInfo, medias, liked, bookmarked);
+        List<String> tags = feed.getFeedTags()
+                .stream()
+                .map(ft -> ft.getTag().getName())
+                .toList();
+
+        return FeedResponseDto.of(feed, userInfo, medias, tags, liked, bookmarked);
     }
 
     public Page<FeedResponseDto> findAllFeeds(Pageable pageable, Long userId) {
@@ -146,6 +151,10 @@ public class FeedService {
                             feed,
                             userInfo,
                             mediaMap.getOrDefault(feed.getId(), List.of()),
+                            feed.getFeedTags()
+                                    .stream()
+                                    .map(ft -> ft.getTag().getName())
+                                    .toList(),
                             likedFeedIds.contains(feed.getId()),
                             bookmarkedFeedIds.contains(feed.getId())
                     );
@@ -222,6 +231,10 @@ public class FeedService {
                             feed,
                             userInfo,
                             mediaMap.getOrDefault(feed.getId(), List.of()),
+                            feed.getFeedTags()
+                                    .stream()
+                                    .map(ft -> ft.getTag().getName())
+                                    .toList(),
                             likedFeedIds.contains(feed.getId()),
                             bookmarkedFeedIds.contains(feed.getId())
                     );
@@ -265,7 +278,12 @@ public class FeedService {
         boolean liked = feedLikeRepository.existsByFeed_IdAndUserId(feedId, userId);
         boolean bookmarked = feedBookmarkRepository.existsByFeed_IdAndUserId(feedId, userId);
 
-        return FeedResponseDto.of(feed, userInfo, medias, liked, bookmarked);
+        List<String> tags = feed.getFeedTags()
+                .stream()
+                .map(ft -> ft.getTag().getName())
+                .toList();
+
+        return FeedResponseDto.of(feed, userInfo, medias, tags, liked, bookmarked);
     }
 
     @Transactional
