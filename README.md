@@ -13,7 +13,6 @@
     - `comment-service/` 댓글 서비스
     - `notification-service/` 알림 서비스
     - `chat-service/` 채팅 서비스
-    - `presence-service/` 접속 상태 확인 서비스
     - `feed-service/` 피드 서비스
     - `search-service/` 검색 서비스
     - `user-service/` 회원 및 인증,인가 서비스
