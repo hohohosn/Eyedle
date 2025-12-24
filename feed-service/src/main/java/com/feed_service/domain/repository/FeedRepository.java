@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FeedRepository extends JpaRepository<Feed, Long>, FeedRepositoryCustom{
@@ -16,4 +17,15 @@ public interface FeedRepository extends JpaRepository<Feed, Long>, FeedRepositor
         where f.id in :ids
     """)
     List<Feed> findByIdsWithRelations(@Param("ids") List<Long> ids);
+
+    @Query("""
+    SELECT DISTINCT f FROM Feed f
+    JOIN f.feedTags ft
+    WHERE ft.tag.name = :tagName
+      AND f.deleted = false
+      AND f.updatedAt >= :since
+    ORDER BY f.updatedAt DESC
+    LIMIT :limit
+""")
+    List<Feed> findByTagNameAndSince(String tagName, LocalDateTime since, int limit);
 }

@@ -22,8 +22,7 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
 
     @Override
     public Page<Feed> findFeeds(Pageable pageable) {
-
-        // 1. 페이징 처리를 위해 ID 목록만 먼저 조회
+        //페이징 처리를 위해 ID 목록만 먼저 조회
         List<Long> feedIds = queryFactory
                 .select(QFeed.feed.id)
                 .from(QFeed.feed)
@@ -36,19 +35,18 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
         if (feedIds.isEmpty()) {
             return Page.empty(pageable);
         }
-
-        // 2. 실제 데이터 조회 (fetchJoin 제거 - BatchSize 설정으로 대체)
+        
         List<Feed> content = queryFactory
                 .selectDistinct(QFeed.feed)
                 .from(QFeed.feed)
-                .leftJoin(QFeed.feed.mediaList)
-                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag)
-                .leftJoin(QFeedTag.feedTag.tag, QTag.tag)
+                .leftJoin(QFeed.feed.mediaList).fetchJoin()
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
                 .where(QFeed.feed.id.in(feedIds))
                 .orderBy(QFeed.feed.createdAt.desc())
                 .fetch();
 
-        // 3. 전체 카운트 조회
+        //전체 카운트 조회
         Long total = queryFactory
                 .select(QFeed.feed.id.count())
                 .from(QFeed.feed)
@@ -60,17 +58,14 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
 
     @Override
     public List<Feed> findRecentFeeds(LocalDateTime since, String keyword) {
-
-        BooleanExpression baseCondition =
-                QFeed.feed.deleted.isFalse()
-                        .and(QFeed.feed.updatedAt.goe(since));
+        BooleanExpression baseCondition = QFeed.feed.deleted.isFalse()
+                .and(QFeed.feed.updatedAt.goe(since));
 
         BooleanExpression keywordCondition = null;
 
         if (keyword != null && !keyword.isBlank()) {
-            keywordCondition =
-                    QFeed.feed.content.containsIgnoreCase(keyword)
-                            .or(QTag.tag.name.containsIgnoreCase(keyword));
+            keywordCondition = QFeed.feed.content.containsIgnoreCase(keyword)
+                    .or(QTag.tag.name.containsIgnoreCase(keyword));
         }
 
         return queryFactory
@@ -86,20 +81,20 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
 
     @Override
     public List<Feed> findByIdsWithRelations(List<Long> feedIds) {
-        if (feedIds.isEmpty()) {
+        if (feedIds == null || feedIds.isEmpty()) {
             return Collections.emptyList();
         }
 
+        
         return queryFactory
                 .selectDistinct(QFeed.feed)
                 .from(QFeed.feed)
-                .leftJoin(QFeed.feed.mediaList)
-                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag)
-                .leftJoin(QFeedTag.feedTag.tag, QTag.tag)
+                .leftJoin(QFeed.feed.mediaList).fetchJoin()
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
                 .where(QFeed.feed.id.in(feedIds)
                         .and(QFeed.feed.deleted.isFalse()))
                 .orderBy(QFeed.feed.createdAt.desc())
                 .fetch();
     }
-
 }
