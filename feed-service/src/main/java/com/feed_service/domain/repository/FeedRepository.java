@@ -10,22 +10,5 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface FeedRepository extends JpaRepository<Feed, Long>, FeedRepositoryCustom{
-    @Query("""
-        select distinct f
-        from Feed f
-        left join fetch f.feedTags
-        where f.id in :ids
-    """)
-    List<Feed> findByIdsWithRelations(@Param("ids") List<Long> ids);
-
-    @Query("""
-    SELECT DISTINCT f FROM Feed f
-    JOIN f.feedTags ft
-    WHERE ft.tag.name = :tagName
-      AND f.deleted = false
-      AND f.updatedAt >= :since
-    ORDER BY f.updatedAt DESC
-    LIMIT :limit
-""")
     List<Feed> findByTagNameAndSince(String tagName, LocalDateTime since, int limit);
 }
