@@ -46,6 +46,7 @@ public class FeedResponseDto {
             Feed feed,
             UserInfoResponseDto userInfo,
             List<FeedMediaResponseDto> medias,
+            List<String> tags,
             boolean liked,
             boolean bookmarked
     ) {
@@ -61,9 +62,7 @@ public class FeedResponseDto {
                 .content(feed.getContent())
                 .permission(feed.getPermission())
                 .medias(medias)
-                .tags(feed.getFeedTags().stream()
-                        .map(ft -> ft.getTag().getName())
-                        .toList())
+                .tags(tags)
                 .liked(liked)
                 .bookmarked(bookmarked)
                 .build();

@@ -20,16 +20,13 @@ public class FeedSummaryDto {
     private boolean liked;
     private boolean bookmarked;
 
-    public static FeedSummaryDto from(Feed feed, boolean liked, boolean bookmarked) {
-
-        List<String> mediaUrls = feed.getMediaList().stream()
-                .map(FeedMedia::getMediaUrl)
-                .toList();
-
-        List<String> tags = feed.getFeedTags().stream()
-                .map(ft -> ft.getTag().getName())
-                .toList();
-
+    public static FeedSummaryDto of(
+            Feed feed,
+            List<String> tags,
+            List<String> mediaUrls,
+            boolean liked,
+            boolean bookmarked
+    ) {
         return new FeedSummaryDto(
                 feed.getId(),
                 feed.getUserId(),
