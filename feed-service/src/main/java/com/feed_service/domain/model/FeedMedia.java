@@ -13,6 +13,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class FeedMedia extends BaseTimeEntity {
 
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "feed_id", nullable = false)
     private Feed feed;
@@ -24,9 +29,13 @@ public class FeedMedia extends BaseTimeEntity {
     @Column(nullable = false)
     private MediaType mediaType;
 
-    public FeedMedia(Feed feed, String mediaUrl, MediaType mediaType) {
+    @Column(nullable = false)
+    private int orderIndex;
+
+    public FeedMedia(Feed feed, String mediaUrl, MediaType mediaType, int orderIndex) {
         this.feed = feed;
         this.mediaUrl = mediaUrl;
         this.mediaType = mediaType;
+        this.orderIndex = orderIndex;
     }
 }

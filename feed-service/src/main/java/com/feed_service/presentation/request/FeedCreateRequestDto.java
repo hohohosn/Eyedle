@@ -6,6 +6,7 @@ import com.feed_service.domain.model.FeedPermission;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,8 +18,6 @@ public class FeedCreateRequestDto {
 
     @NotBlank
     private String content;
-
-//    private List<FeedMediaUploadRequestDto> medias;
 
     private List<String> tags;
 

@@ -28,7 +28,7 @@ name: Deploy Feed Service to Amazon ECS
 
 on:
   push:
-    branches: [ "feat/#4-createFeed" ]
+    branches: [ "feat/#104-feed-service-push" ]
 
 env:
   AWS_REGION: ap-northeast-2

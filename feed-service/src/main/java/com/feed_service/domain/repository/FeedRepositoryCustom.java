@@ -12,4 +12,6 @@ public interface FeedRepositoryCustom {
     Page<Feed> findFeeds(Pageable pageable);
 
     List<Feed> findRecentFeeds(LocalDateTime since, String keyword);
+
+    List<Feed> findByIdsWithRelations(List<Long> feedIds);
 }

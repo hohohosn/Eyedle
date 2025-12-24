@@ -1,24 +1,29 @@
 package com.feed_service.infra.user.service;
 
-import com.common.exception.CustomException;
-import com.common.response.ErrorCode;
-import com.feed_service.infra.user.UserClient;
+import com.feed_service.infra.user.client.UserServiceFeignClient;
 import com.feed_service.infra.user.dto.UserInfoResponseDto;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserQueryService {
 
-    private final UserClient userClient;
+    private final UserServiceFeignClient userServiceFeignClient;
 
     public UserInfoResponseDto loadUser(Long userId) {
-        try {
-            return userClient.getUser(userId);
-        } catch (FeignException.NotFound e) {
-            throw new CustomException(ErrorCode.NOT_FOUND);
-        }
+        return userServiceFeignClient.getUser(userId);
+    }
+
+    public Map<Long, UserInfoResponseDto> loadUsers(Set<Long> userIds) {
+        return userServiceFeignClient.getUsersByIds(userIds).stream()
+                .collect(Collectors.toMap(
+                        UserInfoResponseDto::getId,
+                        u -> u
+                ));
     }
 }

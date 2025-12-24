@@ -31,6 +31,8 @@ dependencyManagement {
 }
 
 dependencies {
+	implementation 'org.springframework.kafka:spring-kafka'
+
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
 	implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -41,10 +43,10 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 	//S3
-//	implementation platform("software.amazon.awssdk:bom:2.25.39")
-//	implementation "software.amazon.awssdk:s3"
-//	implementation "software.amazon.awssdk:auth"
-//	implementation "software.amazon.awssdk:regions"
+	implementation platform("software.amazon.awssdk:bom:2.25.39")
+	implementation "software.amazon.awssdk:s3"
+	implementation "software.amazon.awssdk:auth"
+	implementation "software.amazon.awssdk:regions"
 
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
