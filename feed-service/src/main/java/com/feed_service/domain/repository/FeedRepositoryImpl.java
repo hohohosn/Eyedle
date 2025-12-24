@@ -22,7 +22,7 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
 
     @Override
     public Page<Feed> findFeeds(Pageable pageable) {
-        //페이징 처리를 위해 ID 목록만 먼저 조회
+
         List<Long> feedIds = queryFactory
                 .select(QFeed.feed.id)
                 .from(QFeed.feed)
@@ -35,18 +35,13 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
         if (feedIds.isEmpty()) {
             return Page.empty(pageable);
         }
-        
+
         List<Feed> content = queryFactory
-                .selectDistinct(QFeed.feed)
-                .from(QFeed.feed)
-                .leftJoin(QFeed.feed.mediaList).fetchJoin()
-                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
-                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
+                .selectFrom(QFeed.feed)
                 .where(QFeed.feed.id.in(feedIds))
                 .orderBy(QFeed.feed.createdAt.desc())
                 .fetch();
 
-        //전체 카운트 조회
         Long total = queryFactory
                 .select(QFeed.feed.id.count())
                 .from(QFeed.feed)
@@ -62,18 +57,16 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
                 .and(QFeed.feed.updatedAt.goe(since));
 
         BooleanExpression keywordCondition = null;
-
         if (keyword != null && !keyword.isBlank()) {
             keywordCondition = QFeed.feed.content.containsIgnoreCase(keyword)
                     .or(QTag.tag.name.containsIgnoreCase(keyword));
         }
 
         return queryFactory
-                .selectDistinct(QFeed.feed)
+                .select(QFeed.feed)
                 .from(QFeed.feed)
-                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
-                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
-                .leftJoin(QFeed.feed.mediaList).fetchJoin()
+                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag)
+                .leftJoin(QFeedTag.feedTag.tag, QTag.tag)
                 .where(baseCondition, keywordCondition)
                 .orderBy(QFeed.feed.updatedAt.desc())
                 .fetch();
@@ -85,13 +78,8 @@ public class FeedRepositoryImpl implements FeedRepositoryCustom {
             return Collections.emptyList();
         }
 
-        
         return queryFactory
-                .selectDistinct(QFeed.feed)
-                .from(QFeed.feed)
-                .leftJoin(QFeed.feed.mediaList).fetchJoin()
-                .leftJoin(QFeed.feed.feedTags, QFeedTag.feedTag).fetchJoin()
-                .leftJoin(QFeedTag.feedTag.tag, QTag.tag).fetchJoin()
+                .selectFrom(QFeed.feed)
                 .where(QFeed.feed.id.in(feedIds)
                         .and(QFeed.feed.deleted.isFalse()))
                 .orderBy(QFeed.feed.createdAt.desc())

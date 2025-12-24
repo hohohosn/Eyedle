@@ -8,12 +8,10 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "p_feed")
@@ -39,11 +37,13 @@ public class Feed extends BaseTimeEntity {
 
     private LocalDateTime deletedAt;
 
-    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<FeedMedia> mediaList = new LinkedHashSet<>();
+    @BatchSize(size = 100)
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FeedMedia> mediaList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<FeedTag> feedTags = new LinkedHashSet<>();
+    @BatchSize(size = 100)
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FeedTag> feedTags = new ArrayList<>();
 
     @Builder
     public Feed(Long userId, String content, FeedPermission permission) {
